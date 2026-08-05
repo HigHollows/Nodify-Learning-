@@ -39,9 +39,12 @@ model GuildConfig {
   cyberEnabled    Boolean @default(true)
   newsEnabled     Boolean @default(true)
 
-  // Salons/rôles créés automatiquement par /setup, pour l'auto-recovery
-  managedChannelIds String @default("[]") // JSON array de snowflakes
-  managedRoleIds    String @default("[]") // JSON array de snowflakes
+  // Salons/rôles créés automatiquement par /setup, pour l'auto-recovery.
+  // JSON object { [resourceKey]: snowflake } — la clé est l'identifiant stable
+  // défini dans src/setup/resources.ts, ce qui permet de savoir exactement
+  // quelle ressource Discord correspond à quelle définition entre deux /setup.
+  managedChannelIds String @default("{}")
+  managedRoleIds    String @default("{}")
 
   updatedAt DateTime @updatedAt
 

@@ -81,6 +81,21 @@ bout — les fondations de la Phase 1 sont posées.
 
 ## Roadmap
 
-Voir les phases dans le prompt fondateur du projet. Statut actuel : **Phase 1
-(Architecture, Database, Discord.js, Config, Logging, Command/Event loader) —
-en place.** Prochaine étape : Phase 2 (`/setup`, rôles/salons automatiques).
+Voir les phases dans le prompt fondateur du projet. Statut actuel :
+- ✅ **Phase 1** — Architecture, Database, Discord.js, Config, Logging, Command/Event loader
+- ✅ **Phase 2** — `/setup` (rôles de niveau + salon hub), auto-recovery idempotente
+
+Prochaine étape : Phase 3 (User Profile, Skills, Progression, Achievements).
+
+### `/setup`
+
+Crée (ou répare) :
+- Rôles de progression 🌱 Beginner → 🔴 Expert
+- Catégorie **🧠 NODIFY** avec un salon `#nodify`
+
+Idempotente : relancer `/setup` ne duplique rien. Si un rôle/salon créé par
+Nodify est supprimé, le relancer le recrée automatiquement (♻️ dans le
+rapport). Nodify ne touche jamais aux ressources qu'il n'a pas créées
+lui-même — seuls les IDs qu'il a stockés en base sont vérifiés/réparés.
+Nécessite la permission Discord **Gérer le serveur** pour être exécutée, et
+que le bot ait lui-même **Gérer les rôles** + **Gérer les salons**.

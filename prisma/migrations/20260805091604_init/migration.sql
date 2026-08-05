@@ -13,8 +13,8 @@ CREATE TABLE "guild_configs" (
     "academyEnabled" BOOLEAN NOT NULL DEFAULT true,
     "cyberEnabled" BOOLEAN NOT NULL DEFAULT true,
     "newsEnabled" BOOLEAN NOT NULL DEFAULT true,
-    "managedChannelIds" TEXT NOT NULL DEFAULT '[]',
-    "managedRoleIds" TEXT NOT NULL DEFAULT '[]',
+    "managedChannelIds" TEXT NOT NULL DEFAULT '{}',
+    "managedRoleIds" TEXT NOT NULL DEFAULT '{}',
     "updatedAt" DATETIME NOT NULL,
     CONSTRAINT "guild_configs_guildId_fkey" FOREIGN KEY ("guildId") REFERENCES "guilds" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
