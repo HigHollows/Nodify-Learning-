@@ -40,9 +40,13 @@ const SKILLS: { key: string; name: string; category: SkillCategory }[] = [
   // Cloud
   { key: "docker", name: "Docker", category: "CLOUD" },
   { key: "cloud-fundamentals", name: "Cloud Fundamentals", category: "CLOUD" },
+  { key: "cicd", name: "CI/CD & DevOps", category: "CLOUD" },
 
   // Cybersecurity (suite)
   { key: "red-team-fundamentals", name: "Red Team Fundamentals", category: "CYBERSECURITY" },
+
+  // AI (suite)
+  { key: "prompt-engineering", name: "Prompt Engineering", category: "AI" },
 ];
 
 const ACHIEVEMENTS = [
@@ -854,6 +858,102 @@ const CONCEPTS: ConceptSeed[] = [
     relatedKeys: ["kubernetes", "docker"],
     prerequisiteKeys: [],
     aliases: [],
+  },
+  {
+    key: "rust",
+    name: "Rust",
+    category: "DEVELOPMENT",
+    level: 3,
+    definition:
+      "Un langage de programmation système compilé, conçu pour offrir les performances du C/C++ sans les bugs mémoire classiques (use-after-free, data races) grâce à son système d'ownership vérifié à la compilation.",
+    explanationBeginner:
+      "Rust t'oblige à être précis sur qui « possède » chaque donnée à un instant donné (l'ownership). Ça semble contraignant au début, mais ça élimine à la compilation toute une catégorie de bugs (accéder à une mémoire déjà libérée, deux threads qui modifient la même donnée en même temps) que d'autres langages ne détectent qu'à l'exécution, si jamais ils les détectent.",
+    explanationAdvanced:
+      "Le borrow checker vérifie à la compilation que chaque valeur a un seul propriétaire à la fois (ou plusieurs emprunts en lecture seule, jamais un emprunt mutable en parallèle d'un autre emprunt) — pas de garbage collector, pas de pause GC imprévisible, mais une courbe d'apprentissage réelle. Très utilisé pour des composants critiques en performance/sécurité (moteurs WebAssembly, CLI, systèmes embarqués, composants de navigateurs).",
+    docUrl: "https://doc.rust-lang.org/book/",
+    relatedKeys: ["webassembly"],
+    prerequisiteKeys: [],
+    aliases: [],
+  },
+  {
+    key: "webassembly",
+    name: "WebAssembly",
+    category: "DEVELOPMENT",
+    level: 3,
+    definition:
+      "Un format binaire portable et performant (Wasm) qui s'exécute dans le navigateur (et de plus en plus hors navigateur) à une vitesse proche du natif, en complément du JavaScript plutôt qu'à sa place.",
+    explanationBeginner:
+      "WebAssembly permet de faire tourner dans un navigateur du code écrit dans un autre langage (Rust, C++, Go...) compilé vers un format binaire très rapide à exécuter. Ce n'est pas un remplaçant de JavaScript : les deux collaborent, JS orchestre et Wasm prend en charge les calculs lourds (traitement d'image, jeux vidéo, chiffrement...).",
+    explanationAdvanced:
+      "Wasm s'exécute dans une sandbox mémoire-safe isolée du reste de la page, avec un accès au DOM uniquement via des appels JavaScript (pas d'accès direct). De plus en plus utilisé hors navigateur (WASI) pour du edge computing ou des plugins sandboxés portables indépendants de l'OS hôte.",
+    docUrl: "https://webassembly.org/",
+    relatedKeys: ["rust"],
+    prerequisiteKeys: [],
+    aliases: ["wasm"],
+  },
+  {
+    key: "grpc",
+    name: "gRPC",
+    category: "DEVELOPMENT",
+    level: 3,
+    definition:
+      "Un framework RPC (Remote Procedure Call) développé par Google, basé sur HTTP/2 et Protocol Buffers, conçu pour la communication rapide et fortement typée entre microservices.",
+    explanationBeginner:
+      "Plutôt que d'échanger du JSON en texte libre comme une API REST classique, gRPC définit un contrat strict (quelles fonctions existent, quels types de données elles attendent) dans un fichier `.proto`, puis génère automatiquement le code client/serveur dans plusieurs langages — moins d'erreurs de format, des échanges plus compacts et plus rapides.",
+    explanationAdvanced:
+      "Protocol Buffers sérialise les données en binaire compact (plus petit et plus rapide à parser que du JSON), et HTTP/2 apporte le multiplexage et le streaming bidirectionnel natif. Très répandu pour la communication interne entre microservices dans une même infrastructure ; moins adapté qu'une API REST/GraphQL pour un usage public côté navigateur (support HTTP/2 natif limité côté client web).",
+    docUrl: "https://grpc.io/docs/what-is-grpc/introduction/",
+    relatedKeys: ["rest", "api"],
+    prerequisiteKeys: ["api"],
+    aliases: [],
+  },
+  {
+    key: "terraform",
+    name: "Terraform / Infrastructure as Code",
+    category: "CLOUD",
+    level: 3,
+    definition:
+      "Une approche (et un outil phare, Terraform) qui décrit l'infrastructure cloud (serveurs, réseaux, bases de données) dans des fichiers de configuration versionnés plutôt qu'en cliquant manuellement dans une console — l'Infrastructure as Code (IaC).",
+    explanationBeginner:
+      "Au lieu de créer un serveur à la main dans l'interface web d'un fournisseur cloud (et d'oublier comment tu l'as configuré six mois plus tard), tu décris l'infrastructure voulue dans un fichier texte. L'outil compare cet état voulu à l'état réel et applique automatiquement les changements nécessaires — le fichier devient la documentation vivante et versionnée de ton infrastructure.",
+    explanationAdvanced:
+      "Terraform maintient un fichier d'état (state) représentant l'infrastructure réellement provisionnée, et calcule un plan (diff entre l'état désiré dans le code et l'état réel) avant d'appliquer quoi que ce soit — permettant une revue avant modification, contrairement à un clic direct dans une console. Reproductible entre environnements (dev/staging/prod) et multi-fournisseurs via des providers (AWS, Azure, GCP, Cloudflare...).",
+    docUrl: "https://developer.hashicorp.com/terraform/intro",
+    relatedKeys: ["docker", "kubernetes", "cloud-fundamentals"],
+    prerequisiteKeys: [],
+    aliases: ["iac", "infrastructure as code"],
+  },
+  {
+    key: "oauth2",
+    name: "OAuth 2.0",
+    category: "CYBERSECURITY",
+    level: 3,
+    definition:
+      "Un protocole d'autorisation déléguée qui permet à une application d'accéder à des ressources au nom d'un utilisateur (ex: se connecter avec Google) sans jamais recevoir son mot de passe.",
+    explanationBeginner:
+      "Quand tu cliques sur « Se connecter avec Google » sur un site, tu n'entres jamais ton mot de passe Google sur ce site tiers : Google t'authentifie sur sa propre page, puis transmet au site un jeton d'accès limité. OAuth 2.0 est le protocole qui organise cet échange — c'est de l'autorisation déléguée, pas directement de l'authentification.",
+    explanationAdvanced:
+      "OAuth 2.0 définit plusieurs « flows » selon le contexte (Authorization Code pour une app serveur, PKCE pour une app mobile/SPA sans secret client stockable en sécurité, Client Credentials pour une communication machine-à-machine). OAuth 2.0 en lui-même ne standardise pas l'identité de l'utilisateur — c'est le rôle d'OpenID Connect (OIDC), une couche d'authentification construite par-dessus OAuth 2.0, souvent confondue avec lui.",
+    docUrl: "https://oauth.net/2/",
+    relatedKeys: ["jwt", "mfa"],
+    prerequisiteKeys: [],
+    aliases: ["oauth"],
+  },
+  {
+    key: "csp",
+    name: "Content Security Policy (CSP)",
+    category: "CYBERSECURITY",
+    level: 3,
+    definition:
+      "Un en-tête HTTP de sécurité qui indique au navigateur quelles sources de contenu (scripts, styles, images...) une page a le droit de charger — une défense en profondeur majeure contre les attaques XSS.",
+    explanationBeginner:
+      "Même si une faille XSS permet d'injecter du code malveillant dans une page, une CSP bien configurée peut empêcher ce code de s'exécuter en refusant de charger des scripts venant d'une source non autorisée dans la liste blanche du site.",
+    explanationAdvanced:
+      "Une directive typique : `Content-Security-Policy: default-src 'self'; script-src 'self' https://trusted-cdn.example`. Éviter `unsafe-inline`/`unsafe-eval` qui affaiblissent fortement la protection en autorisant le JavaScript inline ou dynamique. La directive `frame-ancestors` remplace aujourd'hui l'ancien en-tête `X-Frame-Options` pour se protéger du clickjacking (chargement de la page dans une iframe malveillante).",
+    docUrl: "https://developer.mozilla.org/docs/Web/HTTP/CSP",
+    relatedKeys: ["xss", "cors"],
+    prerequisiteKeys: ["xss"],
+    aliases: ["content security policy"],
   },
 ];
 
@@ -1684,6 +1784,261 @@ const COURSES: CourseSeed[] = [
             correctIndex: 1,
             explanation:
               "En s'appuyant sur des extraits de documents réels fournis en contexte, le modèle a moins besoin d'inventer — c'est ce que Nodify utilise pour `/docs`.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "devops-cicd",
+    title: "DevOps & CI/CD Fundamentals",
+    description:
+      "Comprendre pourquoi et comment automatiser la construction, les tests et le déploiement d'une application — les bases du DevOps et de l'Infrastructure as Code.",
+    category: "CLOUD",
+    skillKey: "cicd",
+    level: 2,
+    lessons: [
+      {
+        order: 1,
+        title: "Qu'est-ce que le CI/CD ?",
+        content:
+          "Le CI/CD (Continuous Integration / Continuous Deployment) est une pratique qui automatise ce qu'un développeur ferait manuellement avant de livrer du code : compiler, lancer les tests, et déployer.\n\n" +
+          "**Intégration continue (CI)** : à chaque changement de code poussé sur le dépôt, une machine (pas un humain) reconstruit le projet et lance automatiquement les tests. Ça détecte immédiatement une régression, au lieu de la découvrir des jours plus tard mélangée avec dix autres changements.\n\n" +
+          "**Déploiement continu (CD)** : une fois les tests passés, le code est automatiquement déployé (parfois avec une validation manuelle avant la mise en production — on parle alors de « delivery » continue plutôt que de « deployment » continu au sens strict).\n\n" +
+          "L'objectif n'est pas la vitesse pour la vitesse : c'est de réduire le risque humain (oublier une étape, déployer la mauvaise version) en rendant le processus répétable et vérifiable.",
+        xpReward: 20,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que vérifie principalement l'intégration continue (CI) ?",
+            choices: [
+              "Que le design visuel est cohérent",
+              "Que le code se construit et passe les tests automatiquement à chaque changement",
+              "Que le serveur de production a assez de mémoire disponible",
+              "Que les commits ont un message bien formulé",
+            ],
+            correctIndex: 1,
+            explanation:
+              "La CI reconstruit le projet et lance les tests automatiquement à chaque changement poussé — elle détecte les régressions immédiatement plutôt qu'après coup.",
+          },
+          {
+            order: 2,
+            prompt: "Quelle est la différence entre « continuous delivery » et « continuous deployment » ?",
+            choices: [
+              "Ce sont des synonymes stricts, aucune différence",
+              "Delivery déploie automatiquement en prod ; deployment nécessite toujours une validation manuelle",
+              "Deployment déploie automatiquement en prod après les tests ; delivery garde une validation manuelle avant la mise en production",
+              "Delivery ne concerne que les tests, deployment que la compilation",
+            ],
+            correctIndex: 2,
+            explanation:
+              "Le « continuous deployment » va jusqu'en production sans intervention humaine après les tests ; le « continuous delivery » prépare tout automatiquement mais garde une validation manuelle avant la mise en prod.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Anatomie d'un pipeline",
+        content:
+          "Un pipeline CI/CD s'organise en étapes (stages) successives, chacune devant réussir pour que la suivante se lance :\n\n" +
+          "1. **Build** : compiler/assembler le code (installer les dépendances, transpiler du TypeScript, construire une image Docker...).\n" +
+          "2. **Test** : lancer les tests automatisés (unitaires, puis souvent d'intégration). Si un test échoue, le pipeline s'arrête — le code cassé n'avance pas plus loin.\n" +
+          "3. **Deploy** : publier le résultat vers un environnement (staging d'abord, souvent, avant la production).\n\n" +
+          "Chaque étape produit ou consomme des **artefacts** (le paquet compilé, l'image Docker construite) qui passent d'une étape à l'autre sans être reconstruits inutilement. Un même artefact validé en staging est idéalement celui déployé en production — pas une reconstruction séparée qui pourrait introduire une différence.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que se passe-t-il typiquement si l'étape « test » d'un pipeline échoue ?",
+            choices: [
+              "Le pipeline continue quand même vers le déploiement",
+              "Le pipeline s'arrête, le code n'est pas déployé",
+              "Seuls les tests échoués sont ignorés silencieusement",
+              "Le pipeline redémarre automatiquement en boucle",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un échec de test arrête le pipeline — c'est tout l'intérêt : empêcher qu'un code cassé n'avance jusqu'au déploiement.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi préfère-t-on déployer le MÊME artefact validé en staging plutôt que d'en reconstruire un nouveau pour la production ?",
+            choices: [
+              "Pour économiser de l'espace disque uniquement",
+              "Parce que reconstruire pourrait produire un résultat légèrement différent de ce qui a été réellement testé",
+              "Ça n'a aucune importance en pratique",
+              "Parce que Docker l'exige techniquement",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Reconstruire séparément risquerait d'introduire une différence (version de dépendance, horodatage...) entre ce qui a été testé et ce qui est réellement déployé — on veut déployer exactement ce qui a été validé.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Infrastructure as Code et bonnes pratiques",
+        content:
+          "Automatiser le code (CI/CD) ne suffit pas si l'infrastructure qui l'héberge (serveurs, réseaux) est encore configurée à la main, cliquée dans une console — c'est là qu'intervient l'**Infrastructure as Code (IaC)**, avec des outils comme Terraform : décrire l'infrastructure voulue dans des fichiers versionnés, pas dans la mémoire de la personne qui l'a configurée.\n\n" +
+          "Quelques principes qui reviennent partout en DevOps :\n" +
+          "- **Idempotence** : relancer la même opération plusieurs fois doit produire le même résultat, sans effet de bord cumulé.\n" +
+          "- **Rollback** : pouvoir revenir rapidement à la version précédente si un déploiement pose problème, plutôt que de corriger en urgence en production.\n" +
+          "- **Environnements identiques** : staging doit ressembler le plus possible à la production, sinon « ça marchait en staging » ne veut plus dire grand-chose.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que signifie « idempotence » appliquée à un déploiement ?",
+            choices: [
+              "Le déploiement ne peut être lancé qu'une seule fois dans toute l'histoire du projet",
+              "Relancer plusieurs fois la même opération produit le même résultat final, sans effet cumulé",
+              "Le déploiement doit toujours prendre exactement le même temps",
+              "Chaque déploiement doit changer le nom du serveur",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Une opération idempotente donne le même résultat qu'on l'exécute une fois ou dix fois — essentiel pour pouvoir relancer un déploiement sans crainte après un échec partiel.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi une stratégie de rollback est-elle importante en DevOps ?",
+            choices: [
+              "Elle n'a aucune utilité si les tests sont bons",
+              "Elle permet de revenir rapidement à une version stable si un déploiement pose problème, plutôt que de corriger en urgence en production",
+              "Elle remplace complètement le besoin de tests",
+              "Elle ne concerne que les bases de données",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Même avec des tests solides, un problème peut apparaître seulement en production — un rollback rapide limite les dégâts le temps de diagnostiquer, plutôt que de tenter une correction en urgence sur le système en cours d'utilisation.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "prompt-engineering",
+    title: "Prompt Engineering",
+    description:
+      "Écrire des prompts efficaces pour obtenir de meilleures réponses d'un modèle de langage — et comprendre les limites à connaître avant de s'y fier.",
+    category: "AI",
+    skillKey: "prompt-engineering",
+    level: 2,
+    prerequisiteCourseKeys: ["ai-fundamentals"],
+    lessons: [
+      {
+        order: 1,
+        title: "Anatomie d'un bon prompt",
+        content:
+          "Un prompt efficace précise généralement quatre choses, explicitement plutôt que de les laisser deviner au modèle :\n\n" +
+          "1. **Le rôle** : qui le modèle doit incarner (« Tu es un relecteur de code senior... »).\n" +
+          "2. **Le contexte** : les informations nécessaires pour répondre correctement (le code concerné, la contrainte, le public visé).\n" +
+          "3. **L'instruction** : ce qu'on attend précisément, pas une question vague.\n" +
+          "4. **Le format** : comment la réponse doit être structurée (liste à puces, JSON, longueur maximale...).\n\n" +
+          "« Explique-moi Docker » est vague et laisse le modèle deviner le niveau attendu et la longueur voulue. « Explique Docker en 3 phrases à un développeur qui connaît déjà les machines virtuelles » est précis — la réponse sera plus utile du premier coup, sans aller-retour.",
+        xpReward: 20,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi préciser explicitement le format attendu dans un prompt ?",
+            choices: [
+              "Ça n'a aucun effet sur la réponse générée",
+              "Ça évite au modèle de deviner une structure et augmente les chances d'obtenir une réponse directement utilisable",
+              "C'est obligatoire techniquement, sinon le modèle refuse de répondre",
+              "Ça ralentit toujours la génération de la réponse",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Sans format précisé, le modèle choisit une structure par défaut qui peut ne pas correspondre à l'usage prévu — l'expliciter réduit les allers-retours.",
+          },
+          {
+            order: 2,
+            prompt: "Quel est le problème principal d'un prompt comme « explique-moi Docker » sans autre précision ?",
+            choices: [
+              "Le modèle ne connaît pas Docker",
+              "Il ne précise ni le niveau attendu, ni la longueur, ni le format — la réponse risque de ne pas correspondre au besoin réel",
+              "Docker est un sujet trop récent pour être expliqué",
+              "Il n'y a aucun problème, ce prompt est déjà optimal",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un prompt vague laisse le modèle deviner le contexte réel — plus on précise le niveau, le format et l'objectif, plus la première réponse a de chances d'être directement utile.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Techniques avancées",
+        content:
+          "Quelques techniques qui améliorent nettement la qualité des réponses sur des tâches complexes :\n\n" +
+          "- **Few-shot prompting** : donner 1 à quelques exemples du résultat attendu avant de poser la vraie question — le modèle imite le format/style montré plutôt que de le deviner.\n" +
+          "- **Chain-of-thought** : demander explicitement au modèle de raisonner étape par étape avant de donner sa réponse finale, particulièrement utile sur des problèmes logiques ou mathématiques où une réponse directe a plus de chances d'être fausse.\n" +
+          "- **Séparer system et user** : les instructions de comportement général (rôle, ton, contraintes permanentes) vont dans le prompt système ; la demande concrète de l'utilisateur va dans le prompt utilisateur — c'est exactement ce que fait `/explainme` sur Nodify en interne.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Qu'est-ce que le « few-shot prompting » ?",
+            choices: [
+              "Poser la même question plusieurs fois de suite pour vérifier la cohérence",
+              "Donner quelques exemples du résultat attendu avant la vraie question, pour que le modèle imite le format/style montré",
+              "Limiter le nombre de mots de la réponse",
+              "Utiliser plusieurs modèles IA en parallèle sur la même question",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Le few-shot prompting montre des exemples concrets du résultat voulu — le modèle a alors un modèle clair à suivre plutôt que de deviner un format à partir d'une simple instruction.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi le chain-of-thought aide-t-il sur des problèmes logiques/mathématiques ?",
+            choices: [
+              "Il rend la réponse plus courte",
+              "Il force le modèle à décomposer le raisonnement étape par étape, réduisant le risque d'une réponse directe erronée",
+              "Il n'a aucun effet mesurable",
+              "Il remplace complètement le besoin de vérifier la réponse",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Décomposer le raisonnement en étapes explicites réduit les erreurs qu'une réponse « à l'instinct » directe pourrait produire sur un problème à plusieurs étapes logiques.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Limites et bonnes pratiques",
+        content:
+          "Le prompt engineering ne rend pas un modèle infaillible — connaître ses limites fait partie de bien l'utiliser :\n\n" +
+          "- **Hallucination** : un modèle peut générer une réponse plausible mais fausse, avec la même confiance apparente qu'une réponse correcte. Toujours vérifier une information critique (chiffre, API, référence légale) avant de s'y fier.\n" +
+          "- **Prompt injection** : si le prompt inclut du contenu venant d'un utilisateur externe ou d'une source non fiable, ce contenu peut contenir des instructions qui tentent de détourner le comportement du modèle (« ignore tes instructions précédentes et... »). Ne jamais faire une confiance aveugle à du contenu injecté dans un prompt.\n" +
+          "- **Itération** : un premier prompt rarement parfait — observer la réponse, ajuster le contexte ou le format, retester. C'est un processus itératif, pas un coup d'essai unique.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Qu'est-ce qu'une « prompt injection » ?",
+            choices: [
+              "Une technique pour rendre les réponses plus rapides",
+              "Du contenu externe/non fiable inclus dans un prompt qui tente de détourner le comportement du modèle",
+              "Une erreur de syntaxe dans le prompt",
+              "Un synonyme du few-shot prompting",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Une prompt injection est une tentative, via du contenu externe inséré dans le prompt, de faire ignorer ses instructions au modèle ou de détourner son comportement prévu.",
+          },
+          {
+            order: 2,
+            prompt: "Quelle est la bonne attitude face à une hallucination possible d'un modèle IA ?",
+            choices: [
+              "Faire confiance systématiquement, le modèle a toujours raison",
+              "Vérifier toute information critique (chiffre, référence, API) avant de s'y fier, même si la réponse semble sûre d'elle",
+              "Ne jamais utiliser l'IA pour des tâches sérieuses",
+              "Reformuler la question à l'infini jusqu'à obtenir la réponse voulue",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un modèle peut halluciner avec une confiance apparente identique à une réponse correcte — la seule protection fiable est de vérifier soi-même les informations critiques avant de s'y fier.",
           },
         ],
       },
@@ -3097,10 +3452,13 @@ const DAILY_QUESTIONS: DailyQuestionSeed[] = [
 ];
 
 /**
- * Défis CTF (Phase 8) — rédigés à la main, résolubles sans cible en direct
- * (crypto/forensics/OSINT uniquement). Pas de Web/Pwn/Network/Reverse : ces
- * catégories nécessiteraient une vraie infrastructure de sandbox qu'on n'a
- * pas — les simuler serait fabriquer une fausse capacité.
+ * Défis CTF (Phase 8) — rédigés à la main, résolubles sans cible en direct.
+ * Catégorie WEB : analyse statique d'un artefact donné (en-têtes HTTP, cookie,
+ * JWT décodé, extrait de robots.txt) — jamais une vraie requête réseau ni une
+ * vraie application vulnérable à attaquer, ce qui nécessiterait une
+ * infrastructure de sandbox qu'on n'a pas. Toujours pas de Pwn/Network/
+ * Reverse : ces catégories nécessitent une vraie cible en direct — les
+ * simuler sans elle serait fabriquer une fausse capacité.
  *
  * `acceptedAnswers` : plusieurs formulations valides acceptées (comparaison
  * normalisée — minuscules, accents retirés, espaces superflus supprimés —
@@ -3163,6 +3521,58 @@ const CTF_CHALLENGES: CtfChallengeSeed[] = [
     hint: "C'est l'acronyme de « Indicator Of Compromise ».",
     points: 100,
     acceptedAnswers: ["ioc"],
+  },
+  {
+    key: "web-missing-header",
+    category: "WEB",
+    difficulty: 1,
+    title: "En-tête manquant",
+    description:
+      "Voici les en-têtes de réponse HTTP d'un site qui affiche du contenu généré par les utilisateurs dans des iframes ailleurs sur le web :\n\n" +
+      "```\nHTTP/1.1 200 OK\nContent-Type: text/html\nSet-Cookie: session=abc123\n```\n\n" +
+      "Un en-tête de sécurité manque, qui permettrait d'empêcher ce site d'être chargé dans une iframe malveillante sur un autre domaine (attaque de clickjacking). Quel est le nom de cet en-tête (en anglais, avec les tirets) ?",
+    hint: "Il existe aussi une directive CSP plus moderne (`frame-ancestors`) qui fait la même chose, mais l'en-tête historique dédié à ça a un nom en 3 mots.",
+    points: 50,
+    acceptedAnswers: ["x-frame-options", "xframeoptions"],
+  },
+  {
+    key: "web-cookie-flag",
+    category: "WEB",
+    difficulty: 2,
+    title: "Cookie mal configuré",
+    description:
+      "Un site définit son cookie de session ainsi :\n\n" +
+      "`Set-Cookie: session=abc123; Path=/; Secure`\n\n" +
+      "Un attribut de sécurité important manque : sans lui, un script JavaScript malveillant injecté sur la page (via une faille XSS) pourrait lire ce cookie de session directement. Quel est cet attribut (un seul mot, en anglais) ?",
+    hint: "Cet attribut interdit précisément l'accès au cookie depuis JavaScript (`document.cookie`).",
+    points: 75,
+    acceptedAnswers: ["httponly", "http only", "http-only"],
+  },
+  {
+    key: "web-robots-disclosure",
+    category: "WEB",
+    difficulty: 1,
+    title: "Indiscrétion involontaire",
+    description:
+      "Le fichier `robots.txt` public d'un site contient :\n\n" +
+      "```\nUser-agent: *\nDisallow: /admin-backup-2024/\nDisallow: /images/\n```\n\n" +
+      "`robots.txt` est censé décourager les moteurs de recherche d'indexer certains chemins — mais il est public et lisible par n'importe qui, y compris un attaquant. Quel chemin de la liste ci-dessus révèle involontairement l'existence probable d'une sauvegarde sensible (réponds juste par ce chemin, sans le slash de fin) ?",
+    hint: "Un des deux chemins a un nom bien plus intéressant pour un attaquant que l'autre.",
+    points: 50,
+    acceptedAnswers: ["admin-backup-2024", "/admin-backup-2024", "/admin-backup-2024/", "admin-backup-2024/"],
+  },
+  {
+    key: "web-jwt-none-alg",
+    category: "WEB",
+    difficulty: 3,
+    title: "Signature qui n'en est pas une",
+    description:
+      "L'en-tête décodé d'un JWT intercepté est :\n\n" +
+      "`{\"alg\": \"none\", \"typ\": \"JWT\"}`\n\n" +
+      "Cette valeur de l'algorithme de signature est historiquement dangereuse : un serveur mal implémenté peut accepter un token avec cette valeur sans jamais vérifier de signature, permettant à quiconque de forger un token arbitraire. Quelle est cette valeur d'algorithme dangereuse (un seul mot, en anglais) ?",
+    hint: "C'est littéralement le nom anglais de l'absence de quelque chose.",
+    points: 100,
+    acceptedAnswers: ["none"],
   },
 ];
 

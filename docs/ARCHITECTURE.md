@@ -53,20 +53,22 @@ Classement global par XP (profil Nodify global, pas par guild).
   (tolère les fautes de frappe via distance de Levenshtein, sans IA)
 - Bouton **💡 Expliquer** sur une fiche concept : bascule explication
   débutant ⇄ avancée
-- **47 concepts** rédigés à la main (JWT, Promise, API, DNS, XSS, Docker,
+- **53 concepts** rédigés à la main (JWT, Promise, API, DNS, XSS, Docker,
   RAG, HTTP, Git, SQL Injection, Event Loop, REST, Closure, async/await,
   GraphQL, ORM, npm, CI/CD, WebSocket, JSON, Regex, MFA, CSRF, Zero Trust,
   Ransomware, DDoS, VPN, CDN, TLS/SSL, LLM, Prompt Engineering, Fine-tuning,
-  Hallucination, Kubernetes, Serverless, et bien d'autres), liés entre eux
+  Hallucination, Kubernetes, Serverless, Rust, WebAssembly, gRPC, Terraform/
+  IaC, OAuth 2.0, Content Security Policy, et bien d'autres), liés entre eux
   (concepts liés / prérequis)
 
 ## `/learn` — Nodify Academy
 
 - Liste les cours disponibles avec le statut de progression de l'utilisateur
-- **9 cours**, un par domaine minimum : Introduction à JavaScript, Python,
+- **11 cours**, un par domaine minimum : Introduction à JavaScript, Python,
   TypeScript pour devs JS (DEVELOPMENT) ; Cybersecurity Fundamentals, Red
   Team Fundamentals (CYBERSECURITY) ; Networking Fundamentals (NETWORKING) ;
-  Linux Fundamentals (SYSTEMS) ; AI Fundamentals (AI) ; Docker Basics (CLOUD)
+  Linux Fundamentals (SYSTEMS) ; AI Fundamentals, Prompt Engineering (AI) ;
+  Docker Basics, DevOps & CI/CD Fundamentals (CLOUD)
 - Chaque leçon : contenu pédagogique → quiz (boutons Discord, une question à
   la fois) → validation si ≥ 50% de bonnes réponses
 - **Échec** → la progression n'avance pas, bouton "Recommencer la leçon"
@@ -138,17 +140,20 @@ aucune conséquence.
   identifie l'indicateur de compromission (IOC) parmi 5 lignes plausibles
 - **`ctf list|challenge|leaderboard`** — défis autonomes rédigés à la main
   (crypto : César/Base64 ; OSINT/Forensics : repérer une fuite d'info, un
-  indicateur suspect), réponses comparées après normalisation
-  (accents/casse/espaces). Points crédités une seule fois par défi,
-  classement séparé de l'XP Academy (sémantiques différentes)
+  indicateur suspect ; **web** : analyse statique d'un artefact donné — en-
+  têtes HTTP, cookie, JWT décodé, extrait de `robots.txt` — jamais une vraie
+  requête réseau ni une vraie application à attaquer), réponses comparées
+  après normalisation (accents/casse/espaces). Points crédités une seule
+  fois par défi, classement séparé de l'XP Academy (sémantiques différentes)
 - **Red Team Fundamentals** (cours Academy) — méthodologie
   recon/énumération/exploitation/privesc/reporting, uniquement théorique,
   avec rappel systématique du cadre légal (autorisation écrite requise)
 
-**Volontairement pas construit** : CTF Web/Pwn/Network/Reverse et Labs avec
+**Volontairement pas construit** : CTF Pwn/Network/Reverse et Labs avec
 cibles en direct — nécessitent une vraie infrastructure de sandbox/VM
 isolée qui n'existe pas. Les simuler sans vraie infra serait fabriquer une
-fausse capacité.
+fausse capacité (le CTF Web reste volontairement de l'analyse statique,
+sans jamais prétendre attaquer une vraie cible en direct).
 
 ## Question du jour (`/daily` + post automatique)
 

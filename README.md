@@ -21,7 +21,7 @@ un bot de modération : il est entièrement dédié à l'apprentissage.
 | Domaine | Ce que ça fait |
 |---|---|
 | 🎓 **Academy** | Cours interactifs (JS, Python, TypeScript, Docker...) avec quiz, XP réelle et progression adaptative |
-| 🛡️ **Cyber Academy** | Cybersecurity Fundamentals, Red Team, Blue Team, CTF (crypto/OSINT/forensics), Trust Nothing Simulation |
+| 🛡️ **Cyber Academy** | Cybersecurity Fundamentals, Red Team, Blue Team, CTF (crypto/OSINT/forensics/web statique), Trust Nothing Simulation |
 | 📖 **Knowledge Engine** | Dictionnaire technique avec recherche floue (tolère les fautes de frappe) |
 | 🤖 **IA** | ExplainMe, review de code, threat modeling, RAG documentation, learning planner |
 | 🏆 **Gamification** | XP, niveaux, rôles Discord dynamiques, streaks, achievements, leaderboards |
@@ -188,7 +188,7 @@ liste toutes les commandes disponibles groupées par domaine.
 - `/cyber learn` — cours de cybersécurité
 - `/cyber simulation` — Trust Nothing Simulation (phishing, 100% simulé)
 - `/cyber blueteam` — analyse de logs, repérer un IOC
-- `/cyber ctf list|challenge|leaderboard` — défis crypto/OSINT/forensics
+- `/cyber ctf list|challenge|leaderboard` — défis crypto/OSINT/forensics/web (statique)
 </details>
 
 <details>
@@ -222,10 +222,10 @@ liste toutes les commandes disponibles groupées par domaine.
 
 | Catalogue | Volume |
 |---|---|
-| Concepts du dictionnaire | 47 |
+| Concepts du dictionnaire | 53 |
 | Questions du jour | 158 |
-| Cours Academy (tous domaines couverts) | 9 |
-| Défis CTF | 4 |
+| Cours Academy (tous domaines couverts) | 11 |
+| Défis CTF (crypto/OSINT/forensics/web) | 8 |
 | Sources Hacktualités (RSS réelles) | 10 |
 | Extraits de documentation (RAG) | 10 |
 
@@ -235,17 +235,18 @@ liste toutes les commandes disponibles groupées par domaine.
 - ✅ Knowledge Engine, Academy, AIService (Anthropic/Groq)
 - ✅ Dev Tools, Cyber Academy (CTF, Blue/Red Team), Hacktualités
 - ✅ Sync de rôles Discord, prérequis entre cours, `/plan`, `/stats`, `/settings`
-- ✅ Contenu étoffé : dictionnaire (47), questions du jour (158), Academy sur
-  les 6 domaines, Hacktualités diversifiées (10 sources, sélection équitable)
+- ✅ Contenu étoffé : dictionnaire (53), questions du jour (158), Academy sur
+  les 6 domaines (11 cours), Hacktualités diversifiées (10 sources, sélection
+  équitable), CTF Web statique (analyse d'artefacts, sans vraie cible réseau)
 - ✅ AI Credit System & AI Control Center : crédits non-monétaires, réservation/
   remboursement atomique, Reward Engine générique, provider Gemini, statut IA
   calculé + panneau persistant, anti-abus configurable, audit admin
 - ✅ Multi-provider avec coûts par provider, budgets IA par serveur, annulation
   réelle des appels IA au timeout, alertes AI Incident, bonus événementiel et
   statut supporter, audit log enfin consultable depuis Discord (`/ai audit-log`)
-- ⏳ CTF Web/Pwn/Network/Reverse et Labs avec cibles en direct — nécessitent
-  une vraie infrastructure de sandbox/VM isolée, volontairement pas simulés
-  sans elle
+- ⏳ CTF Pwn/Network/Reverse et Labs avec cibles en direct — nécessitent une
+  vraie infrastructure de sandbox/VM isolée, volontairement pas simulés sans
+  elle (le CTF Web reste statique, sans vraie application à attaquer)
 
 ## 🧪 Qualité
 

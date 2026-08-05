@@ -41,7 +41,7 @@ const command: Command = {
     .addSubcommandGroup((group) =>
       group
         .setName("ctf")
-        .setDescription("Défis CTF Nodify (crypto, forensics, OSINT).")
+        .setDescription("Défis CTF Nodify (crypto, forensics, OSINT, web).")
         .addSubcommand((sub) => sub.setName("list").setDescription("Liste les défis CTF disponibles."))
         .addSubcommand((sub) =>
           sub
