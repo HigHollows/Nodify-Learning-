@@ -88,12 +88,13 @@ Voir les phases dans le prompt fondateur du projet. Statut actuel :
 - ✅ **Phase 3** — User Profile global, Skills, Streak, Achievements
 - ✅ **Phase 4** — Knowledge Engine : `/dictionary` (+ alias `/dict` `/term` `/define`)
 - ✅ **Phase 5** — Academy : `/learn`, cours/leçons/quiz, XP réelle, progression adaptative
-- ✅ **Phase 6 (partielle)** — AIService/ModelRouter + `/explainme`
+- ✅ **Phase 6** — AIService/ModelRouter + `/explainme` + RAG documentation (`/docs`)
+- ✅ **Phase 7** — `/securityreview`, `/codereview`, `/debugme` (Debug Coach)
 - ✅ **Phase 8 (partielle)** — Cyber Academy (`/cyber learn`) + Trust Nothing Simulation
 
-Prochaine étape : RAG documentation (`/docs`), `/securityreview`, ou CTF/Labs
-(ces derniers nécessitent une vraie infrastructure de sandbox — pas encore
-construite volontairement, voir section Cyber Academy ci-dessous).
+Prochaine étape : CTF/Labs/Red Team/Blue Team restent volontairement pas
+construits — nécessitent une vraie infrastructure de sandbox/VM isolée qui
+n'existe pas encore (voir section Cyber Academy ci-dessous).
 
 ### AIService (`src/ai/`)
 
@@ -101,8 +102,44 @@ construite volontairement, voir section Cyber Academy ci-dessous).
   la config — `StubProvider` (par défaut, aucun appel réseau, réponses
   clairement labellées "mode démonstration") ou `AnthropicProvider` (réel,
   dès que `ANTHROPIC_API_KEY` est renseignée dans `.env`)
+- **Contrat unique** : `AIProvider.complete({system, user})` — chaque feature
+  (ExplainMe, Security/Code Review, Debug Coach, Docs RAG) construit son
+  propre prompt dans `aiService.ts` ; ajouter une feature n'oblige jamais à
+  retoucher les providers
 - Aucun appel LLM dispersé dans les commandes : tout passe par
   `src/ai/aiService.ts`
+
+### `/docs` — Documentation RAG
+
+- Corpus de 10 extraits rédigés à la main (Node.js, Discord.js, PostgreSQL,
+  OWASP), retrieval par **mots-clés tolérants aux fautes** (Levenshtein) —
+  pas d'embeddings/recherche vectorielle : Anthropic n'expose pas d'API
+  d'embeddings publique. Si un provider d'embeddings est ajouté un jour, seul
+  `findRelevantChunks` (src/documentation/docsService.ts) change
+- Avec IA active : synthétise une réponse à partir des extraits trouvés,
+  sans jamais inventer si l'info n'y est pas. En mode stub : affiche
+  directement les extraits bruts (pas d'appel IA inutile)
+
+### `/securityreview`, `/codereview`, `/debugme` (Phase 7)
+
+Même schéma UX : la commande ouvre directement un **Modal** Discord (paste
+de code, pas d'option slash — un extrait de code ne tient pas dans 100
+caractères) :
+
+- **`/securityreview`** — analyse de sécurité groupée par sévérité
+  (🔴 Critique → 🔵 Faible), avec un bouton **🔧 Voir une correction
+  suggérée** qui redemande à l'IA une version corrigée
+- **`/codereview`** — relecture qualité (lisibilité, nommage, duplication) —
+  volontairement **pas** de sécurité, c'est le rôle de `/securityreview`
+- **`/debugme`** — Debug Coach façon tuteur socratique : l'IA pose des
+  questions et donne des indices, **jamais** la solution directe. Un bouton
+  **💡 Encore un indice** permet une seule escalade vers un indice plus
+  précis (toujours pas la solution)
+
+Le code/contexte à réutiliser sur les boutons de suivi est trop long pour
+tenir dans un customId Discord (contrairement au quiz Academy) — il est
+gardé en mémoire process avec une expiration de 10 minutes, pas en base :
+le perdre à un redémarrage n'a aucune conséquence.
 
 ### `/explainme`
 

@@ -39,6 +39,18 @@ import {
   TRUST_START_CUSTOM_ID,
   TRUST_VERIFY_CUSTOM_ID,
 } from "../cybersecurity/trustSimulationView.js";
+import {
+  CODE_REVIEW_MODAL_ID,
+  DEBUGME_MODAL_ID,
+  SECURITY_REVIEW_MODAL_ID,
+} from "../commands/devtools/devtoolsView.js";
+import {
+  handleCodeReviewSubmit,
+  handleDebugHintButton,
+  handleDebugSubmit,
+  handleSecurityFixButton,
+  handleSecurityReviewSubmit,
+} from "../interactions/devtoolsInteractions.js";
 import { recordActivity } from "../services/userService.js";
 import type { Event } from "../types/event.js";
 import { AppError } from "../utils/errors.js";
@@ -136,6 +148,22 @@ const event: Event<"interactionCreate"> = {
         return;
       }
 
+      if (interaction.customId.startsWith("devtools:fix:")) {
+        const reviewId = interaction.customId.slice("devtools:fix:".length);
+        await runWithGuards(interaction, interaction.customId, () =>
+          handleSecurityFixButton(interaction, reviewId),
+        );
+        return;
+      }
+
+      if (interaction.customId.startsWith("devtools:debughint:")) {
+        const debugId = interaction.customId.slice("devtools:debughint:".length);
+        await runWithGuards(interaction, interaction.customId, () =>
+          handleDebugHintButton(interaction, debugId),
+        );
+        return;
+      }
+
       const academyAction = parseAcademyCustomId(interaction.customId);
       if (academyAction) {
         await runWithGuards(interaction, interaction.customId, async () => {
@@ -183,6 +211,27 @@ const event: Event<"interactionCreate"> = {
       if (interaction.customId === DICTIONARY_SEARCH_MODAL_ID) {
         await runWithGuards(interaction, interaction.customId, () =>
           handleSearchModalSubmit(interaction),
+        );
+        return;
+      }
+
+      if (interaction.customId === SECURITY_REVIEW_MODAL_ID) {
+        await runWithGuards(interaction, interaction.customId, () =>
+          handleSecurityReviewSubmit(interaction),
+        );
+        return;
+      }
+
+      if (interaction.customId === CODE_REVIEW_MODAL_ID) {
+        await runWithGuards(interaction, interaction.customId, () =>
+          handleCodeReviewSubmit(interaction),
+        );
+        return;
+      }
+
+      if (interaction.customId === DEBUGME_MODAL_ID) {
+        await runWithGuards(interaction, interaction.customId, () =>
+          handleDebugSubmit(interaction),
         );
         return;
       }

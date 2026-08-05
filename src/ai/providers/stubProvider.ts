@@ -1,4 +1,4 @@
-import type { AIProvider, ExplainRequest } from "../types.js";
+import type { AIProvider, CompletionRequest } from "../types.js";
 
 /**
  * Provider par défaut, actif tant qu'aucune clé API IA n'est configurée.
@@ -9,18 +9,14 @@ import type { AIProvider, ExplainRequest } from "../types.js";
 export class StubProvider implements AIProvider {
   readonly name = "stub";
 
-  async explainConcept(request: ExplainRequest): Promise<string> {
-    const lines = [
+  async complete(request: CompletionRequest): Promise<string> {
+    const preview = request.user.length > 200 ? `${request.user.slice(0, 200)}...` : request.user;
+
+    return [
       "*(Mode démonstration — aucune clé API IA n'est configurée sur ce bot)*",
       "",
-      `Une fois \`ANTHROPIC_API_KEY\` renseignée dans le \`.env\`, Nodify expliquera ` +
-        `« ${request.term} » avec une vraie IA, adaptée à ton niveau (${request.levelHint}).`,
-    ];
-
-    if (request.context) {
-      lines.push("", "Ce que le dictionnaire Nodify en dit déjà :", `> ${request.context}`);
-    }
-
-    return lines.join("\n");
+      "Une fois `ANTHROPIC_API_KEY` renseignée dans le `.env`, Nodify répondrait ici à :",
+      `> ${preview}`,
+    ].join("\n");
   }
 }

@@ -292,3 +292,24 @@ model UserLessonCompletion {
   @@unique([userId, lessonId])
   @@map("user_lesson_completions")
 }
+
+/// Documentation RAG (Phase 6) — un chunk = un extrait ciblé et autonome
+/// d'une documentation technique, rédigé à la main (pas de contenu copié
+/// depuis un site tiers).
+///
+/// Retrieval par mots-clés (pas d'embeddings) : Anthropic n'expose pas
+/// d'API d'embeddings publique, donc pas de vraie recherche vectorielle
+/// pour l'instant — voir src/documentation/docsService.ts pour le détail
+/// de ce choix et comment migrer si un provider d'embeddings est ajouté.
+model DocChunk {
+  id      String @id @default(cuid())
+  source  String // ex: "Node.js", "Discord.js", "PostgreSQL", "OWASP"
+  title   String
+  url     String
+  content String
+
+  createdAt DateTime @default(now())
+
+  @@unique([source, title])
+  @@map("doc_chunks")
+}

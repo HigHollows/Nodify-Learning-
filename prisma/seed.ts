@@ -541,6 +541,91 @@ const COURSES: CourseSeed[] = [
   },
 ];
 
+/**
+ * Corpus documentaire (Phase 6) — extraits rédigés à la main, pas copiés
+ * depuis les sites sources. Retrieval par mots-clés (voir docsService.ts),
+ * pas d'embeddings (Anthropic n'expose pas d'API d'embeddings publique).
+ */
+interface DocChunkSeed {
+  source: string;
+  title: string;
+  url: string;
+  content: string;
+}
+
+const DOC_CHUNKS: DocChunkSeed[] = [
+  {
+    source: "Node.js",
+    title: "require vs import",
+    url: "https://nodejs.org/api/esm.html",
+    content:
+      "require() (CommonJS) est synchrone et historique ; import (ESM, ECMAScript Modules) est la syntaxe standard moderne, asynchrone au chargement. Pour utiliser import/export dans un projet Node, ajoute `\"type\": \"module\"` dans package.json (ou utilise l'extension .mjs). Mélanger les deux dans le même fichier ne fonctionne pas : un module ESM ne peut pas utiliser require() directement (il existe des contournements comme createRequire, mais mieux vaut rester cohérent sur un seul système par projet).",
+  },
+  {
+    source: "Node.js",
+    title: "Gérer les erreurs asynchrones non catchées",
+    url: "https://nodejs.org/api/process.html#event-unhandledrejection",
+    content:
+      "Une Promise rejetée sans .catch() ni try/catch autour d'un await déclenche l'event 'unhandledRejection' sur process, plutôt qu'un try/catch classique qui ne l'attrape pas. En production, il faut écouter cet event pour logger l'erreur (voir src/index.ts de Nodify) — sans ça, l'erreur est silencieuse ou fait planter le process selon la version de Node.",
+  },
+  {
+    source: "Node.js",
+    title: "Streams pour les gros fichiers",
+    url: "https://nodejs.org/api/stream.html",
+    content:
+      "fs.readFileSync() charge un fichier entier en mémoire avant de continuer — problématique sur un gros fichier (RAM, latence). Un stream (fs.createReadStream) traite les données par petits morceaux (chunks) au fur et à mesure qu'ils arrivent, avec un mécanisme de backpressure qui ralentit automatiquement la lecture si le consommateur est plus lent que la source. À privilégier pour tout fichier dont la taille n'est pas garantie petite.",
+  },
+  {
+    source: "Discord.js",
+    title: "Quels Gateway Intents activer",
+    url: "https://discordjs.guide/popular-topics/intents.html",
+    content:
+      "Les Gateway Intents déterminent quels events Discord envoie à ton bot. N'active que ceux dont tu as réellement besoin (ex: Nodify n'active que GatewayIntentBits.Guilds en Phase 1) : moins d'intents = moins de trafic réseau et de charge mémoire côté client. Certains intents sont \"privilégiés\" (ex: MessageContent, GuildMembers) et doivent être activés manuellement dans le Discord Developer Portal en plus d'être déclarés dans le code, sinon la connexion échoue.",
+  },
+  {
+    source: "Discord.js",
+    title: "Différer une réponse longue (deferReply)",
+    url: "https://discordjs.guide/slash-commands/response-methods.html",
+    content:
+      "Discord invalide une interaction si elle ne reçoit pas de réponse dans les 3 secondes. Si une commande doit faire un traitement plus long (appel IA, requête DB lourde...), il faut appeler interaction.deferReply() immédiatement (ça affiche \"Nodify réfléchit...\" et donne 15 minutes de plus), puis interaction.editReply() une fois le résultat prêt — c'est ce que font /explainme et /securityreview dans Nodify.",
+  },
+  {
+    source: "Discord.js",
+    title: "Limites des Embeds Discord",
+    url: "https://discordjs.guide/popular-topics/embeds.html",
+    content:
+      "Un embed Discord a des limites strictes : 256 caractères pour le titre, 4096 pour la description, 25 fields maximum, 1024 caractères par valeur de field, et 6000 caractères au total pour tout l'embed cumulé. Dépasser une limite fait échouer l'envoi avec une erreur — il faut tronquer ou paginer le contenu généré dynamiquement (ex: une réponse IA très longue) avant de construire l'embed.",
+  },
+  {
+    source: "PostgreSQL",
+    title: "Quand ajouter un index",
+    url: "https://www.postgresql.org/docs/current/indexes.html",
+    content:
+      "Un index (B-tree par défaut) accélère les recherches sur une colonne utilisée dans une clause WHERE, JOIN ou ORDER BY, en évitant un scan complet de la table. Mais un index n'est pas gratuit : chaque écriture (INSERT/UPDATE/DELETE) doit aussi mettre à jour tous les index de la table, donc indexer une colonne rarement filtrée ralentit les écritures pour un gain de lecture qui n'arrivera jamais. Prisma crée automatiquement un index sur les clés uniques et les clés étrangères.",
+  },
+  {
+    source: "PostgreSQL",
+    title: "Lire un plan avec EXPLAIN ANALYZE",
+    url: "https://www.postgresql.org/docs/current/using-explain.html",
+    content:
+      "EXPLAIN ANALYZE <requête> exécute réellement la requête et affiche le plan choisi par l'optimiseur ainsi que le temps réel de chaque étape. Un \"Seq Scan\" (scan séquentiel) sur une grosse table dans les lignes coûteuses du plan indique souvent qu'un index manquant permettrait un \"Index Scan\" bien plus rapide. C'est l'outil de diagnostic de référence avant d'ajouter un index au hasard.",
+  },
+  {
+    source: "OWASP",
+    title: "Qu'est-ce que le Top 10",
+    url: "https://owasp.org/www-project-top-ten/",
+    content:
+      "L'OWASP Top 10 liste les 10 catégories de risques de sécurité web jugées les plus critiques par la communauté, mise à jour tous les quelques années (dernière édition stable : 2021). Ce n'est ni une checklist exhaustive ni une certification — c'est un point de départ pour prioriser les risques les plus courants et les plus impactants en premier, pas une garantie de sécurité totale si tous les points sont cochés.",
+  },
+  {
+    source: "OWASP",
+    title: "Broken Access Control (A01:2021)",
+    url: "https://owasp.org/Top10/A01_2021-Broken_Access_Control/",
+    content:
+      "Broken Access Control est la catégorie n°1 du Top 10 2021 : un utilisateur peut accéder à des ressources ou actions au-delà de ses permissions prévues. Exemple classique : IDOR (Insecure Direct Object Reference) — changer l'ID dans /api/orders/1234 en /api/orders/1235 et accéder à la commande de quelqu'un d'autre parce que le serveur ne revérifie pas que la ressource appartient bien à l'utilisateur authentifié. La défense fiable est de toujours revérifier les permissions côté serveur à chaque requête, jamais seulement côté client.",
+  },
+];
+
 async function main() {
   for (const skill of SKILLS) {
     await prisma.skill.upsert({
@@ -613,6 +698,15 @@ async function main() {
     }
   }
   console.log(`✅ ${COURSES.length} cours synchronisé(s)`);
+
+  for (const chunk of DOC_CHUNKS) {
+    await prisma.docChunk.upsert({
+      where: { source_title: { source: chunk.source, title: chunk.title } },
+      create: chunk,
+      update: chunk,
+    });
+  }
+  console.log(`✅ ${DOC_CHUNKS.length} extrait(s) de documentation synchronisé(s)`);
 }
 
 main()
