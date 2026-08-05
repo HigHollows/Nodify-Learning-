@@ -197,12 +197,25 @@ liste toutes les commandes disponibles groupées par domaine.
 - `/stats` — statistiques globales
 </details>
 
+## 📊 Contenu actuel
+
+| Catalogue | Volume |
+|---|---|
+| Concepts du dictionnaire | 47 |
+| Questions du jour | 158 |
+| Cours Academy (tous domaines couverts) | 9 |
+| Défis CTF | 4 |
+| Sources Hacktualités (RSS réelles) | 10 |
+| Extraits de documentation (RAG) | 10 |
+
 ## 🗺️ Roadmap
 
 - ✅ Fondations, `/setup`, profil global, gamification
 - ✅ Knowledge Engine, Academy, AIService (Anthropic/Groq)
 - ✅ Dev Tools, Cyber Academy (CTF, Blue/Red Team), Hacktualités
 - ✅ Sync de rôles Discord, prérequis entre cours, `/plan`, `/stats`, `/settings`
+- ✅ Contenu étoffé : dictionnaire (47), questions du jour (158), Academy sur
+  les 6 domaines, Hacktualités diversifiées (10 sources, sélection équitable)
 - ⏳ CTF Web/Pwn/Network/Reverse et Labs avec cibles en direct — nécessitent
   une vraie infrastructure de sandbox/VM isolée, volontairement pas simulés
   sans elle

@@ -53,13 +53,20 @@ Classement global par XP (profil Nodify global, pas par guild).
   (tolère les fautes de frappe via distance de Levenshtein, sans IA)
 - Bouton **💡 Expliquer** sur une fiche concept : bascule explication
   débutant ⇄ avancée
-- 12 concepts rédigés à la main pour démarrer (JWT, Promise, API, DNS, XSS,
-  Docker, RAG, HTTP, Git, SQL Injection, Event Loop, REST), liés entre eux
+- **47 concepts** rédigés à la main (JWT, Promise, API, DNS, XSS, Docker,
+  RAG, HTTP, Git, SQL Injection, Event Loop, REST, Closure, async/await,
+  GraphQL, ORM, npm, CI/CD, WebSocket, JSON, Regex, MFA, CSRF, Zero Trust,
+  Ransomware, DDoS, VPN, CDN, TLS/SSL, LLM, Prompt Engineering, Fine-tuning,
+  Hallucination, Kubernetes, Serverless, et bien d'autres), liés entre eux
   (concepts liés / prérequis)
 
 ## `/learn` — Nodify Academy
 
 - Liste les cours disponibles avec le statut de progression de l'utilisateur
+- **9 cours**, un par domaine minimum : Introduction à JavaScript, Python,
+  TypeScript pour devs JS (DEVELOPMENT) ; Cybersecurity Fundamentals, Red
+  Team Fundamentals (CYBERSECURITY) ; Networking Fundamentals (NETWORKING) ;
+  Linux Fundamentals (SYSTEMS) ; AI Fundamentals (AI) ; Docker Basics (CLOUD)
 - Chaque leçon : contenu pédagogique → quiz (boutons Discord, une question à
   la fois) → validation si ≥ 50% de bonnes réponses
 - **Échec** → la progression n'avance pas, bouton "Recommencer la leçon"
@@ -145,9 +152,11 @@ fausse capacité.
 
 ## Question du jour (`/daily` + post automatique)
 
-- Catalogue de questions rédigées à la main, sélection **déterministe** par
-  jour UTC (même question pour tout le monde, pas de tirage aléatoire qui
-  désynchroniserait `/daily` et le post automatique)
+- **158 questions** rédigées à la main, réparties sur les 6 domaines
+  (~25-28 par catégorie), sélection **déterministe** par jour UTC (même
+  question pour tout le monde, pas de tirage aléatoire qui désynchroniserait
+  `/daily` et le post automatique — rotation par jour de l'année dans le
+  catalogue)
 - Postée automatiquement dans le salon hub de chaque guild qui l'a activée,
   vérifié toutes les 15 minutes — idempotent, ne reposte jamais deux fois
   le même jour
@@ -157,9 +166,19 @@ fausse capacité.
 
 ## Hacktualités (`/news` + post automatique)
 
-- Vrais flux RSS de sources officielles uniquement (Node.js, GitHub,
-  Cloudflare — liste dans `src/community/newsService.ts`, facile à étendre).
+- **10 flux RSS** de sources officielles uniquement (Node.js, GitHub,
+  Cloudflare, Python Insider, Rust Blog, TypeScript/Microsoft, Docker,
+  Kubernetes, GitHub Security Lab, PostgreSQL — liste dans
+  `src/community/newsService.ts`, toutes vérifiées réellement avant ajout).
   **Jamais** d'actu inventée ou résumée par IA sans lien vers l'article original
+- **Sélection équitable (round-robin) entre sources** : un flux qui publie
+  plus souvent que les autres (typiquement un blog très actif) ne
+  monopolise plus toutes les places à chaque vérification — la sélection
+  alterne entre sources plutôt que de prendre les N premiers articles
+  trouvés dans l'ordre. Testé (`newsService.test.ts`) et vérifié en
+  conditions réelles (6 sources différentes représentées sur 6 articles postés)
+- Récupération des flux en parallèle (`Promise.allSettled`), avec timeout
+  par flux (8s) : un flux lent ou en panne ne bloque plus les autres
 - Vérifié toutes les 30 minutes. Au tout premier démarrage, le backlog
   existant des flux est marqué comme "déjà vu" **sans être posté** — sinon
   le premier lancement inonderait le salon hub avec des dizaines d'articles
