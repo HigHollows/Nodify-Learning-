@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from "discord.js";
 import { getTodaysQuestion, toDisplay } from "../../community/dailyQuestionService.js";
 import { buildDailyQuestionPost } from "../../community/dailyQuestionView.js";
+import { assertModuleEnabled } from "../../setup/guildSettingsService.js";
 import type { Command } from "../../types/command.js";
 
 /**
@@ -15,6 +16,8 @@ const command: Command = {
     .setDescription("Affiche la question du jour Nodify."),
 
   async execute(interaction) {
+    await assertModuleEnabled(interaction.guildId, "dailyQuestion");
+
     const question = await getTodaysQuestion();
     await interaction.reply(buildDailyQuestionPost(toDisplay(question)));
   },

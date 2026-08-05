@@ -1,6 +1,7 @@
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { generateLearningPlan, getActiveProviderName } from "../../ai/aiService.js";
 import { listCourseSummaries } from "../../education/academyService.js";
+import { assertModuleEnabled } from "../../setup/guildSettingsService.js";
 import type { Command } from "../../types/command.js";
 
 /**
@@ -17,10 +18,13 @@ const command: Command = {
       option
         .setName("objectif")
         .setDescription("Ton objectif (ex: devenir développeur backend Node.js)")
-        .setRequired(true),
+        .setRequired(true)
+        .setMaxLength(200),
     ),
 
   async execute(interaction) {
+    await assertModuleEnabled(interaction.guildId, "academy");
+
     const goal = interaction.options.getString("objectif", true);
     await interaction.deferReply();
 

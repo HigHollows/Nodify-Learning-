@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from "discord.js";
 import { listCourseSummaries, startOrResumeCourse } from "../../education/academyService.js";
+import { assertModuleEnabled } from "../../setup/guildSettingsService.js";
 import type { Command } from "../../types/command.js";
 import { AppError } from "../../utils/errors.js";
 import {
@@ -21,6 +22,8 @@ const command: Command = {
     ),
 
   async execute(interaction) {
+    await assertModuleEnabled(interaction.guildId, "academy");
+
     const courseKey = interaction.options.getString("cours");
 
     if (!courseKey) {

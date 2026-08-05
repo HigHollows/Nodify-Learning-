@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from "discord.js";
-import type { Command } from "../../types/command.js";
 import { buildThreatModelModal } from "../../cybersecurity/threatModelView.js";
+import { assertModuleEnabled } from "../../setup/guildSettingsService.js";
+import type { Command } from "../../types/command.js";
 
 const command: Command = {
   data: new SlashCommandBuilder()
@@ -10,6 +11,7 @@ const command: Command = {
     ),
 
   async execute(interaction) {
+    await assertModuleEnabled(interaction.guildId, "cyber");
     await interaction.showModal(buildThreatModelModal());
   },
 };

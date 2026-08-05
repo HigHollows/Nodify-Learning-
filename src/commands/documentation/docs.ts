@@ -10,7 +10,8 @@ const command: Command = {
       option
         .setName("question")
         .setDescription("Ta question (ex: quand ajouter un index, comment différer une réponse...)")
-        .setRequired(true),
+        .setRequired(true)
+        .setMaxLength(300),
     ),
 
   async execute(interaction) {

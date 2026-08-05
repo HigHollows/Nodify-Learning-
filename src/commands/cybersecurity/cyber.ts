@@ -8,6 +8,7 @@ import {
 } from "../../cybersecurity/ctfView.js";
 import { buildBlueTeamStart } from "../../cybersecurity/blueTeamView.js";
 import { buildTrustSimulationStart } from "../../cybersecurity/trustSimulationView.js";
+import { assertModuleEnabled } from "../../setup/guildSettingsService.js";
 import type { Command } from "../../types/command.js";
 import { AppError } from "../../utils/errors.js";
 import { buildCourseListReply } from "../education/learnView.js";
@@ -60,6 +61,8 @@ const command: Command = {
     ),
 
   async execute(interaction) {
+    await assertModuleEnabled(interaction.guildId, "cyber");
+
     const subcommand = interaction.options.getSubcommand();
     const group = interaction.options.getSubcommandGroup(false);
 

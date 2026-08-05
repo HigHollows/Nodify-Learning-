@@ -22,7 +22,8 @@ const command: Command = {
       option
         .setName("terme")
         .setDescription("Le concept à expliquer (ex: event loop, sql injection, closures...)")
-        .setRequired(true),
+        .setRequired(true)
+        .setMaxLength(200),
     ),
 
   async execute(interaction) {

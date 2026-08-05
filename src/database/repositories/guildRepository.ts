@@ -69,3 +69,18 @@ export async function setManagedResources(
     },
   });
 }
+
+export interface ModuleFlags {
+  academyEnabled: boolean;
+  cyberEnabled: boolean;
+  newsEnabled: boolean;
+  dailyQuestionEnabled: boolean;
+}
+
+export async function updateModuleFlags(
+  guildId: string,
+  updates: Partial<ModuleFlags>,
+): Promise<void> {
+  await getOrCreateGuildConfig(guildId); // s'assure que la ligne existe avant l'update
+  await prisma.guildConfig.update({ where: { guildId }, data: updates });
+}

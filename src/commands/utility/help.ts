@@ -42,7 +42,7 @@ const CATEGORIES: { title: string; commands: string[] }[] = [
   },
   {
     title: "⚙️ Admin",
-    commands: ["/stats"],
+    commands: ["/stats", "/settings"],
   },
   {
     title: "🔧 Divers",

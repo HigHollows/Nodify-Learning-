@@ -16,7 +16,8 @@ export function createDictionaryCommand(name: string, description: string): Comm
         option
           .setName("terme")
           .setDescription("Le terme à rechercher (ex: JWT, Promise, XSS...)")
-          .setRequired(false),
+          .setRequired(false)
+          .setMaxLength(100),
       ),
 
     async execute(interaction) {
