@@ -1,3 +1,4 @@
+import { pathToFileURL } from "node:url";
 import { REST, Routes } from "discord.js";
 import { env } from "./config/env.js";
 import { loadCommandDefinitions } from "./loaders/commandLoader.js";
@@ -12,9 +13,14 @@ const log = childLogger("deployCommands");
  *   (instantané — idéal en dev, pour itérer vite).
  * - Sinon : déploiement global (propagation jusqu'à ~1h — pour la prod).
  *
- * À lancer manuellement après chaque ajout/modif de commande : npm run deploy:commands
+ * Réutilisée à deux endroits : le script manuel (`npm run deploy:commands`,
+ * exécution directe de ce fichier, voir plus bas) ET automatiquement à
+ * chaque démarrage du bot (src/index.ts) — pour ne jamais dépendre d'une
+ * étape manuelle oubliée après avoir ajouté/modifié une commande. Avec
+ * DISCORD_GUILD_ID renseigné, la sync est effective en quelques secondes à
+ * chaque redémarrage, jamais plus d'une minute.
  */
-async function main() {
+export async function deployCommands(): Promise<number> {
   const commands = await loadCommandDefinitions();
   const body = commands.map((c) => c.data.toJSON());
 
@@ -32,9 +38,17 @@ async function main() {
     await rest.put(Routes.applicationCommands(env.DISCORD_CLIENT_ID), { body });
     log.info(`${body.length} commande(s) déployée(s) globalement`);
   }
+
+  return body.length;
 }
 
-main().catch((error) => {
-  log.error(error, "Échec du déploiement des commandes");
-  process.exit(1);
-});
+// N'exécute le déploiement immédiatement que lorsque ce fichier est lancé
+// directement (`npm run deploy:commands`) — pas quand `deployCommands` est
+// juste importé depuis src/index.ts pour la sync automatique au démarrage.
+const isDirectRun = import.meta.url === pathToFileURL(process.argv[1] ?? "").href;
+if (isDirectRun) {
+  deployCommands().catch((error: unknown) => {
+    log.error(error, "Échec du déploiement des commandes");
+    process.exit(1);
+  });
+}

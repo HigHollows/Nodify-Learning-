@@ -3,6 +3,7 @@ import { checkAndPostDailyQuestions } from "./community/dailyQuestionService.js"
 import { checkAndPostNews } from "./community/newsService.js";
 import { env } from "./config/env.js";
 import { connectDatabase, disconnectDatabase } from "./database/client.js";
+import { deployCommands } from "./deploy-commands.js";
 import { refreshStatusPanel } from "./credits/statusPanelService.js";
 import { loadCommands } from "./loaders/commandLoader.js";
 import { loadEvents } from "./loaders/eventLoader.js";
@@ -23,6 +24,18 @@ async function main() {
   const client = new NodifyClient();
   await loadCommands(client);
   await loadEvents(client);
+
+  // Sync automatique des slash commands à chaque démarrage — jamais besoin
+  // de se souvenir de lancer `npm run deploy:commands` après un ajout/modif
+  // de commande. Avec DISCORD_GUILD_ID renseigné (déploiement sur une seule
+  // guild), Discord synchronise en quelques secondes ; sans ça (déploiement
+  // global), la propagation peut prendre jusqu'à ~1h côté Discord — rien
+  // côté Nodify ne peut aller plus vite que ça. Résiliente : un échec ne
+  // doit jamais empêcher le bot de démarrer (les commandes existantes
+  // restent utilisables même si la resync a échoué).
+  await deployCommands().catch((error: unknown) => {
+    logger.error({ err: error }, "Échec de la synchronisation automatique des slash commands au démarrage");
+  });
 
   await client.login(env.DISCORD_TOKEN);
 

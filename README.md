@@ -96,7 +96,8 @@ dans une commande.
    npm run prisma:seed
    ```
 
-4. Déployer les slash commands sur Discord :
+4. Déployer les slash commands sur Discord (optionnel — le bot les
+   resynchronise aussi automatiquement à chaque démarrage) :
    ```bash
    npm run deploy:commands
    ```
@@ -131,7 +132,7 @@ liste toutes les commandes disponibles groupées par domaine.
 | `npm run dev` | Bot en mode watch (rechargement auto) |
 | `npm run build` | Compile TypeScript → `dist/` |
 | `npm start` | Lance la version compilée |
-| `npm run deploy:commands` | (Re)déploie les slash commands sur Discord |
+| `npm run deploy:commands` | (Re)déploie manuellement les slash commands (aussi fait automatiquement à chaque démarrage du bot) |
 | `npm run prisma:migrate` | Applique une migration DB |
 | `npm run prisma:studio` | Interface graphique pour inspecter la DB |
 | `npm run typecheck` | Vérifie les types sans compiler |

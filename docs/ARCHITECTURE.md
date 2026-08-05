@@ -371,3 +371,20 @@ gagnée sur cette compétence. Résilient par conception : toute erreur
 (permissions manquantes, membre introuvable...) est loggée et avalée,
 jamais remontée à l'utilisateur — la progression ne doit jamais être
 bloquée par un souci de synchronisation de rôle Discord.
+
+## Sync automatique des slash commands (`src/deploy-commands.ts`)
+
+`deployCommands()` (exporté, pas juste un script) est appelée à deux
+endroits : manuellement (`npm run deploy:commands`, exécution directe du
+fichier — détectée via `import.meta.url` comparé à `process.argv[1]`) ET
+automatiquement à chaque démarrage du bot (`src/index.ts`, juste après
+`loadCommands`/`loadEvents`, avant `client.login`). Objectif : ne plus
+jamais dépendre de se souvenir de relancer le déploiement après avoir
+ajouté/modifié une commande — un redémarrage suffit.
+
+Avec `DISCORD_GUILD_ID` renseigné (déploiement sur une seule guild), Discord
+synchronise en quelques secondes ; sans cette variable (déploiement global),
+la propagation peut prendre jusqu'à ~1h côté Discord — rien côté Nodify ne
+peut aller plus vite que l'API elle-même. La sync au démarrage est résiliente
+: un échec est loggé mais n'empêche jamais le bot de démarrer (les commandes
+déjà enregistrées restent utilisables même si la resync automatique échoue).
