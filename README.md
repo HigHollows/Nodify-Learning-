@@ -88,9 +88,28 @@ Voir les phases dans le prompt fondateur du projet. Statut actuel :
 - ✅ **Phase 3** — User Profile global, Skills, Streak, Achievements
 - ✅ **Phase 4** — Knowledge Engine : `/dictionary` (+ alias `/dict` `/term` `/define`)
 - ✅ **Phase 5** — Academy : `/learn`, cours/leçons/quiz, XP réelle, progression adaptative
+- ✅ **Phase 6 (partielle)** — AIService/ModelRouter + `/explainme`
 
-Prochaine étape : Phase 6 (IA — ExplainMe, mémoire, RAG documentation). C'est
-la première phase qui nécessite un vrai choix de provider IA.
+Prochaine étape : RAG documentation (`/docs`), volontairement pas fait dans
+la même passe que l'AIService — trop gros pour ne pas le valider d'abord
+contre un cas d'usage simple.
+
+### AIService (`src/ai/`)
+
+- **ModelRouter** minimal : un seul provider actif, choisi au démarrage selon
+  la config — `StubProvider` (par défaut, aucun appel réseau, réponses
+  clairement labellées "mode démonstration") ou `AnthropicProvider` (réel,
+  dès que `ANTHROPIC_API_KEY` est renseignée dans `.env`)
+- Aucun appel LLM dispersé dans les commandes : tout passe par
+  `src/ai/aiService.ts`
+
+### `/explainme`
+
+Contrairement à `/dictionary`, fonctionne sur **n'importe quel terme**, pas
+seulement ceux catalogués. Si le terme existe dans le dictionnaire, sa
+définition est injectée en contexte à l'IA (évite les réponses à côté) ;
+sinon l'IA répond de ses connaissances générales. Le niveau (débutant/avancé)
+est déduit du profil réel de l'utilisateur (`/profile`).
 
 ### `/dictionary` (alias `/dict` `/term` `/define`)
 

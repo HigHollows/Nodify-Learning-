@@ -23,7 +23,11 @@ const envSchema = z.object({
     .enum(["fatal", "error", "warn", "info", "debug", "trace"])
     .default("info"),
 
+  // Optionnel : sans clé, l'AIService (src/ai/aiService.ts) bascule
+  // automatiquement sur un provider "stub" (réponses de démonstration,
+  // aucun appel réseau) — voir src/ai/providers/.
   ANTHROPIC_API_KEY: z.string().optional(),
+  ANTHROPIC_MODEL: z.string().default("claude-sonnet-5"),
 });
 
 const parsed = envSchema.safeParse(process.env);
