@@ -141,3 +141,47 @@ model UserAchievement {
   @@unique([userId, achievementId])
   @@map("user_achievements")
 }
+
+/// Knowledge Engine (Phase 4) : unité de connaissance partagée par le
+/// dictionnaire, /explainme (Phase 6), les cours (Phase 5) et la doc (Phase 6).
+/// Un seul modèle de concept pour toutes ces features, pas cinq systèmes
+/// séparés qui stockeraient la même information.
+///
+/// `relatedKeys` / `prerequisiteKeys` : listes de `Concept.key`, en JSON —
+/// même pattern que GuildConfig.managedRoleIds. Pas de table de graphe
+/// relationnelle tant que le nombre de concepts reste petit ; à migrer si
+/// on a un jour besoin de vraies requêtes de graphe (ex: "qui dépend de X").
+model Concept {
+  id   String @id @default(cuid())
+  key  String @unique // slug stable, ex: "jwt", "promise" — ne pas renommer
+  name String
+
+  category String // même taxonomie que Skill.category (src/types/skill.ts)
+  level    Int // 1 (Beginner) à 5 (Expert), voir LEVEL_ROLES
+
+  definition           String // définition courte, affichée par défaut
+  explanationBeginner  String
+  explanationAdvanced  String
+  docUrl               String? // lien vers une doc officielle, si pertinent
+
+  relatedKeys      String @default("[]")
+  prerequisiteKeys String @default("[]")
+
+  aliases ConceptAlias[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("concepts")
+}
+
+/// Synonymes/abréviations pointant vers un concept (ex: "JS" → "javascript").
+/// `term` est stocké en minuscules pour une recherche insensible à la casse.
+model ConceptAlias {
+  id        String  @id @default(cuid())
+  term      String  @unique
+  conceptId String
+  concept   Concept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+
+  @@map("concept_aliases")
+}

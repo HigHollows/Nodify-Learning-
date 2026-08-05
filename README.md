@@ -86,8 +86,23 @@ Voir les phases dans le prompt fondateur du projet. Statut actuel :
 - ✅ **Phase 1** — Architecture, Database, Discord.js, Config, Logging, Command/Event loader
 - ✅ **Phase 2** — `/setup` (rôles de niveau + salon hub), auto-recovery idempotente
 - ✅ **Phase 3** — User Profile global, Skills, Streak, Achievements
+- ✅ **Phase 4** — Knowledge Engine : `/dictionary` (+ alias `/dict` `/term` `/define`)
 
-Prochaine étape : Phase 4 (Knowledge Engine — dictionnaire, concepts).
+Prochaine étape : Phase 5 (Academy — cours, quiz, apprentissage adaptatif).
+
+### `/dictionary` (alias `/dict` `/term` `/define`)
+
+- `/dictionary terme:JWT` cherche directement ; sans argument, affiche l'accueil
+  avec un bouton **🔎 Rechercher** qui ouvre un Modal Discord
+- Résolution : clé exacte → alias exact → nom exact → recherche floue
+  (tolère les fautes de frappe via distance de Levenshtein, sans IA)
+- Bouton **💡 Expliquer** sur une fiche concept : bascule explication
+  débutant ⇄ avancée — seul bouton implémenté pour l'instant, les autres
+  (`Mini-cours`, `Exercice`, `Documentation`) attendront d'avoir du vrai
+  contenu derrière (Phases 5/6/7) plutôt que d'être des boutons morts
+- 12 concepts rédigés à la main pour démarrer (JWT, Promise, API, DNS, XSS,
+  Docker, RAG, HTTP, Git, SQL Injection, Event Loop, REST), liés entre eux
+  (concepts liés / prérequis) et seedés via `npm run prisma:seed`
 
 ### `/profile`
 

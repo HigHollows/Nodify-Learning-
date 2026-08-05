@@ -44,3 +44,13 @@ export function progressBar(current: number, target: number, size = 10): string 
   const filled = Math.round(ratio * size);
   return "▰".repeat(filled) + "▱".repeat(size - filled) + ` ${Math.round(ratio * 100)}%`;
 }
+
+/**
+ * Nom affichable (avec emoji) pour un niveau de difficulté, réutilisé par
+ * le Knowledge Engine (concepts) en plus des rôles/skills — un seul
+ * référentiel de niveaux dans tout Nodify.
+ * `order` va de 1 (Beginner) à 5 (Expert), voir LEVEL_ROLES.
+ */
+export function labelForLevelOrder(order: number): string {
+  return LEVELS.find((l) => l.order === order)?.name ?? `Niveau ${order}`;
+}
