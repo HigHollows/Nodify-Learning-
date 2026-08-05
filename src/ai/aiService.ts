@@ -2,6 +2,7 @@ import { env } from "../config/env.js";
 import { AppError } from "../utils/errors.js";
 import { childLogger } from "../utils/logger.js";
 import { AnthropicProvider } from "./providers/anthropicProvider.js";
+import { GroqProvider } from "./providers/groqProvider.js";
 import { StubProvider } from "./providers/stubProvider.js";
 import type { AIProvider, LevelHint } from "./types.js";
 
@@ -9,11 +10,17 @@ const log = childLogger("aiService");
 
 /**
  * ModelRouter minimal : un seul provider actif à la fois, choisi une fois
- * au démarrage selon la config disponible.
+ * au démarrage selon la config disponible. Priorité si plusieurs clés sont
+ * présentes : Anthropic > Groq > stub — Anthropic reste le choix par défaut
+ * recommandé (Phase 1), Groq est une alternative rapide/gratuite.
  */
-const activeProvider: AIProvider = env.ANTHROPIC_API_KEY
-  ? new AnthropicProvider(env.ANTHROPIC_API_KEY, env.ANTHROPIC_MODEL)
-  : new StubProvider();
+function selectProvider(): AIProvider {
+  if (env.ANTHROPIC_API_KEY) return new AnthropicProvider(env.ANTHROPIC_API_KEY, env.ANTHROPIC_MODEL);
+  if (env.GROQ_API_KEY) return new GroqProvider(env.GROQ_API_KEY, env.GROQ_MODEL);
+  return new StubProvider();
+}
+
+const activeProvider: AIProvider = selectProvider();
 
 log.info(`AIService initialisé — provider actif : ${activeProvider.name}`);
 

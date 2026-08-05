@@ -25,6 +25,7 @@
     "@prisma/client": "^5.20.0",
     "discord.js": "^14.16.3",
     "dotenv": "^16.4.5",
+    "groq-sdk": "^1.5.0",
     "pino": "^9.4.0",
     "pino-pretty": "^11.2.2",
     "rss-parser": "^3.13.0",

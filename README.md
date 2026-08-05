@@ -167,9 +167,13 @@ séparé de l'XP Academy (sémantiques différentes : apprentissage vs défi).
 ### AIService (`src/ai/`)
 
 - **ModelRouter** minimal : un seul provider actif, choisi au démarrage selon
-  la config — `StubProvider` (par défaut, aucun appel réseau, réponses
-  clairement labellées "mode démonstration") ou `AnthropicProvider` (réel,
-  dès que `ANTHROPIC_API_KEY` est renseignée dans `.env`)
+  la config. Priorité : `AnthropicProvider` (si `ANTHROPIC_API_KEY`) >
+  `GroqProvider` (si `GROQ_API_KEY`, modèles ouverts type Llama, inférence
+  très rapide) > `StubProvider` (par défaut, aucun appel réseau, réponses
+  clairement labellées "mode démonstration")
+- **Actuellement actif : Groq** (`llama-3.3-70b-versatile`) — testé en
+  conditions réelles sur `/explainme` et `/securityreview` (vraie détection
+  d'injection SQL confirmée)
 - **Contrat unique** : `AIProvider.complete({system, user})` — chaque feature
   (ExplainMe, Security/Code Review, Debug Coach, Docs RAG) construit son
   propre prompt dans `aiService.ts` ; ajouter une feature n'oblige jamais à
