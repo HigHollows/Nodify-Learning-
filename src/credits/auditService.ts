@@ -1,4 +1,4 @@
-import { createAuditLog } from "../database/repositories/auditLogRepository.js";
+import { createAuditLog, listAuditLogs } from "../database/repositories/auditLogRepository.js";
 import { childLogger } from "../utils/logger.js";
 
 const log = childLogger("auditService");
@@ -20,4 +20,28 @@ export async function logAdminAction(
     ...(data.metadata !== undefined ? { metadata: JSON.stringify(data.metadata) } : {}),
   });
   log.info({ adminId, action, ...data }, "Action admin journalisée");
+}
+
+export interface AuditLogPage {
+  entries: {
+    adminId: string;
+    action: string;
+    targetUserId: string | null;
+    reason: string | null;
+    createdAt: Date;
+  }[];
+  total: number;
+}
+
+/**
+ * Seule façon de consulter AdminAuditLog depuis Discord (`/ai audit-log`) —
+ * jusqu'ici il n'existait qu'en écriture, un admin ne pouvait le lire qu'en
+ * ouvrant Prisma Studio directement sur le serveur.
+ */
+export async function getAuditLogPage(
+  limit: number,
+  offset: number,
+  filter: { adminId?: string; action?: string } = {},
+): Promise<AuditLogPage> {
+  return listAuditLogs(filter, limit, offset);
 }

@@ -77,14 +77,31 @@ export interface AiUsageFilter {
   feature?: string;
 }
 
-export async function listAiCalls(filter: AiUsageFilter, limit: number) {
+export interface AICallSummary {
+  userId: string;
+  feature: string;
+  status: string;
+  creditCost: number;
+  createdAt: Date;
+}
+
+function usageWhere(filter: AiUsageFilter) {
+  return {
+    ...(filter.since ? { createdAt: { gte: filter.since } } : {}),
+    ...(filter.userId ? { userId: filter.userId } : {}),
+    ...(filter.feature ? { feature: filter.feature } : {}),
+  };
+}
+
+export async function listAiCalls(filter: AiUsageFilter, limit: number, offset = 0) {
   return prisma.aICall.findMany({
-    where: {
-      ...(filter.since ? { createdAt: { gte: filter.since } } : {}),
-      ...(filter.userId ? { userId: filter.userId } : {}),
-      ...(filter.feature ? { feature: filter.feature } : {}),
-    },
+    where: usageWhere(filter),
     orderBy: { createdAt: "desc" },
     take: limit,
+    skip: offset,
   });
+}
+
+export async function countAiCalls(filter: AiUsageFilter): Promise<number> {
+  return prisma.aICall.count({ where: usageWhere(filter) });
 }

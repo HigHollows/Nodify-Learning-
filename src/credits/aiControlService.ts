@@ -14,6 +14,18 @@ import { childLogger } from "../utils/logger.js";
 
 const log = childLogger("aiControlService");
 
+/** Centralise le calcul des bornes "aujourd'hui/cette semaine/ce mois-ci" — utilisé par `/ai stats` et `/ai usage`. */
+export function periodSince(period: "today" | "week" | "month"): Date {
+  const now = new Date();
+  if (period === "today") {
+    const d = new Date(now);
+    d.setUTCHours(0, 0, 0, 0);
+    return d;
+  }
+  if (period === "week") return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+}
+
 /** Au-delà d'une erreur récente de ce coût minimum, l'erreur est bloquante en mode LIMITED. */
 const LIMITED_MODE_MAX_COST = 2;
 /** Une erreur plus récente que ceci (et plus récente que le dernier succès) fait passer le statut en ERROR/QUOTA. */

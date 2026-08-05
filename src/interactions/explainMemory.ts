@@ -12,7 +12,16 @@ import {
 } from "discord.js";
 import { explainFollowUp, getActiveProviderName } from "../ai/aiService.js";
 import type { LevelHint } from "../ai/types.js";
+import { creditsEnabled } from "../credits/creditService.js";
+import { getCreditCost } from "../credits/creditCosts.js";
 import { AppError } from "../utils/errors.js";
+
+/** Le bouton relance un appel IA (`explainme`), donc reconsomme des crédits — affiché pour ne pas surprendre. */
+function costLabel(): string {
+  if (!creditsEnabled()) return "";
+  const cost = getCreditCost("explainme");
+  return ` (${cost} crédit${cost > 1 ? "s" : ""})`;
+}
 
 /**
  * Mémoire courte pour les questions de suivi sur /explainme — un seul tour
@@ -69,7 +78,7 @@ export function buildExplainReply(term: string, explanation: string, contextId: 
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`${FOLLOWUP_BUTTON_PREFIX}${contextId}`)
-      .setLabel("💬 Question de suivi")
+      .setLabel(`💬 Question de suivi${costLabel()}`)
       .setStyle(ButtonStyle.Secondary),
   );
 

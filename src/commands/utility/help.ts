@@ -55,7 +55,12 @@ const CATEGORIES: { title: string; commands: string[] }[] = [
   },
   {
     title: "⚙️ Admin",
-    commands: ["/stats", "/settings", "/credit-admin give|remove|set", "/ai status|open|close|maintenance|limited|stats|usage|panel"],
+    commands: [
+      "/stats",
+      "/settings",
+      "/credit-admin give|remove|set|bonus|subscriber",
+      "/ai status|open|close|maintenance|limited|stats|usage|panel|budget|audit-log",
+    ],
   },
   {
     title: "🔧 Divers",

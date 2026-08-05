@@ -12,12 +12,15 @@ export class AnthropicProvider implements AIProvider {
   }
 
   async complete(request: CompletionRequest): Promise<CompletionResult> {
-    const response = await this.client.messages.create({
-      model: this.model,
-      max_tokens: request.maxTokens ?? 600,
-      system: request.system,
-      messages: [{ role: "user", content: request.user }],
-    });
+    const response = await this.client.messages.create(
+      {
+        model: this.model,
+        max_tokens: request.maxTokens ?? 600,
+        system: request.system,
+        messages: [{ role: "user", content: request.user }],
+      },
+      request.signal ? { signal: request.signal } : undefined,
+    );
 
     const textBlock = response.content.find((block) => block.type === "text");
     const text =

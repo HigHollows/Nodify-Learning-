@@ -1,19 +1,15 @@
 import { ChannelType, PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import { env } from "../../config/env.js";
-import {
-  computeAiStatus,
-  getSystemConfig,
-  setAiMode,
-} from "../../credits/aiControlService.js";
+import { computeAiStatus, getSystemConfig, setAiMode } from "../../credits/aiControlService.js";
+import { getAdminControlCenterData, getAiUsagePage } from "../../credits/aiAdminService.js";
 import { creditsEnabled } from "../../credits/creditService.js";
 import { getActiveProviderName } from "../../ai/aiService.js";
-import { getTopFeaturesSince, getUsageStatsSince, listAiCalls } from "../../database/repositories/aiCallRepository.js";
 import { getAiBudgetOverrides, setAiBudgetOverrides } from "../../database/repositories/guildRepository.js";
-import { getFeatureLabel } from "../../credits/creditCosts.js";
 import { baseEmbed, EmbedColors, SEPARATOR } from "../../credits/embedTheme.js";
-import { buildAdminControlCenterEmbed } from "../../credits/aiStatusView.js";
+import { buildAdminControlCenterEmbed, buildAiUsageReply, type AiUsageFilters } from "../../credits/aiStatusView.js";
+import { AUDIT_LOG_PAGE_SIZE, buildAuditLogReply } from "../../credits/auditView.js";
 import { createOrMovePanel } from "../../credits/statusPanelService.js";
-import { logAdminAction } from "../../credits/auditService.js";
+import { getAuditLogPage, logAdminAction } from "../../credits/auditService.js";
 import type { Command } from "../../types/command.js";
 import { AppError } from "../../utils/errors.js";
 
@@ -22,20 +18,6 @@ import { AppError } from "../../utils/errors.js";
  * sur le mode IA. Séparée de `/credit-admin` (crédits utilisateur) : deux
  * domaines distincts, deux commandes distinctes.
  */
-function periodSince(period: string): Date {
-  const now = new Date();
-  if (period === "today") {
-    const d = new Date(now);
-    d.setUTCHours(0, 0, 0, 0);
-    return d;
-  }
-  if (period === "week") {
-    return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  }
-  // month
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-}
-
 const command: Command = {
   data: new SlashCommandBuilder()
     .setName("ai")
@@ -66,7 +48,7 @@ const command: Command = {
     .addSubcommand((sub) =>
       sub
         .setName("usage")
-        .setDescription("Historique détaillé des appels IA, filtrable.")
+        .setDescription("Historique détaillé des appels IA, filtrable et paginé.")
         .addStringOption((o) =>
           o
             .setName("periode")
@@ -107,7 +89,8 @@ const command: Command = {
         .addBooleanOption((o) =>
           o.setName("reset").setDescription("Retire l'override et retombe sur le plafond global par défaut"),
         ),
-    ),
+    )
+    .addSubcommand((sub) => sub.setName("audit-log").setDescription("Historique des actions admin sensibles (mode IA, crédits, bonus...).")),
 
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
@@ -155,64 +138,18 @@ const command: Command = {
     }
 
     if (subcommand === "stats") {
-      const [status, today, week, month] = await Promise.all([
-        computeAiStatus(),
-        getUsageStatsSince(periodSince("today")),
-        getUsageStatsSince(periodSince("week")),
-        getUsageStatsSince(periodSince("month")),
-      ]);
-
-      await interaction.reply(
-        buildAdminControlCenterEmbed({
-          status,
-          provider: getActiveProviderName(),
-          creditsEnabled: creditsEnabled(),
-          today,
-          week,
-          month,
-        }),
-      );
+      await interaction.reply(buildAdminControlCenterEmbed(await getAdminControlCenterData()));
       return;
     }
 
     if (subcommand === "usage") {
-      const period = interaction.options.getString("periode");
-      const targetUser = interaction.options.getUser("utilisateur");
-      const feature = interaction.options.getString("feature");
+      const filters: AiUsageFilters = {
+        period: interaction.options.getString("periode") ?? "",
+        userId: interaction.options.getUser("utilisateur")?.id ?? "",
+        feature: interaction.options.getString("feature") ?? "",
+      };
 
-      const [calls, topFeatures] = await Promise.all([
-        listAiCalls(
-          {
-            ...(period ? { since: periodSince(period) } : {}),
-            ...(targetUser ? { userId: targetUser.id } : {}),
-            ...(feature ? { feature } : {}),
-          },
-          10,
-        ),
-        getTopFeaturesSince(periodSince("week"), 5),
-      ]);
-
-      const embed = baseEmbed("🤖 NODIFY — AI USAGE", EmbedColors.neutral)
-        .addFields(
-          { name: SEPARATOR, value: "🏆 Top fonctionnalités (7 jours)" },
-          ...(topFeatures.length > 0
-            ? topFeatures.map((f) => ({ name: getFeatureLabel(f.feature), value: `${f.count} appel(s)`, inline: true }))
-            : [{ name: "​", value: "Aucune donnée." }]),
-          { name: SEPARATOR, value: "📜 Derniers appels" },
-        );
-
-      if (calls.length === 0) {
-        embed.addFields({ name: "​", value: "Aucun appel trouvé pour ces filtres." });
-      } else {
-        for (const call of calls) {
-          embed.addFields({
-            name: `${getFeatureLabel(call.feature)} — ${call.status}`,
-            value: `<@${call.userId}> · ${call.creditCost} crédit(s) · <t:${Math.floor(call.createdAt.getTime() / 1000)}:R>`,
-          });
-        }
-      }
-
-      await interaction.reply({ embeds: [embed] });
+      await interaction.reply(buildAiUsageReply(await getAiUsagePage(0, filters)));
       return;
     }
 
@@ -266,6 +203,12 @@ const command: Command = {
           ),
         ],
       });
+      return;
+    }
+
+    if (subcommand === "audit-log") {
+      const page = await getAuditLogPage(AUDIT_LOG_PAGE_SIZE, 0);
+      await interaction.reply(buildAuditLogReply(page, 0));
     }
   },
 };

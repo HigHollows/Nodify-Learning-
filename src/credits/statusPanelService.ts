@@ -41,9 +41,21 @@ async function checkAndNotifyIncident(client: Client, channelId: string, data: S
       reason: data.config.lastErrorMessage,
       lastSuccessfulRequestAt: data.config.lastSuccessfulRequestAt,
     });
-    await (channel as TextChannel).send(embed).catch((error: unknown) => {
-      log.warn({ err: error, channelId }, "Échec de l'envoi de l'alerte AI Incident");
-    });
+
+    // Ping optionnel d'un rôle admin en plus du message — `allowedMentions`
+    // restreint explicitement à ce seul rôle (jamais un @everyone/@here
+    // accidentel si la variable est mal renseignée).
+    const pingRoleId = env.AI_INCIDENT_PING_ROLE_ID;
+    await (channel as TextChannel)
+      .send({
+        ...embed,
+        ...(pingRoleId
+          ? { content: `<@&${pingRoleId}>`, allowedMentions: { roles: [pingRoleId] } }
+          : {}),
+      })
+      .catch((error: unknown) => {
+        log.warn({ err: error, channelId }, "Échec de l'envoi de l'alerte AI Incident");
+      });
   }
 
   await markStatusNotified(data.status);

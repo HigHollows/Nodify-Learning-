@@ -3,6 +3,7 @@ import { getCreditStats, getSpendBudgetStatus, getWallet } from "../../credits/c
 import { buildWalletReply } from "../../credits/creditView.js";
 import { getRewardStatus } from "../../credits/rewardService.js";
 import { getProfile } from "../../services/userService.js";
+import { isSupporter } from "../../database/repositories/userRepository.js";
 import type { Command } from "../../types/command.js";
 
 const command: Command = {
@@ -13,7 +14,7 @@ const command: Command = {
   async execute(interaction) {
     const guildId = interaction.guildId ?? undefined;
 
-    const [wallet, stats, profile, daily, weekly, monthly, spendStatus] = await Promise.all([
+    const [wallet, stats, profile, daily, weekly, monthly, spendStatus, supporter] = await Promise.all([
       getWallet(interaction.user.id),
       getCreditStats(interaction.user.id),
       getProfile(interaction.user.id),
@@ -21,6 +22,7 @@ const command: Command = {
       getRewardStatus(interaction.user.id, "WEEKLY"),
       getRewardStatus(interaction.user.id, "MONTHLY"),
       getSpendBudgetStatus(interaction.user.id, guildId),
+      isSupporter(interaction.user.id),
     ]);
 
     await interaction.reply(
@@ -32,6 +34,7 @@ const command: Command = {
         learningStreak: profile?.currentStreak ?? 0,
         rewards: { daily, weekly, monthly },
         spendStatus,
+        isSupporter: supporter,
       }),
     );
   },

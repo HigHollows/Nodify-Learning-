@@ -17,14 +17,17 @@ export class GroqProvider implements AIProvider {
   }
 
   async complete(request: CompletionRequest): Promise<CompletionResult> {
-    const response = await this.client.chat.completions.create({
-      model: this.model,
-      max_completion_tokens: request.maxTokens ?? 600,
-      messages: [
-        { role: "system", content: request.system },
-        { role: "user", content: request.user },
-      ],
-    });
+    const response = await this.client.chat.completions.create(
+      {
+        model: this.model,
+        max_completion_tokens: request.maxTokens ?? 600,
+        messages: [
+          { role: "system", content: request.system },
+          { role: "user", content: request.user },
+        ],
+      },
+      request.signal ? { signal: request.signal } : undefined,
+    );
 
     const text = response.choices[0]?.message?.content ?? "Je n'ai pas réussi à générer de réponse cette fois-ci.";
 

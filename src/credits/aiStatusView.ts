@@ -9,7 +9,8 @@ import type { AIUnavailableError } from "../utils/errors.js";
 import { baseEmbed, EmbedColors, SEPARATOR, type MessageViewPayload } from "./embedTheme.js";
 import type { AIStatus } from "./creditTypes.js";
 import type { SystemConfigView } from "./aiControlService.js";
-import type { UsageStats } from "../database/repositories/aiCallRepository.js";
+import type { AICallSummary, UsageStats } from "../database/repositories/aiCallRepository.js";
+import { getFeatureLabel } from "./creditCosts.js";
 
 const STATUS_LABEL: Record<AIStatus, string> = {
   OPERATIONAL: "Operational",
@@ -144,6 +145,68 @@ export function buildAdminControlCenterEmbed(data: AdminControlCenterData): Mess
 
 export function buildSimpleStatusEmbed(title: string, color: number, description: string): InteractionReplyOptions {
   return { embeds: [baseEmbed(title, color).setDescription(description)], components: [] };
+}
+
+export const AI_USAGE_PAGE_SIZE = 8;
+
+export interface AiUsageFilters {
+  period: string; // "" = pas de filtre, sinon "today"|"week"|"month"
+  userId: string; // "" = pas de filtre
+  feature: string; // "" = pas de filtre
+}
+
+/** `ai:usage:<page>:<period>:<userId>:<feature>` — segments vides = pas de filtre sur ce champ. */
+export function buildAiUsagePageCustomId(page: number, filters: AiUsageFilters): string {
+  return `ai:usage:${page}:${filters.period}:${filters.userId}:${filters.feature}`;
+}
+
+export interface AiUsageData {
+  calls: AICallSummary[];
+  total: number;
+  page: number;
+  filters: AiUsageFilters;
+  topFeatures: { feature: string; count: number }[];
+}
+
+/** `/ai usage` — paginé (contrairement à la version d'origine plafonnée à 10 résultats sans suite). */
+export function buildAiUsageReply(data: AiUsageData): MessageViewPayload {
+  const totalPages = Math.max(Math.ceil(data.total / AI_USAGE_PAGE_SIZE), 1);
+
+  const embed = baseEmbed("🤖 NODIFY — AI USAGE", EmbedColors.neutral).addFields(
+    { name: SEPARATOR, value: "🏆 Top fonctionnalités (7 jours)" },
+    ...(data.topFeatures.length > 0
+      ? data.topFeatures.map((f) => ({ name: getFeatureLabel(f.feature), value: `${f.count} appel(s)`, inline: true }))
+      : [{ name: "​", value: "Aucune donnée." }]),
+    { name: SEPARATOR, value: "📜 Appels" },
+  );
+
+  if (data.calls.length === 0) {
+    embed.addFields({ name: "​", value: "Aucun appel trouvé pour ces filtres." });
+  } else {
+    for (const call of data.calls) {
+      embed.addFields({
+        name: `${getFeatureLabel(call.feature)} — ${call.status}`,
+        value: `<@${call.userId}> · ${call.creditCost} crédit(s) · <t:${Math.floor(call.createdAt.getTime() / 1000)}:R>`,
+      });
+    }
+  }
+
+  embed.setFooter({ text: `Page ${data.page + 1}/${totalPages} — ${data.total} appel(s) au total` });
+
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId(buildAiUsagePageCustomId(data.page - 1, data.filters))
+      .setLabel("◀️")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(data.page <= 0),
+    new ButtonBuilder()
+      .setCustomId(buildAiUsagePageCustomId(data.page + 1, data.filters))
+      .setLabel("▶️")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(data.page + 1 >= totalPages),
+  );
+
+  return { embeds: [embed], components: [row] };
 }
 
 export interface AiIncidentData {

@@ -7,6 +7,8 @@ import {
   TextInputBuilder,
   TextInputStyle,
 } from "discord.js";
+import { creditsEnabled } from "../../credits/creditService.js";
+import { getCreditCost } from "../../credits/creditCosts.js";
 
 export const SECURITY_REVIEW_MODAL_ID = "devtools:securityreview_modal";
 export const CODE_REVIEW_MODAL_ID = "devtools:codereview_modal";
@@ -22,6 +24,17 @@ function truncate(text: string): string {
   return text.length > EMBED_DESCRIPTION_LIMIT
     ? `${text.slice(0, EMBED_DESCRIPTION_LIMIT)}\n\n*(réponse tronquée)*`
     : text;
+}
+
+/**
+ * Suffixe de coût sur un bouton de suivi (relance un appel IA, donc reconsomme
+ * des crédits) — sans ça, l'utilisateur découvrait le coût seulement en cas
+ * de solde insuffisant après avoir cliqué. Vide si les crédits sont
+ * désactivés : pas la peine d'afficher un coût qui n'est jamais vérifié.
+ */
+function costLabel(feature: string): string {
+  if (!creditsEnabled()) return "";
+  return ` (${getCreditCost(feature)} crédit${getCreditCost(feature) > 1 ? "s" : ""})`;
 }
 
 function buildCodeModal(customId: string, title: string): ModalBuilder {
@@ -79,7 +92,7 @@ export function buildSecurityReviewReply(findings: string, reviewId: string) {
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`devtools:fix:${reviewId}`)
-      .setLabel("🔧 Voir une correction suggérée")
+      .setLabel(`🔧 Voir une correction suggérée${costLabel("securityreview")}`)
       .setStyle(ButtonStyle.Primary),
   );
 
@@ -114,7 +127,7 @@ export function buildDebugGuideReply(guidance: string, debugId: string) {
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`devtools:debughint:${debugId}`)
-      .setLabel("💡 Encore un indice")
+      .setLabel(`💡 Encore un indice${costLabel("debugme")}`)
       .setStyle(ButtonStyle.Secondary),
   );
 

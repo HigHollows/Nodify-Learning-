@@ -321,6 +321,47 @@ automatiquement si l'appel IA échoue, jamais de solde négatif.
   utilisateur malchanceux pouvait ainsi se retrouver bloqué par sa propre
   limite sans avoir réellement consommé les crédits.
 
+### Évolutions v3 (annulation réelle, audit log consultable, polish)
+
+- **Annulation réelle des appels IA au timeout** (`aiService.complete`) : un
+  `AbortController` est créé par requête, transmis via `CompletionRequest.
+  signal` à chaque provider (Gemini/Anthropic/Groq acceptent tous un
+  `signal` natif par appel), et déclenché après `AI_REQUEST_TIMEOUT_MS`.
+  Avant : le timeout était une simple course entre un timer et la promesse
+  du provider — l'appel HTTP continuait de tourner côté provider après le
+  remboursement de l'utilisateur. Maintenant la requête est effectivement
+  annulée.
+- **Audit log enfin consultable depuis Discord** (`/ai audit-log`, paginé) :
+  `AdminAuditLog` n'existait qu'en écriture jusqu'ici (`createAuditLog`
+  appelé partout, mais aucune commande ne le lisait) — un admin ne pouvait
+  vérifier "qui a fait quoi" qu'en ouvrant Prisma Studio directement sur le
+  serveur.
+- **`/ai usage` paginé** (`buildAiUsagePageCustomId`, boutons ◀️/▶️) au lieu
+  d'être plafonné à 10 résultats sans suite — les filtres (période/
+  utilisateur/feature) sont préservés à travers les pages via le customId.
+  La logique de fetch (`getAdminControlCenterData`, `getAiUsagePage`) est
+  centralisée dans `aiAdminService.ts`, séparé de `aiControlService.ts`
+  volontairement : il dépend à la fois de `aiControlService.ts` et de
+  `aiService.ts` (pour `getActiveProviderName`), qui dépend lui-même de
+  `aiControlService.ts` — le mettre directement dans `aiControlService.ts`
+  aurait créé un cycle d'imports.
+- **Alerte AI Incident avec ping optionnel** (`AI_INCIDENT_PING_ROLE_ID`) :
+  un rôle admin peut être mentionné en plus du message, avec
+  `allowedMentions` explicitement restreint à ce rôle (jamais un
+  `@everyone`/`@here` accidentel si la variable est mal renseignée).
+- **Coût affiché sur les boutons de suivi** (`🔧 Voir une correction
+  suggérée (3 crédits)`, `💡 Encore un indice (2 crédits)`, `💬 Question de
+  suivi (1 crédit)`) : ces boutons relancent un appel IA et reconsommaient
+  donc des crédits sans que l'utilisateur le sache avant de cliquer.
+- **Statut supporter visible** dans `/balance` (bonus ⭐ affiché sur la ligne
+  Monthly) — auparavant seul un admin pouvait savoir qui était supporter.
+- **Cache de la config JSON des providers** (`AI_FEATURE_PROVIDER_OVERRIDES`,
+  `AI_PROVIDER_COST_MULTIPLIERS`) : parsée une seule fois au lieu de
+  `JSON.parse` à chaque appel IA — ces variables viennent de `.env` et ne
+  changent jamais en cours de process.
+- **`/help` mis à jour** avec `bonus`/`subscriber`/`budget`/`audit-log`,
+  qui manquaient depuis leur ajout en v2.
+
 ## Sync des rôles Discord (`src/setup/roleSyncService.ts`)
 
 Après chaque leçon Academy validée dans un serveur, le rôle de niveau global

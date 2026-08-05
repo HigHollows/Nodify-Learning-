@@ -85,11 +85,14 @@ export interface WalletViewData {
   learningStreak: number;
   rewards: { daily: RewardStatus; weekly: RewardStatus; monthly: RewardStatus };
   spendStatus: SpendBudgetStatus;
+  isSupporter: boolean;
 }
 
 export function buildWalletReply(data: WalletViewData): InteractionReplyOptions {
   const embed = baseEmbed("💳 NODIFY — CREDIT WALLET", EmbedColors.info)
-    .setDescription(`Solde et activité récente de ${data.username}.`)
+    .setDescription(
+      `Solde et activité récente de ${data.username}.${data.isSupporter ? " ⭐ Statut supporter." : ""}`,
+    )
     .addFields(
       { name: SEPARATOR, value: "🪙 Balance" },
       { name: "​", value: formatCredits(data.wallet.balance) },
@@ -101,7 +104,11 @@ export function buildWalletReply(data: WalletViewData): InteractionReplyOptions 
       { name: SEPARATOR, value: "🎁 Récompenses" },
       { name: "Daily", value: rewardLine("Daily", data.rewards.daily), inline: true },
       { name: "Weekly", value: rewardLine("Weekly", data.rewards.weekly), inline: true },
-      { name: "Monthly", value: rewardLine("Monthly", data.rewards.monthly), inline: true },
+      {
+        name: "Monthly",
+        value: `${rewardLine("Monthly", data.rewards.monthly)}${data.isSupporter ? " (+ bonus supporter ⭐)" : ""}`,
+        inline: true,
+      },
       { name: SEPARATOR, value: "📊 Budget IA anti-abus" },
       { name: "Aujourd'hui", value: spendLine(data.spendStatus.dailyLimit, data.spendStatus.dailySpent), inline: true },
       { name: "Ce mois-ci", value: spendLine(data.spendStatus.monthlyLimit, data.spendStatus.monthlySpent), inline: true },

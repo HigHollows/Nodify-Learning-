@@ -6,6 +6,14 @@ export interface CompletionRequest {
   /** La requête concrète (le texte à traiter). */
   user: string;
   maxTokens?: number;
+  /**
+   * Annulation réelle de la requête HTTP sous-jacente (pas juste un timer qui
+   * ignore le résultat) — chaque provider le transmet à son SDK
+   * (Gemini/Anthropic/Groq supportent tous un `signal` natif par requête).
+   * Sans ça, un appel « timeout » continuait de tourner côté serveur du
+   * provider après qu'on ait déjà remboursé l'utilisateur.
+   */
+  signal?: AbortSignal;
 }
 
 /**

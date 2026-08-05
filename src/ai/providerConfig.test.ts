@@ -12,11 +12,17 @@ vi.mock("../config/env.js", async (importOriginal) => {
   };
 });
 
-const { getFeatureProviderOverrides, getProviderCostMultiplier } = await import("./providerConfig.js");
+const { getFeatureProviderOverrides, getProviderCostMultiplier, __resetProviderConfigCacheForTests } = await import(
+  "./providerConfig.js"
+);
 
 beforeEach(() => {
   delete overrides.AI_FEATURE_PROVIDER_OVERRIDES;
   delete overrides.AI_PROVIDER_COST_MULTIPLIERS;
+  // La vraie config .env ne change jamais en cours de process (voir le
+  // commentaire dans providerConfig.ts) — sans ce reset, le cache figerait
+  // la première valeur lue pour tout le fichier de test.
+  __resetProviderConfigCacheForTests();
 });
 
 describe("getFeatureProviderOverrides", () => {

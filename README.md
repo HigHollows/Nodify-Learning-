@@ -214,7 +214,7 @@ liste toutes les commandes disponibles groupées par domaine.
 - `/settings` — active/désactive les modules par serveur
 - `/stats` — statistiques globales
 - `/credit-admin give|remove|set|bonus|subscriber` — gère les crédits d'un utilisateur (audité) : attribution/retrait/fixation, bonus événementiel ponctuel, statut supporter non-monétaire
-- `/ai status|open|close|maintenance|limited|stats|usage|panel|budget` — AI Control Center : bascule le mode des services IA (sans affecter le reste de Nodify), statistiques d'usage, panneau de statut persistant, budget IA personnalisé par serveur
+- `/ai status|open|close|maintenance|limited|stats|usage|panel|budget|audit-log` — AI Control Center : bascule le mode des services IA (sans affecter le reste de Nodify), statistiques et historique d'usage paginé, panneau de statut persistant, budget IA par serveur, journal d'audit
 </details>
 
 ## 📊 Contenu actuel
@@ -239,6 +239,9 @@ liste toutes les commandes disponibles groupées par domaine.
 - ✅ AI Credit System & AI Control Center : crédits non-monétaires, réservation/
   remboursement atomique, Reward Engine générique, provider Gemini, statut IA
   calculé + panneau persistant, anti-abus configurable, audit admin
+- ✅ Multi-provider avec coûts par provider, budgets IA par serveur, annulation
+  réelle des appels IA au timeout, alertes AI Incident, bonus événementiel et
+  statut supporter, audit log enfin consultable depuis Discord (`/ai audit-log`)
 - ⏳ CTF Web/Pwn/Network/Reverse et Labs avec cibles en direct — nécessitent
   une vraie infrastructure de sandbox/VM isolée, volontairement pas simulés
   sans elle

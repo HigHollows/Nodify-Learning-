@@ -76,6 +76,10 @@ const envSchema = z.object({
   AI_DEFAULT_MODE: z.enum(["OPEN", "LIMITED", "MAINTENANCE", "CLOSED"]).default("OPEN"),
   AI_STATUS_ENABLED: envBool(true),
   AI_STATUS_AUTO_UPDATE: envBool(true),
+  // Optionnel : rôle Discord mentionné sur une alerte "AI Incident"
+  // (dégradation ET retour à la normale) en plus du message dans le salon de
+  // statut. Sans cette variable, l'alerte reste un message normal, non ping.
+  AI_INCIDENT_PING_ROLE_ID: z.string().optional(),
 
   // Anti-abus — désactivables individuellement en mettant la valeur à 0.
   // Valeurs globales (défaut) — un serveur peut les surcharger via

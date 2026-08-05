@@ -70,23 +70,6 @@ export function getActiveProviderName(): string {
 /** Quota anti-abus : au-delà, on bloque plutôt que de laisser exploser la conso du provider actif. */
 const AI_RATE_LIMIT_WINDOW_MS = 60 * 1000;
 
-/** Empêche un provider en rade de bloquer indéfiniment l'utilisateur — la requête réseau peut continuer en arrière-plan, mais on rembourse et on répond proprement après ce délai. */
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error(`AI request timed out after ${ms}ms`)), ms);
-    promise.then(
-      (value) => {
-        clearTimeout(timer);
-        resolve(value);
-      },
-      (error: unknown) => {
-        clearTimeout(timer);
-        reject(error);
-      },
-    );
-  });
-}
-
 /**
  * Point de passage UNIQUE pour tout appel IA. C'est ici, et nulle part
  * ailleurs, que se fait : la vérification du statut IA (AI Control Center),
@@ -126,11 +109,20 @@ async function complete(
 
   const startedAt = Date.now();
 
+  // Annulation RÉELLE de la requête HTTP sous-jacente au timeout (pas juste
+  // un timer qui ignore le résultat) — chaque provider transmet ce signal à
+  // son SDK, qui abandonne effectivement l'appel réseau en cours.
+  const abortController = new AbortController();
+  const timeoutTimer = setTimeout(() => abortController.abort(), env.AI_REQUEST_TIMEOUT_MS);
+
   try {
-    const result = await withTimeout(
-      provider.complete({ system, user, ...(maxTokens ? { maxTokens } : {}) }),
-      env.AI_REQUEST_TIMEOUT_MS,
-    );
+    const result = await provider.complete({
+      system,
+      user,
+      ...(maxTokens ? { maxTokens } : {}),
+      signal: abortController.signal,
+    });
+    clearTimeout(timeoutTimer);
 
     await confirmReservation(reservation.transactionId);
     await recordAiSuccess();
@@ -149,6 +141,7 @@ async function complete(
 
     return result.text;
   } catch (error) {
+    clearTimeout(timeoutTimer);
     const classified = classifyProviderError(error);
 
     await refundReservation(reservation.transactionId);

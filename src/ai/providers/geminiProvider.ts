@@ -22,10 +22,13 @@ export class GeminiProvider implements AIProvider {
       systemInstruction: request.system,
     });
 
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: request.user }] }],
-      generationConfig: { maxOutputTokens: request.maxTokens ?? 600 },
-    });
+    const result = await model.generateContent(
+      {
+        contents: [{ role: "user", parts: [{ text: request.user }] }],
+        generationConfig: { maxOutputTokens: request.maxTokens ?? 600 },
+      },
+      request.signal ? { signal: request.signal } : undefined,
+    );
 
     const text = result.response.text() || "Je n'ai pas réussi à générer de réponse cette fois-ci.";
     const usageMetadata = result.response.usageMetadata;

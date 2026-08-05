@@ -89,6 +89,8 @@ import {
   handleAdminControlCenterRefresh,
   handleAdminMaintenanceAi,
   handleAdminReasonModalSubmit,
+  handleAiUsagePage,
+  handleAuditLogPage,
   handleStatusPanelRefresh,
   parseReasonModalId,
 } from "../interactions/aiInteractions.js";
@@ -379,6 +381,25 @@ const event: Event<"interactionCreate"> = {
         await runWithGuards(interaction, interaction.customId, () =>
           handleCreditAdminSetZero(interaction, targetUserId),
         );
+        return;
+      }
+
+      if (interaction.customId.startsWith("ai:usage:")) {
+        // Format `ai:usage:<page>:<period>:<userId>:<feature>`.
+        const [, , pageStr, period, userId, feature] = interaction.customId.split(":");
+        await runWithGuards(interaction, interaction.customId, () =>
+          handleAiUsagePage(interaction, Number(pageStr), {
+            period: period ?? "",
+            userId: userId ?? "",
+            feature: feature ?? "",
+          }),
+        );
+        return;
+      }
+
+      if (interaction.customId.startsWith("credits:audit:")) {
+        const page = Number(interaction.customId.slice("credits:audit:".length));
+        await runWithGuards(interaction, interaction.customId, () => handleAuditLogPage(interaction, page));
         return;
       }
 

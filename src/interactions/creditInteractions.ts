@@ -14,6 +14,7 @@ import {
 import { baseEmbed, EmbedColors } from "../credits/embedTheme.js";
 import { claimReward, getRewardStatus, type RewardStatus } from "../credits/rewardService.js";
 import { getProfile } from "../services/userService.js";
+import { isSupporter } from "../database/repositories/userRepository.js";
 import { AppError } from "../utils/errors.js";
 
 /** Bouton "📖 Guide des crédits" — visible depuis plusieurs embeds (wallet, insufficient credits, ...). */
@@ -122,7 +123,7 @@ export async function handleHistoryPage(interaction: ButtonInteraction, page: nu
 export async function handleWalletRefresh(interaction: ButtonInteraction): Promise<void> {
   const guildId = interaction.guildId ?? undefined;
 
-  const [wallet, stats, profile, daily, weekly, monthly, spendStatus] = await Promise.all([
+  const [wallet, stats, profile, daily, weekly, monthly, spendStatus, supporter] = await Promise.all([
     getWallet(interaction.user.id),
     getCreditStats(interaction.user.id),
     getProfile(interaction.user.id),
@@ -130,6 +131,7 @@ export async function handleWalletRefresh(interaction: ButtonInteraction): Promi
     getRewardStatus(interaction.user.id, "WEEKLY"),
     getRewardStatus(interaction.user.id, "MONTHLY"),
     getSpendBudgetStatus(interaction.user.id, guildId),
+    isSupporter(interaction.user.id),
   ]);
 
   await interaction.reply(
@@ -141,6 +143,7 @@ export async function handleWalletRefresh(interaction: ButtonInteraction): Promi
       learningStreak: profile?.currentStreak ?? 0,
       rewards: { daily, weekly, monthly },
       spendStatus,
+      isSupporter: supporter,
     }),
   );
 }

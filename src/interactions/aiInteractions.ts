@@ -7,11 +7,11 @@ import {
   type ButtonInteraction,
   type ModalSubmitInteraction,
 } from "discord.js";
-import { computeAiStatus, setAiMode } from "../credits/aiControlService.js";
-import { creditsEnabled } from "../credits/creditService.js";
-import { getActiveProviderName } from "../ai/aiService.js";
-import { getUsageStatsSince } from "../database/repositories/aiCallRepository.js";
-import { buildAdminControlCenterEmbed } from "../credits/aiStatusView.js";
+import { setAiMode } from "../credits/aiControlService.js";
+import { getAdminControlCenterData, getAiUsagePage } from "../credits/aiAdminService.js";
+import { buildAdminControlCenterEmbed, buildAiUsageReply, type AiUsageFilters } from "../credits/aiStatusView.js";
+import { getAuditLogPage } from "../credits/auditService.js";
+import { AUDIT_LOG_PAGE_SIZE, buildAuditLogReply } from "../credits/auditView.js";
 import { refreshStatusPanel } from "../credits/statusPanelService.js";
 import { AppError } from "../utils/errors.js";
 
@@ -21,39 +21,35 @@ export async function handleStatusPanelRefresh(interaction: ButtonInteraction): 
   await refreshStatusPanel(interaction.client);
 }
 
-function periodSince(period: "today" | "week" | "month"): Date {
-  const now = new Date();
-  if (period === "today") {
-    const d = new Date(now);
-    d.setUTCHours(0, 0, 0, 0);
-    return d;
-  }
-  if (period === "week") return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-}
-
 function assertAdminPermission(hasPermission: boolean): void {
   if (!hasPermission) {
     throw new AppError("Tu n'as pas la permission d'utiliser ce bouton.");
   }
 }
 
+function isGuildAdmin(interaction: ButtonInteraction | ModalSubmitInteraction): boolean {
+  return interaction.inCachedGuild() && (interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild) ?? false);
+}
+
 /** Bouton "🔄 Refresh" du Control Center admin (`/ai stats`). */
 export async function handleAdminControlCenterRefresh(interaction: ButtonInteraction): Promise<void> {
-  assertAdminPermission(
-    interaction.inCachedGuild() && (interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild) ?? false),
-  );
+  assertAdminPermission(isGuildAdmin(interaction));
+  await interaction.update(buildAdminControlCenterEmbed(await getAdminControlCenterData()));
+}
 
-  const [status, today, week, month] = await Promise.all([
-    computeAiStatus(),
-    getUsageStatsSince(periodSince("today")),
-    getUsageStatsSince(periodSince("week")),
-    getUsageStatsSince(periodSince("month")),
-  ]);
+/** Pagination de `/ai usage` — customId `ai:usage:<page>:<period>:<userId>:<feature>`. */
+export async function handleAiUsagePage(interaction: ButtonInteraction, page: number, filters: AiUsageFilters): Promise<void> {
+  assertAdminPermission(isGuildAdmin(interaction));
+  const safePage = Math.max(page, 0);
+  await interaction.update(buildAiUsageReply(await getAiUsagePage(safePage, filters)));
+}
 
-  await interaction.update(
-    buildAdminControlCenterEmbed({ status, provider: getActiveProviderName(), creditsEnabled: creditsEnabled(), today, week, month }),
-  );
+/** Pagination de `/ai audit-log` — customId `credits:audit:<page>`. */
+export async function handleAuditLogPage(interaction: ButtonInteraction, page: number): Promise<void> {
+  assertAdminPermission(isGuildAdmin(interaction));
+  const safePage = Math.max(page, 0);
+  const data = await getAuditLogPage(AUDIT_LOG_PAGE_SIZE, safePage * AUDIT_LOG_PAGE_SIZE);
+  await interaction.update(buildAuditLogReply(data, safePage));
 }
 
 const AI_REASON_MODAL_PREFIX = "ai:admin:reasonmodal:";
@@ -82,17 +78,13 @@ export function parseReasonModalId(customId: string): "CLOSED" | "MAINTENANCE" |
 
 /** Bouton "🔴 Close AI" du Control Center admin — ouvre un Modal pour recueillir la raison avant d'agir. */
 export async function handleAdminCloseAi(interaction: ButtonInteraction): Promise<void> {
-  assertAdminPermission(
-    interaction.inCachedGuild() && (interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild) ?? false),
-  );
+  assertAdminPermission(isGuildAdmin(interaction));
   await interaction.showModal(buildReasonModal("CLOSED"));
 }
 
 /** Bouton "🔧 Maintenance" du Control Center admin — ouvre un Modal pour recueillir la raison avant d'agir. */
 export async function handleAdminMaintenanceAi(interaction: ButtonInteraction): Promise<void> {
-  assertAdminPermission(
-    interaction.inCachedGuild() && (interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild) ?? false),
-  );
+  assertAdminPermission(isGuildAdmin(interaction));
   await interaction.showModal(buildReasonModal("MAINTENANCE"));
 }
 
@@ -101,27 +93,12 @@ export async function handleAdminReasonModalSubmit(
   interaction: ModalSubmitInteraction,
   mode: "CLOSED" | "MAINTENANCE",
 ): Promise<void> {
-  assertAdminPermission(
-    interaction.inCachedGuild() && (interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild) ?? false),
-  );
+  assertAdminPermission(isGuildAdmin(interaction));
 
   const reason = interaction.fields.getTextInputValue(AI_REASON_INPUT_ID) || undefined;
   await setAiMode(mode, interaction.user.id, reason);
 
-  const [status, today, week, month] = await Promise.all([
-    computeAiStatus(),
-    getUsageStatsSince(periodSince("today")),
-    getUsageStatsSince(periodSince("week")),
-    getUsageStatsSince(periodSince("month")),
-  ]);
-  const payload = buildAdminControlCenterEmbed({
-    status,
-    provider: getActiveProviderName(),
-    creditsEnabled: creditsEnabled(),
-    today,
-    week,
-    month,
-  });
+  const payload = buildAdminControlCenterEmbed(await getAdminControlCenterData());
 
   // Le Modal a été ouvert depuis un bouton du Control Center : si ce message
   // est encore identifiable, on le met à jour directement plutôt que de
