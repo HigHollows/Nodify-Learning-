@@ -54,6 +54,13 @@ import {
 import { handleThreatModelSubmit } from "../interactions/threatModelInteractions.js";
 import { THREAT_MODEL_MODAL_ID } from "../cybersecurity/threatModelView.js";
 import { handleDailyAnswer } from "../interactions/dailyQuestionInteractions.js";
+import { handleBlueTeamLineChoice } from "../interactions/blueTeamInteractions.js";
+import { BLUE_TEAM_CUSTOM_ID_PREFIX } from "../cybersecurity/blueTeamView.js";
+import { handleCtfSubmitButton, handleCtfSubmitModal } from "../interactions/ctfInteractions.js";
+import {
+  CTF_SUBMIT_MODAL_ID,
+  parseCtfSubmitButtonId,
+} from "../cybersecurity/ctfView.js";
 import { recordActivity } from "../services/userService.js";
 import type { Event } from "../types/event.js";
 import { AppError } from "../utils/errors.js";
@@ -177,6 +184,22 @@ const event: Event<"interactionCreate"> = {
         }
       }
 
+      if (interaction.customId.startsWith(BLUE_TEAM_CUSTOM_ID_PREFIX)) {
+        const index = Number(interaction.customId.slice(BLUE_TEAM_CUSTOM_ID_PREFIX.length));
+        await runWithGuards(interaction, interaction.customId, () =>
+          handleBlueTeamLineChoice(interaction, index),
+        );
+        return;
+      }
+
+      const ctfChallengeKey = parseCtfSubmitButtonId(interaction.customId);
+      if (ctfChallengeKey) {
+        await runWithGuards(interaction, interaction.customId, () =>
+          handleCtfSubmitButton(interaction, ctfChallengeKey),
+        );
+        return;
+      }
+
       const academyAction = parseAcademyCustomId(interaction.customId);
       if (academyAction) {
         await runWithGuards(interaction, interaction.customId, async () => {
@@ -252,6 +275,14 @@ const event: Event<"interactionCreate"> = {
       if (interaction.customId === THREAT_MODEL_MODAL_ID) {
         await runWithGuards(interaction, interaction.customId, () =>
           handleThreatModelSubmit(interaction),
+        );
+        return;
+      }
+
+      if (interaction.customId.startsWith(`${CTF_SUBMIT_MODAL_ID}:`)) {
+        const challengeKey = interaction.customId.slice(`${CTF_SUBMIT_MODAL_ID}:`.length);
+        await runWithGuards(interaction, interaction.customId, () =>
+          handleCtfSubmitModal(interaction, challengeKey),
         );
         return;
       }

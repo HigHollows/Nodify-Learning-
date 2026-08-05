@@ -21,13 +21,13 @@ src/
 ├── config/          Validation des variables d'environnement
 ├── utils/           Logger, erreurs applicatives typées
 ├── types/           Contrats partagés (Command, Event)
-├── ai/               (Phase 6 — AIService centralisé)
-├── knowledge/        (Phase 4 — Knowledge Engine : concepts, dictionnaire)
-├── education/        (Phase 5 — Academy : cours, quiz, progression)
-├── cybersecurity/     (Phase 8 — Cyber Academy, CTF, labs)
-├── documentation/     (Phase 6 — RAG sur docs techniques)
-├── news/              (Phase 9 — Hacktualités, question du jour)
-└── setup/             (Phase 2 — /setup, rôles/salons auto)
+├── ai/               AIService centralisé (Phase 6)
+├── knowledge/        Knowledge Engine : concepts, dictionnaire (Phase 4)
+├── education/        Academy : cours, quiz, progression (Phase 5)
+├── cybersecurity/     Cyber Academy, CTF, Blue/Red Team, Trust Sim (Phase 8)
+├── documentation/     RAG sur docs techniques (Phase 6)
+├── community/         Question du jour, Hacktualités (Phase 9)
+└── setup/             /setup, rôles/salons auto (Phase 2)
 ```
 
 Les dossiers de phases futures existent déjà (vides, avec `.gitkeep`) pour que
@@ -90,13 +90,18 @@ Voir les phases dans le prompt fondateur du projet. Statut actuel :
 - ✅ **Phase 5** — Academy : `/learn`, cours/leçons/quiz, XP réelle, progression adaptative
 - ✅ **Phase 6** — AIService/ModelRouter + `/explainme` + RAG documentation (`/docs`)
 - ✅ **Phase 7** — `/securityreview`, `/codereview`, `/debugme` (Debug Coach)
-- ✅ **Phase 8 (partielle)** — Cyber Academy (`/cyber learn`), Trust Nothing Simulation, `/threatmodel`
-- ✅ **Phase 9 (partielle)** — Question du jour (auto-postée + `/daily`), `/leaderboard`
+- ✅ **Phase 8** — Cyber Academy (`/cyber learn`), Trust Nothing Simulation,
+  `/threatmodel`, Red Team Fundamentals (cours), Blue Team (simulation de
+  logs), CTF (`/cyber ctf list|challenge|leaderboard`)
+- ✅ **Phase 9** — Question du jour (auto-postée + `/daily`), `/leaderboard`,
+  Hacktualités (`/news` + post automatique, vrais flux RSS)
 
-Prochaine étape : CTF/Labs/Red Team/Blue Team restent volontairement pas
-construits (vraie infra sandbox/VM manquante). Hacktualités (actus tech
-réelles) pas construit — nécessite de choisir une vraie source (flux RSS
-officiels) pour ne jamais inventer une actualité.
+**Volontairement non construit** : CTF Web/Pwn/Network/Reverse et Labs avec
+cibles en direct — nécessiteraient une vraie infrastructure de sandbox/VM
+isolée qui n'existe pas. Les simuler sans vraie infra serait fabriquer une
+fausse capacité. Le Red Team et le Blue Team livrés sont volontairement
+**conceptuels/simulés** (méthodologie, analyse de logs fictifs) plutôt que
+des mises en situation avec de vraies machines.
 
 ### `/leaderboard`
 
@@ -120,6 +125,44 @@ Classement global par XP (profil Nodify global, pas par guild — voir Phase 3).
 Même schéma que Phase 7 (Modal → IA → embed) : décris une architecture ou
 un flux, l'IA identifie actifs à protéger, menaces plausibles et
 protections recommandées.
+
+### Hacktualités (`/news` + post automatique)
+
+- Vrais flux RSS de sources officielles uniquement (Node.js, GitHub,
+  Cloudflare — liste dans `src/community/newsService.ts`, facile à étendre).
+  **Jamais** d'actu inventée ou résumée par IA sans lien vers l'article original
+- Vérifié toutes les 30 minutes. Au tout premier démarrage, le backlog
+  existant des flux est marqué comme "déjà vu" **sans être posté** — sinon le
+  premier lancement inonderait le salon hub avec des dizaines d'articles
+  déjà anciens (testé : confirmé qu'aucun article n'est posté au bootstrap,
+  seulement enregistré)
+- Anti-doublon global par `guid` d'article (contrainte unique DB), pas
+  d'embeddings ni de résumé — le dédoublonnage RSS est un problème résolu,
+  pas la peine de le complexifier
+
+### Red Team Fundamentals (cours Academy)
+
+Cours conceptuel de plus sur le moteur Academy existant (méthodologie
+recon/énumération/exploitation/privesc/reporting) — **pas** de vraies
+techniques offensives applicables, uniquement de la théorie avec rappel
+systématique du cadre légal (autorisation écrite requise).
+
+### Blue Team (`/cyber blueteam`)
+
+Simulation d'analyse de logs 100% fictive et statique : identifie
+l'indicateur de compromission (IOC) parmi 5 lignes de log plausibles.
+Explique la réponse dans tous les cas (bonne ou mauvaise), débloque
+l'achievement **Analyste Blue Team** en cas de bon diagnostic.
+
+### CTF (`/cyber ctf list|challenge|leaderboard`)
+
+4 défis autonomes rédigés à la main — **crypto** (César, Base64) et
+**OSINT/Forensics** (repérer une fuite d'info, un indicateur suspect) —
+volontairement pas de Web/Pwn/Network/Reverse qui nécessiteraient une
+vraie cible en direct. Soumission par Modal, réponses comparées après
+normalisation (accents/casse/espaces — testé avec des variantes réelles).
+Points crédités une seule fois par défi (contrainte DB unique), classement
+séparé de l'XP Academy (sémantiques différentes : apprentissage vs défi).
 
 ### AIService (`src/ai/`)
 

@@ -40,6 +40,9 @@ const SKILLS: { key: string; name: string; category: SkillCategory }[] = [
   // Cloud
   { key: "docker", name: "Docker", category: "CLOUD" },
   { key: "cloud-fundamentals", name: "Cloud Fundamentals", category: "CLOUD" },
+
+  // Cybersecurity (suite)
+  { key: "red-team-fundamentals", name: "Red Team Fundamentals", category: "CYBERSECURITY" },
 ];
 
 const ACHIEVEMENTS = [
@@ -60,6 +63,18 @@ const ACHIEVEMENTS = [
     name: "Esprit critique",
     description: "Tu as déjoué une tentative d'ingénierie sociale dans la Trust Nothing Simulation.",
     icon: "🕵️",
+  },
+  {
+    key: "first-flag",
+    name: "Premier flag capturé",
+    description: "Tu as résolu ton premier défi CTF sur Nodify.",
+    icon: "🚩",
+  },
+  {
+    key: "blue-team-analyst",
+    name: "Analyste Blue Team",
+    description: "Tu as correctement identifié un indicateur de compromission dans une simulation d'incident.",
+    icon: "🔵",
   },
 ];
 
@@ -539,6 +554,120 @@ const COURSES: CourseSeed[] = [
       },
     ],
   },
+  {
+    key: "redteam-fundamentals",
+    title: "Red Team Fundamentals",
+    description:
+      "La méthodologie offensive expliquée conceptuellement : reconnaissance, exploitation, reporting — uniquement en environnements autorisés.",
+    category: "CYBERSECURITY",
+    skillKey: "red-team-fundamentals",
+    level: 2,
+    lessons: [
+      {
+        order: 1,
+        title: "La méthodologie Red Team",
+        content:
+          "⚠️ Tout ce qui suit ne s'applique **que** dans le cadre d'un test d'intrusion autorisé par écrit (pentest, bug bounty avec périmètre défini, CTF). Attaquer un système sans autorisation est illégal, point final.\n\n" +
+          "La méthodologie Red Team suit généralement ces phases : **Reconnaissance** (collecter de l'information sur la cible), **Enumeration** (identifier précisément services/versions exposés), **Exploitation** (exploiter une vulnérabilité identifiée pour obtenir un accès), **Privilege Escalation** (passer d'un accès limité à des droits plus élevés), **Post-Exploitation** (maintenir l'accès, explorer le réseau interne), et enfin **Reporting** — l'étape la plus négligée mais souvent la plus utile pour le client : sans un rapport clair et actionnable, l'intrusion la plus réussie ne sert à rien.",
+        xpReward: 20,
+        questions: [
+          {
+            order: 1,
+            prompt: "Dans quel cadre les techniques Red Team peuvent-elles être utilisées légalement ?",
+            choices: [
+              "Sur n'importe quel système accessible depuis internet",
+              "Uniquement avec une autorisation écrite explicite du propriétaire du système (pentest, bug bounty avec périmètre défini)",
+              "Sur les systèmes de la concurrence",
+              "Sans restriction si l'intention est bonne",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Sans autorisation écrite et un périmètre clairement défini, ces techniques constituent une intrusion illégale — peu importe l'intention.",
+          },
+          {
+            order: 2,
+            prompt: "Quelle est souvent l'étape la plus négligée mais la plus utile pour le client ?",
+            choices: ["La reconnaissance", "L'exploitation", "Le reporting", "La post-exploitation"],
+            correctIndex: 2,
+            explanation:
+              "Un rapport clair et actionnable est ce qui permet au client de corriger réellement les failles trouvées — sans lui, le test n'a pas de valeur pratique.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Reconnaissance et énumération",
+        content:
+          "La **reconnaissance passive** collecte de l'information sans interagir directement avec la cible (OSINT : recherches publiques, réseaux sociaux, enregistrements DNS publics, offres d'emploi qui révèlent la stack technique...). La **reconnaissance active** interagit avec la cible (scan de ports, requêtes DNS directes) et laisse des traces détectables.\n\n" +
+          "L'**énumération** va plus loin que la reconnaissance : une fois qu'un service est identifié (ex: un serveur web), on cherche sa version précise, ses configurations, ses éventuelles pages ou endpoints non protégés. Plus l'énumération est précise, plus il devient facile de cibler une vulnérabilité connue pour cette version exacte plutôt que d'essayer au hasard.",
+        xpReward: 20,
+        questions: [
+          {
+            order: 1,
+            prompt: "Qu'est-ce qui distingue la reconnaissance passive de la reconnaissance active ?",
+            choices: [
+              "La passive est illégale, l'active est légale",
+              "La passive ne laisse aucune trace détectable par la cible (recherches publiques), l'active interagit directement avec elle",
+              "Il n'y a aucune différence",
+              "La passive est toujours plus rapide",
+            ],
+            correctIndex: 1,
+            explanation:
+              "La reconnaissance passive (OSINT, recherches publiques) ne touche jamais directement la cible, contrairement à un scan de ports par exemple, qui est actif et détectable.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi l'énumération précise (version exacte d'un service) est-elle utile à un attaquant ?",
+            choices: [
+              "Elle ne sert à rien de particulier",
+              "Elle permet de cibler des vulnérabilités connues spécifiques à cette version plutôt que d'essayer au hasard",
+              "Elle rend le scan plus lent",
+              "Elle est uniquement utile pour la défense, jamais l'attaque",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Connaître la version exacte permet de chercher des CVE (vulnérabilités connues) documentées pour cette version précise, bien plus efficace qu'une approche à l'aveugle.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "De l'exploitation au reporting",
+        content:
+          "L'**exploitation** consiste à utiliser une vulnérabilité identifiée pour obtenir un accès initial. La **privilege escalation** cherche ensuite à passer d'un accès limité (ex: utilisateur standard) à des droits plus élevés (ex: administrateur) — souvent via une mauvaise configuration plutôt qu'une faille sophistiquée (permissions trop larges, mot de passe administrateur réutilisé...).\n\n" +
+          "La **post-exploitation** explore ce qui est accessible depuis l'accès obtenu (mouvement latéral vers d'autres machines, données sensibles accessibles), toujours dans le périmètre autorisé. Enfin, le **rapport** doit lister chaque vulnérabilité trouvée avec sa sévérité, la preuve de concept, et une recommandation de correction concrète — c'est ce livrable, pas l'exploit lui-même, qui a de la valeur pour le client.",
+        xpReward: 20,
+        questions: [
+          {
+            order: 1,
+            prompt: "La privilege escalation exploite le plus souvent :",
+            choices: [
+              "Toujours une faille 0-day sophistiquée",
+              "Souvent une mauvaise configuration (permissions trop larges, mot de passe réutilisé) plutôt qu'une faille complexe",
+              "Une attaque physique sur le serveur",
+              "Un problème matériel",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Dans la pratique, la privilege escalation vient très souvent d'erreurs de configuration simples, pas d'exploits sophistiqués — d'où l'importance du principe du moindre privilège.",
+          },
+          {
+            order: 2,
+            prompt: "Qu'est-ce qui a le plus de valeur pour le client à l'issue d'un test d'intrusion ?",
+            choices: [
+              "L'exploit technique en lui-même",
+              "Un rapport clair listant les failles, leur sévérité, et des recommandations de correction concrètes",
+              "Le temps passé sur le test",
+              "Le nombre de systèmes compromis",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un rapport actionnable est ce qui permet au client de corriger réellement les failles — c'est le vrai livrable d'un test d'intrusion, pas l'exploit.",
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 /**
@@ -748,6 +877,76 @@ const DAILY_QUESTIONS: DailyQuestionSeed[] = [
   },
 ];
 
+/**
+ * Défis CTF (Phase 8) — rédigés à la main, résolubles sans cible en direct
+ * (crypto/forensics/OSINT uniquement). Pas de Web/Pwn/Network/Reverse : ces
+ * catégories nécessiteraient une vraie infrastructure de sandbox qu'on n'a
+ * pas — les simuler serait fabriquer une fausse capacité.
+ *
+ * `acceptedAnswers` : plusieurs formulations valides acceptées (comparaison
+ * normalisée — minuscules, accents retirés, espaces superflus supprimés —
+ * voir src/cybersecurity/ctfService.ts).
+ */
+interface CtfChallengeSeed {
+  key: string;
+  category: string;
+  difficulty: number;
+  title: string;
+  description: string;
+  hint?: string;
+  points: number;
+  acceptedAnswers: string[];
+}
+
+const CTF_CHALLENGES: CtfChallengeSeed[] = [
+  {
+    key: "caesar-basics",
+    category: "CRYPTO",
+    difficulty: 1,
+    title: "Décalage suspect",
+    description:
+      "Un message intercepté semble chiffré avec un simple décalage de César (shift +3) :\n\n`qrglib`\n\nDéchiffre-le (un seul mot, en minuscules).",
+    hint: "Chaque lettre a été décalée de 3 positions vers l'avant dans l'alphabet (a→d, b→e...). Pour déchiffrer, décale de 3 vers l'arrière.",
+    points: 50,
+    acceptedAnswers: ["nodify"],
+  },
+  {
+    key: "base64-basics",
+    category: "CRYPTO",
+    difficulty: 1,
+    title: "Encodage familier",
+    description:
+      "Ce message a été encodé, pas chiffré — la nuance compte. Décode-le :\n\n`Tm9kaWZ5IEFjYWRlbXk=`",
+    hint: "Le suffixe `=` et l'alphabet utilisé (lettres, chiffres, +, /) sont typiques d'un encodage très répandu sur le web.",
+    points: 50,
+    acceptedAnswers: ["nodify academy"],
+  },
+  {
+    key: "osint-oversharing",
+    category: "OSINT",
+    difficulty: 2,
+    title: "Trop d'informations",
+    description:
+      "Un profil public sur un forum indique : « Je travaille chez Nodify, bureau de Lyon, badge d'accès #482, en poste depuis janvier 2024. »\n\n" +
+      "Quel élément précis de ce message pourrait permettre à un attaquant de tenter une usurpation d'identité physique sur le lieu de travail (un seul mot) ?",
+    hint: "Pense à ce qui donne un accès physique à un bâtiment.",
+    points: 75,
+    acceptedAnswers: ["badge", "le badge", "numero de badge", "numéro de badge"],
+  },
+  {
+    key: "forensics-ioc",
+    category: "FORENSICS",
+    difficulty: 3,
+    title: "Signal dans le bruit",
+    description:
+      "Un log serveur montre une connexion réussie à 03h14 un dimanche, depuis un pays où l'entreprise n'a aucun employé, immédiatement suivie d'un export massif de données.\n\n" +
+      "Quel terme générique (acronyme à 3 lettres, en anglais) désigne ce type de signal qui suggère une compromission ?",
+    hint: "C'est l'acronyme de « Indicator Of Compromise ».",
+    points: 100,
+    acceptedAnswers: ["ioc"],
+  },
+];
+
 async function main() {
   for (const skill of SKILLS) {
     await prisma.skill.upsert({
@@ -839,6 +1038,16 @@ async function main() {
     });
   }
   console.log(`✅ ${DAILY_QUESTIONS.length} question(s) du jour synchronisée(s)`);
+
+  for (const challenge of CTF_CHALLENGES) {
+    const { acceptedAnswers, ...data } = challenge;
+    await prisma.ctfChallenge.upsert({
+      where: { key: challenge.key },
+      create: { ...data, acceptedAnswers: JSON.stringify(acceptedAnswers) },
+      update: { ...data, acceptedAnswers: JSON.stringify(acceptedAnswers) },
+    });
+  }
+  console.log(`✅ ${CTF_CHALLENGES.length} défi(s) CTF synchronisé(s)`);
 }
 
 main()

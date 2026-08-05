@@ -84,6 +84,7 @@ model User {
   courseProgress    UserCourseProgress[]
   lessonCompletions UserLessonCompletion[]
   dailyAnswers      DailyQuestionAnswer[]
+  ctfSolves         CtfSolve[]
 
   @@map("users")
 }
@@ -355,4 +356,62 @@ model DailyQuestionAnswer {
 
   @@unique([userId, guildId, date])
   @@map("daily_question_answers")
+}
+
+/// CTF (Phase 8) — défis AUTONOMES rédigés à la main, résolubles sans cible
+/// en direct (crypto/forensics/OSINT). Volontairement pas de catégories
+/// Web/Pwn/Network/Reverse qui nécessiteraient une vraie infrastructure de
+/// sandbox — ce serait fabriquer une fausse capacité.
+///
+/// `acceptedAnswers` : JSON array de réponses valides normalisées (voir
+/// src/cybersecurity/ctfService.ts) — permet d'accepter plusieurs formulations
+/// correctes (ex: "IOC" et "indicateur de compromission") sans dupliquer le défi.
+model CtfChallenge {
+  id          String @id @default(cuid())
+  key         String @unique
+  category    String // "CRYPTO" | "FORENSICS" | "OSINT" (extensible)
+  difficulty  Int // 1 (Beginner) à 5 (Expert), voir LEVEL_ROLES
+  title       String
+  description String
+  hint        String?
+  points      Int
+
+  acceptedAnswers String // JSON array de strings
+
+  createdAt DateTime @default(now())
+  solves    CtfSolve[]
+
+  @@map("ctf_challenges")
+}
+
+/// Résolution d'un défi CTF par un utilisateur. Contrainte unique : un défi
+/// ne rapporte ses points qu'une seule fois par utilisateur.
+model CtfSolve {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  challengeId String
+  challenge   CtfChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  solvedAt DateTime @default(now())
+
+  @@unique([userId, challengeId])
+  @@map("ctf_solves")
+}
+
+/// Hacktualités (Phase 9) — jamais d'actualité inventée : uniquement des
+/// articles réels récupérés depuis de vrais flux RSS de sources officielles
+/// (voir src/community/newsService.ts pour la liste des flux).
+/// Un seul enregistrement par article déjà diffusé (guid du flux RSS), pour
+/// ne jamais reposter deux fois le même article sur l'ensemble des guildes.
+model PostedNewsArticle {
+  id       String   @id @default(cuid())
+  guid     String   @unique
+  source   String
+  title    String
+  url      String
+  postedAt DateTime @default(now())
+
+  @@map("posted_news_articles")
 }
