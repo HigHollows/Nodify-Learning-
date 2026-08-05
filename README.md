@@ -48,6 +48,7 @@ de code avant d'avoir réellement conçu ces systèmes.
 3. Générer le client Prisma et créer la base SQLite :
    ```bash
    npm run prisma:migrate -- --name init
+   npm run prisma:seed
    ```
 
 4. Déployer les slash commands sur Discord :
@@ -84,8 +85,25 @@ bout — les fondations de la Phase 1 sont posées.
 Voir les phases dans le prompt fondateur du projet. Statut actuel :
 - ✅ **Phase 1** — Architecture, Database, Discord.js, Config, Logging, Command/Event loader
 - ✅ **Phase 2** — `/setup` (rôles de niveau + salon hub), auto-recovery idempotente
+- ✅ **Phase 3** — User Profile global, Skills, Streak, Achievements
 
-Prochaine étape : Phase 3 (User Profile, Skills, Progression, Achievements).
+Prochaine étape : Phase 4 (Knowledge Engine — dictionnaire, concepts).
+
+### `/profile`
+
+Profil **global** par utilisateur Discord (partagé entre tous les serveurs
+où Nodify est installé — la progression d'une personne ne dépend pas du
+serveur qu'elle a rejoint).
+
+- Créé automatiquement à la première interaction avec Nodify (`recordActivity`,
+  branché dans `interactionCreate` pour toutes les commandes)
+- **Streak** : jours consécutifs d'activité, mesure réelle d'engagement
+- **XP / niveau** : reste à 0 tant que l'Academy (Phase 5) n'existe pas —
+  volontairement aucune XP fabriquée artificiellement
+- **Compétences** : catalogue statique seedé (`npm run prisma:seed`), vide
+  pour chaque utilisateur tant qu'aucun cours n'en attribue
+- **Succès** : un seul pour l'instant ("Bienvenue"), débloqué à la 1ère
+  interaction — prouve le pipeline, les autres arriveront avec du vrai contenu
 
 ### `/setup`
 

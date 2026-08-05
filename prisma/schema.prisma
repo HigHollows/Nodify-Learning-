@@ -1,9 +1,11 @@
 // Nodify — schéma Prisma
 //
-// Phase 1 : uniquement les fondations multi-guild (Guild + config).
-// Les modèles Skills/Courses/Progress/Concepts/etc. arriveront avec
-// les phases 3 (User Profile) et 4 (Knowledge Engine) pour éviter
-// de figer un schéma qu'on n'a pas encore vraiment conçu.
+// Phase 1 : fondations multi-guild (Guild + config).
+// Phase 3 : User Profile global (indépendant des guilds — un utilisateur a
+// un seul profil, une seule progression, peu importe le serveur Discord
+// depuis lequel il interagit).
+// Les modèles Courses/Concepts/Documentation arriveront avec la Phase 4
+// (Knowledge Engine) pour éviter de figer un schéma pas encore conçu.
 
 generator client {
   provider = "prisma-client-js"
@@ -49,4 +51,93 @@ model GuildConfig {
   updatedAt DateTime @updatedAt
 
   @@map("guild_configs")
+}
+
+/// Profil utilisateur GLOBAL : un seul par personne Discord, partagé sur
+/// tous les serveurs où Nodify est installé. La progression d'une personne
+/// ne dépend pas du serveur qu'elle a rejoint.
+model User {
+  id       String @id // Discord user ID (snowflake)
+  username String // dernier username connu, mis à jour à chaque interaction
+
+  // XP global : reste à 0 tant qu'aucune vraie source d'apprentissage
+  // (Academy, Phase 5) n'existe. Pas de gain d'XP fabriqué artificiellement.
+  totalXp Int @default(0)
+
+  // Streak : mesure réelle d'engagement (jours consécutifs avec au moins
+  // une interaction Nodify), indépendante du contenu pédagogique.
+  currentStreak  Int       @default(0)
+  longestStreak  Int       @default(0)
+  lastActiveDate String? // date UTC "YYYY-MM-DD" du dernier jour actif
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  skills       UserSkill[]
+  achievements UserAchievement[]
+
+  @@map("users")
+}
+
+/// Catalogue statique des compétences reconnues par Nodify.
+/// Référentiel indépendant du contenu des cours — l'Academy (Phase 5) et
+/// la Cyber Academy (Phase 8) s'y raccrocheront sans dupliquer cette liste.
+///
+/// `category` : SQLite ne supporte pas les enums natifs Prisma, donc stocké
+/// en String et validé côté app via le type SkillCategory (src/types/skill.ts).
+model Skill {
+  id       String @id @default(cuid())
+  key      String @unique // ex: "javascript", "linux" — stable, ne pas renommer
+  name     String
+  category String // "DEVELOPMENT" | "CYBERSECURITY" | "NETWORKING" | "AI" | "SYSTEMS" | "CLOUD"
+
+  users UserSkill[]
+
+  @@map("skills")
+}
+
+/// Progression d'un utilisateur sur une compétence précise.
+/// Le niveau (Beginner..Expert) est dérivé de `xp`, pas stocké, pour ne
+/// jamais désynchroniser la donnée brute et sa représentation.
+model UserSkill {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  skillId String
+  skill   Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  xp        Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, skillId])
+  @@map("user_skills")
+}
+
+/// Catalogue statique des succès débloquables.
+model Achievement {
+  id          String @id @default(cuid())
+  key         String @unique // ex: "welcome" — stable, ne pas renommer
+  name        String
+  description String
+  icon        String // emoji
+
+  users UserAchievement[]
+
+  @@map("achievements")
+}
+
+/// Succès effectivement débloqué par un utilisateur.
+model UserAchievement {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  earnedAt DateTime @default(now())
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
 }

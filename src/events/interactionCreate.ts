@@ -4,6 +4,7 @@ import {
   type InteractionReplyOptions,
 } from "discord.js";
 import type { NodifyClient } from "../client.js";
+import { recordActivity } from "../services/userService.js";
 import type { Event } from "../types/event.js";
 import { AppError } from "../utils/errors.js";
 import { childLogger } from "../utils/logger.js";
@@ -22,6 +23,14 @@ const event: Event<"interactionCreate"> = {
       log.warn({ commandName: interaction.commandName }, "Commande inconnue reçue");
       return;
     }
+
+    // Résilient : un profil non mis à jour ne doit jamais empêcher une commande
+    // de s'exécuter — on log et on continue plutôt que de bloquer l'utilisateur.
+    await recordActivity({ id: interaction.user.id, username: interaction.user.username }).catch(
+      (error: unknown) => {
+        log.warn({ err: error, userId: interaction.user.id }, "Échec de recordActivity");
+      },
+    );
 
     try {
       await command.execute(interaction);
