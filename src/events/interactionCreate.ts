@@ -51,6 +51,9 @@ import {
   handleSecurityFixButton,
   handleSecurityReviewSubmit,
 } from "../interactions/devtoolsInteractions.js";
+import { handleThreatModelSubmit } from "../interactions/threatModelInteractions.js";
+import { THREAT_MODEL_MODAL_ID } from "../cybersecurity/threatModelView.js";
+import { handleDailyAnswer } from "../interactions/dailyQuestionInteractions.js";
 import { recordActivity } from "../services/userService.js";
 import type { Event } from "../types/event.js";
 import { AppError } from "../utils/errors.js";
@@ -164,6 +167,16 @@ const event: Event<"interactionCreate"> = {
         return;
       }
 
+      if (interaction.customId.startsWith("daily:answer:")) {
+        const [, , questionKey, choiceIndexStr] = interaction.customId.split(":");
+        if (questionKey && choiceIndexStr !== undefined) {
+          await runWithGuards(interaction, interaction.customId, () =>
+            handleDailyAnswer(interaction, questionKey, Number(choiceIndexStr)),
+          );
+          return;
+        }
+      }
+
       const academyAction = parseAcademyCustomId(interaction.customId);
       if (academyAction) {
         await runWithGuards(interaction, interaction.customId, async () => {
@@ -232,6 +245,13 @@ const event: Event<"interactionCreate"> = {
       if (interaction.customId === DEBUGME_MODAL_ID) {
         await runWithGuards(interaction, interaction.customId, () =>
           handleDebugSubmit(interaction),
+        );
+        return;
+      }
+
+      if (interaction.customId === THREAT_MODEL_MODAL_ID) {
+        await runWithGuards(interaction, interaction.customId, () =>
+          handleThreatModelSubmit(interaction),
         );
         return;
       }

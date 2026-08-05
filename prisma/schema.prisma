@@ -37,9 +37,15 @@ model GuildConfig {
   guild   Guild  @relation(fields: [guildId], references: [id], onDelete: Cascade)
 
   // Modules activables indépendamment par serveur
-  academyEnabled  Boolean @default(true)
-  cyberEnabled    Boolean @default(true)
-  newsEnabled     Boolean @default(true)
+  academyEnabled       Boolean @default(true)
+  cyberEnabled         Boolean @default(true)
+  newsEnabled          Boolean @default(true) // Hacktualités (Phase 9) — pas encore construit
+  dailyQuestionEnabled Boolean @default(true)
+
+  // Anti-doublon de la Question du jour : ne repostée qu'une fois par jour UTC,
+  // et on évite de reposter deux fois la même question d'affilée.
+  lastDailyQuestionDate String? // "YYYY-MM-DD"
+  lastDailyQuestionKey  String?
 
   // Salons/rôles créés automatiquement par /setup, pour l'auto-recovery.
   // JSON object { [resourceKey]: snowflake } — la clé est l'identifiant stable
@@ -73,10 +79,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  skills           UserSkill[]
-  achievements     UserAchievement[]
-  courseProgress   UserCourseProgress[]
+  skills            UserSkill[]
+  achievements      UserAchievement[]
+  courseProgress    UserCourseProgress[]
   lessonCompletions UserLessonCompletion[]
+  dailyAnswers      DailyQuestionAnswer[]
 
   @@map("users")
 }
@@ -312,4 +319,40 @@ model DocChunk {
 
   @@unique([source, title])
   @@map("doc_chunks")
+}
+
+/// Catalogue statique de questions pour la Question du jour — rédigées à la
+/// main, pas de contenu inventé à la volée par IA (évite les questions
+/// factuellement fausses générées automatiquement).
+model DailyQuestion {
+  id           String @id @default(cuid())
+  key          String @unique
+  category     String // même taxonomie que Skill.category
+  prompt       String
+  choices      String // JSON array de strings
+  correctIndex Int
+  explanation  String
+
+  createdAt DateTime @default(now())
+
+  @@map("daily_questions")
+}
+
+/// Une réponse d'utilisateur à LA question du jour d'une guild donnée.
+/// Contrainte unique (userId, guildId, date) : empêche de répondre deux
+/// fois au même jour sur le même serveur, que ce soit via le post
+/// automatique ou via /daily.
+model DailyQuestionAnswer {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  guildId String
+  date    String // "YYYY-MM-DD" UTC
+  correct Boolean
+
+  answeredAt DateTime @default(now())
+
+  @@unique([userId, guildId, date])
+  @@map("daily_question_answers")
 }

@@ -86,6 +86,23 @@ export async function suggestCodeFix(code: string, findings: string): Promise<st
   return complete(system, user, 900);
 }
 
+// --- Threat Modeling (Phase 8) ---------------------------------------------
+
+export async function analyzeThreatModel(description: string): Promise<string> {
+  const system =
+    "Tu es un architecte sécurité qui fait du threat modeling pour un développeur. " +
+    "On te décrit une architecture ou un flux applicatif (pas du code). Réponds en " +
+    "français, en markdown, structuré en 3 sections : « 🎯 Actifs à protéger » " +
+    "(données/ressources sensibles en jeu), « ⚠️ Menaces principales » (scénarios " +
+    "d'attaque plausibles compte tenu de l'architecture décrite), et " +
+    "« 🛡️ Protections recommandées » (mesures concrètes, priorisées). Reste " +
+    "concis (250 mots maximum). Si la description est trop vague pour analyser " +
+    "sérieusement, dis-le et demande les précisions nécessaires plutôt que d'inventer.";
+
+  const user = `Architecture/flux à analyser :\n${description}`;
+  return complete(system, user, 800);
+}
+
 // --- Code Review qualité (Phase 7) ----------------------------------------
 
 export async function reviewCodeQuality(code: string): Promise<string> {

@@ -626,6 +626,128 @@ const DOC_CHUNKS: DocChunkSeed[] = [
   },
 ];
 
+/**
+ * Question du jour — catalogue statique rédigé à la main (pas de génération
+ * IA à la volée, pour éviter une question factuellement fausse). Postée
+ * automatiquement dans le salon hub (voir src/community/dailyQuestionService.ts).
+ */
+interface DailyQuestionSeed {
+  key: string;
+  category: SkillCategory;
+  prompt: string;
+  choices: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
+const DAILY_QUESTIONS: DailyQuestionSeed[] = [
+  {
+    key: "typeof-null",
+    category: "DEVELOPMENT",
+    prompt: "En JavaScript, que retourne `typeof null` ?",
+    choices: ["\"null\"", "\"undefined\"", "\"object\"", "\"number\""],
+    correctIndex: 2,
+    explanation:
+      "C'est un bug historique du langage conservé pour la compatibilité : `typeof null` retourne `\"object\"`, alors que `null` n'est pas un objet.",
+  },
+  {
+    key: "git-reset-soft",
+    category: "DEVELOPMENT",
+    prompt:
+      "Quelle commande Git annule le dernier commit tout en gardant les modifications indexées (prêtes à recommit) ?",
+    choices: [
+      "git reset --hard HEAD~1",
+      "git reset --soft HEAD~1",
+      "git revert HEAD",
+      "git checkout HEAD~1",
+    ],
+    correctIndex: 1,
+    explanation:
+      "`--soft` déplace juste le pointeur de branche, en gardant les changements dans la zone d'index (stagés). `--hard` les supprimerait complètement, `--mixed` (par défaut) les garderait mais désindexés.",
+  },
+  {
+    key: "https-port",
+    category: "NETWORKING",
+    prompt: "Quel port HTTPS utilise-t-il par défaut ?",
+    choices: ["21", "80", "443", "8080"],
+    correctIndex: 2,
+    explanation: "HTTPS utilise le port 443 par défaut ; HTTP (non chiffré) utilise le port 80.",
+  },
+  {
+    key: "dns-acronym",
+    category: "NETWORKING",
+    prompt: "Que signifie l'acronyme DNS ?",
+    choices: [
+      "Dynamic Network Service",
+      "Domain Name System",
+      "Data Node Server",
+      "Digital Naming Standard",
+    ],
+    correctIndex: 1,
+    explanation: "DNS = Domain Name System, le service qui traduit les noms de domaine en IP.",
+  },
+  {
+    key: "llm-acronym",
+    category: "AI",
+    prompt: "Que signifie l'acronyme LLM ?",
+    choices: [
+      "Large Language Model",
+      "Long Learning Machine",
+      "Linear Logic Model",
+      "Local Language Module",
+    ],
+    correctIndex: 0,
+    explanation: "LLM = Large Language Model, un modèle de langage entraîné sur d'énormes volumes de texte.",
+  },
+  {
+    key: "linux-top",
+    category: "SYSTEMS",
+    prompt:
+      "Sous Linux, quelle commande affiche les processus en cours d'exécution en temps réel ?",
+    choices: ["ls", "top", "cat", "chmod"],
+    correctIndex: 1,
+    explanation:
+      "`top` affiche un tableau de bord des processus en temps réel (CPU, mémoire...). `ls` liste des fichiers, `chmod` change des permissions.",
+  },
+  {
+    key: "sql-having",
+    category: "DEVELOPMENT",
+    prompt: "En SQL, quelle clause filtre les résultats APRÈS un GROUP BY ?",
+    choices: ["WHERE", "HAVING", "FILTER", "ORDER BY"],
+    correctIndex: 1,
+    explanation:
+      "WHERE filtre les lignes AVANT le regroupement ; HAVING filtre les groupes APRÈS le GROUP BY (ex: HAVING COUNT(*) > 5).",
+  },
+  {
+    key: "mitm-attack",
+    category: "CYBERSECURITY",
+    prompt:
+      "Quel type d'attaque consiste à intercepter les communications entre deux parties sans qu'elles le sachent ?",
+    choices: ["DDoS", "Man-in-the-Middle", "Brute force", "Cross-Site Scripting"],
+    correctIndex: 1,
+    explanation:
+      "Le Man-in-the-Middle (MITM) place l'attaquant entre les deux parties, capable de lire voire modifier les échanges à leur insu.",
+  },
+  {
+    key: "docker-ps",
+    category: "CLOUD",
+    prompt: "Quelle commande Docker liste les conteneurs en cours d'exécution ?",
+    choices: ["docker images", "docker ps", "docker run", "docker build"],
+    correctIndex: 1,
+    explanation:
+      "`docker ps` liste les conteneurs actifs. `docker images` liste les images, `docker run` en lance un nouveau, `docker build` en construit une.",
+  },
+  {
+    key: "array-map-immutable",
+    category: "DEVELOPMENT",
+    prompt: "Quelle méthode de tableau JavaScript ne modifie PAS le tableau original ?",
+    choices: ["push", "splice", "map", "sort"],
+    correctIndex: 2,
+    explanation:
+      "`map` retourne un nouveau tableau sans toucher à l'original. `push`, `splice` et `sort` modifient tous le tableau en place.",
+  },
+];
+
 async function main() {
   for (const skill of SKILLS) {
     await prisma.skill.upsert({
@@ -707,6 +829,16 @@ async function main() {
     });
   }
   console.log(`✅ ${DOC_CHUNKS.length} extrait(s) de documentation synchronisé(s)`);
+
+  for (const q of DAILY_QUESTIONS) {
+    const { choices, ...data } = q;
+    await prisma.dailyQuestion.upsert({
+      where: { key: q.key },
+      create: { ...data, choices: JSON.stringify(choices) },
+      update: { ...data, choices: JSON.stringify(choices) },
+    });
+  }
+  console.log(`✅ ${DAILY_QUESTIONS.length} question(s) du jour synchronisée(s)`);
 }
 
 main()

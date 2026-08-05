@@ -1,4 +1,5 @@
 import { countAchievements } from "../database/repositories/achievementRepository.js";
+import { listTopUsersByXp } from "../database/repositories/userRepository.js";
 import { SKILL_CATEGORY_LABELS, type SkillCategory } from "../types/skill.js";
 import { levelForXp, progressBar, type LevelInfo } from "../utils/leveling.js";
 import { getProfile } from "./userService.js";
@@ -59,4 +60,23 @@ export async function buildProfileView(discordId: string): Promise<ProfileView |
     achievementsUnlockedCount: profile.achievements.length,
     achievementsTotalCount,
   };
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  username: string;
+  totalXp: number;
+  levelName: string;
+}
+
+/** Classement global par XP (toutes guildes confondues — profil Nodify global). */
+export async function buildLeaderboard(limit: number): Promise<LeaderboardEntry[]> {
+  const users = await listTopUsersByXp(limit);
+
+  return users.map((user, index) => ({
+    rank: index + 1,
+    username: user.username,
+    totalXp: user.totalXp,
+    levelName: levelForXp(user.totalXp).name,
+  }));
 }

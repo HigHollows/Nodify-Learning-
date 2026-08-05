@@ -1,9 +1,13 @@
 import { NodifyClient } from "./client.js";
+import { checkAndPostDailyQuestions } from "./community/dailyQuestionService.js";
 import { env } from "./config/env.js";
 import { connectDatabase, disconnectDatabase } from "./database/client.js";
 import { loadCommands } from "./loaders/commandLoader.js";
 import { loadEvents } from "./loaders/eventLoader.js";
 import { logger } from "./utils/logger.js";
+
+/** Vérifie toutes les 15 minutes s'il faut poster la question du jour quelque part. */
+const DAILY_QUESTION_CHECK_INTERVAL_MS = 15 * 60 * 1000;
 
 async function main() {
   logger.info(`🚀 Démarrage de Nodify (env: ${env.NODE_ENV})`);
@@ -16,10 +20,25 @@ async function main() {
 
   await client.login(env.DISCORD_TOKEN);
 
+  // Vérification immédiate au démarrage (utile après un redémarrage tardif
+  // dans la journée), puis toutes les 15 minutes. checkAndPostDailyQuestions
+  // est idempotente : rien ne se passe si déjà postée aujourd'hui.
+  const dailyQuestionInterval = setInterval(() => {
+    checkAndPostDailyQuestions(client).catch((error: unknown) => {
+      logger.error({ err: error }, "Échec de la vérification de la question du jour");
+    });
+  }, DAILY_QUESTION_CHECK_INTERVAL_MS);
+  client.once("ready", () => {
+    checkAndPostDailyQuestions(client).catch((error: unknown) => {
+      logger.error({ err: error }, "Échec de la vérification initiale de la question du jour");
+    });
+  });
+
   // Arrêt propre : on ferme la connexion DB et le client Discord avant de quitter,
   // pour ne jamais couper une requête ou une écriture en plein vol.
   const shutdown = async (signal: string) => {
     logger.info(`Signal ${signal} reçu, arrêt de Nodify...`);
+    clearInterval(dailyQuestionInterval);
     client.destroy();
     await disconnectDatabase();
     process.exit(0);

@@ -90,11 +90,36 @@ Voir les phases dans le prompt fondateur du projet. Statut actuel :
 - ✅ **Phase 5** — Academy : `/learn`, cours/leçons/quiz, XP réelle, progression adaptative
 - ✅ **Phase 6** — AIService/ModelRouter + `/explainme` + RAG documentation (`/docs`)
 - ✅ **Phase 7** — `/securityreview`, `/codereview`, `/debugme` (Debug Coach)
-- ✅ **Phase 8 (partielle)** — Cyber Academy (`/cyber learn`) + Trust Nothing Simulation
+- ✅ **Phase 8 (partielle)** — Cyber Academy (`/cyber learn`), Trust Nothing Simulation, `/threatmodel`
+- ✅ **Phase 9 (partielle)** — Question du jour (auto-postée + `/daily`), `/leaderboard`
 
 Prochaine étape : CTF/Labs/Red Team/Blue Team restent volontairement pas
-construits — nécessitent une vraie infrastructure de sandbox/VM isolée qui
-n'existe pas encore (voir section Cyber Academy ci-dessous).
+construits (vraie infra sandbox/VM manquante). Hacktualités (actus tech
+réelles) pas construit — nécessite de choisir une vraie source (flux RSS
+officiels) pour ne jamais inventer une actualité.
+
+### `/leaderboard`
+
+Classement global par XP (profil Nodify global, pas par guild — voir Phase 3).
+
+### Question du jour (`/daily` + post automatique)
+
+- Catalogue de 10 questions rédigées à la main, sélection **déterministe**
+  par jour UTC (même question pour tout le monde, pas de tirage aléatoire
+  qui désynchroniserait `/daily` et le post automatique)
+- Postée automatiquement dans le salon hub (`/setup`) de chaque guild qui
+  l'a activée, vérifié toutes les 15 minutes (`src/index.ts`) — idempotent,
+  ne reposte jamais deux fois le même jour
+- Une seule réponse comptée par utilisateur par jour et par guild (contrainte
+  DB unique, testée), même en mélangeant `/daily` et le post automatique
+- **Pas de nouvelle dépendance** : aucun scheduler externe, juste un
+  `setInterval` côté process — suffisant à cette échelle
+
+### `/threatmodel`
+
+Même schéma que Phase 7 (Modal → IA → embed) : décris une architecture ou
+un flux, l'IA identifie actifs à protéger, menaces plausibles et
+protections recommandées.
 
 ### AIService (`src/ai/`)
 

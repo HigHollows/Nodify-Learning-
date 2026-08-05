@@ -36,3 +36,16 @@ export async function getUserProfile(discordId: string) {
     },
   });
 }
+
+/**
+ * Top utilisateurs par XP globale (toutes guildes confondues — le profil
+ * Nodify est global, voir Phase 3). Le filtrage à l'affichage aux seuls
+ * membres présents sur la guild courante se fait côté commande, pas ici.
+ */
+export async function listTopUsersByXp(limit: number) {
+  return prisma.user.findMany({
+    where: { totalXp: { gt: 0 } },
+    orderBy: { totalXp: "desc" },
+    take: limit,
+  });
+}
