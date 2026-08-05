@@ -9,7 +9,13 @@ const log = childLogger("commandLoader");
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const COMMANDS_DIR = path.join(__dirname, "..", "commands");
 
-/** Parcourt src/commands/**\/*.ts (ou .js en prod compilé) récursivement. */
+/**
+ * Parcourt src/commands/**\/*.ts (ou .js en prod compilé) récursivement.
+ * Exclut les fichiers *.test.ts/*.test.js : `dist/` (build de prod) ne les
+ * contient déjà plus (tsconfig.build.json), mais `tsx` (dev/deploy:commands)
+ * exécute directement sur src/ et les verrait sinon — un fichier de test
+ * importé hors du runner vitest plante (describe/it non définis).
+ */
 function walk(dir: string): string[] {
   const entries = readdirSync(dir);
   const files: string[] = [];
@@ -18,7 +24,7 @@ function walk(dir: string): string[] {
     const fullPath = path.join(dir, entry);
     if (statSync(fullPath).isDirectory()) {
       files.push(...walk(fullPath));
-    } else if (entry.endsWith(".js") || entry.endsWith(".ts")) {
+    } else if (/\.(js|ts)$/.test(entry) && !/\.test\.(js|ts)$/.test(entry)) {
       files.push(fullPath);
     }
   }
