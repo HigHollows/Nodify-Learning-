@@ -35,11 +35,16 @@ export async function loadCommands(client: NodifyClient): Promise<void> {
   let loaded = 0;
 
   for (const file of files) {
-    const imported = await import(pathToFileURL(file).href);
-    const command: Command | undefined = imported.default;
+    const imported: unknown = await import(pathToFileURL(file).href);
+    const command = (imported as { default?: Command }).default;
 
-    if (!command?.data || typeof command.execute !== "function") {
-      log.warn({ file }, "Fichier de commande invalide, ignoré (export default manquant)");
+    // Beaucoup de fichiers dans src/commands/<domaine>/ sont des modules
+    // partagés (vues, parseurs de customId...) sans export default, pas des
+    // commandes — c'est attendu, pas la peine de le crier en warning.
+    if (!command) continue;
+
+    if (!command.data || typeof command.execute !== "function") {
+      log.warn({ file }, "Export default invalide pour une commande (data/execute manquant)");
       continue;
     }
 
@@ -56,8 +61,8 @@ export async function loadCommandDefinitions(): Promise<Command[]> {
   const commands: Command[] = [];
 
   for (const file of files) {
-    const imported = await import(pathToFileURL(file).href);
-    const command: Command | undefined = imported.default;
+    const imported: unknown = await import(pathToFileURL(file).href);
+    const command = (imported as { default?: Command }).default;
     if (command?.data && typeof command.execute === "function") {
       commands.push(command);
     }

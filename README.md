@@ -62,6 +62,20 @@ de code avant d'avoir réellement conçu ces systèmes.
    npm run dev
    ```
 
+## Déploiement (hébergeur type Pterodactyl/Bot-Hosting)
+
+Ces panels lancent typiquement `npm install && node index.js` sans étape de
+build/migration configurable. Deux mécanismes s'en chargent automatiquement :
+
+- **`postinstall`** (package.json) : génère le client Prisma et compile
+  TypeScript (`dist/`) à chaque `npm install`
+- **`index.js`** (racine) : applique les migrations Prisma (`prisma migrate
+  deploy`) puis démarre le vrai code compilé (`dist/index.js`)
+
+Renseigne juste les variables d'environnement du panel (`DISCORD_TOKEN`,
+`DISCORD_CLIENT_ID`, `DATABASE_URL`, clé IA...) — pas besoin de configurer de
+commande de build séparée.
+
 ## Vérifier que ça marche
 
 Une fois le bot en ligne, taper `/ping` sur le serveur Discord configuré →
