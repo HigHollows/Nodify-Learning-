@@ -9,6 +9,18 @@ import { labelForLevelOrder } from "../../utils/leveling.js";
 
 export const ACADEMY_LIST_BUTTON_ID = "academy:list";
 
+export function buildPrerequisitesBlockedReply(missingPrerequisites: string[]) {
+  const embed = new EmbedBuilder()
+    .setTitle("🔒 Prérequis manquant")
+    .setColor("Orange")
+    .setDescription(
+      "Termine d'abord ce(s) cours avant de pouvoir commencer celui-ci :\n" +
+        missingPrerequisites.map((title) => `• **${title}**`).join("\n"),
+    );
+
+  return { embeds: [embed], components: [] };
+}
+
 const STATUS_LABEL: Record<CourseSummary["status"], string> = {
   not_started: "⚪ Pas commencé",
   in_progress: "🟡 En cours",

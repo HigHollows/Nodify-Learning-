@@ -50,7 +50,8 @@ const command: Command = {
               option
                 .setName("cle")
                 .setDescription("Clé du défi (voir /cyber ctf list)")
-                .setRequired(true),
+                .setRequired(true)
+                .setAutocomplete(true),
             ),
         )
         .addSubcommand((sub) =>

@@ -9,6 +9,7 @@ documentation) intégrée à Discord. Nodify n'est **pas** un bot de modération
 - **Database** : SQLite via [Prisma](https://prisma.io) (migration vers PostgreSQL possible plus tard sans changer le code applicatif — seul le schéma et l'URL changent)
 - **Logging** : [pino](https://getpino.io) (JSON en prod, coloré en dev)
 - **Config** : validée au démarrage avec [zod](https://zod.dev) — le bot refuse de démarrer si `.env` est incomplet
+- **Tests** : [vitest](https://vitest.dev) sur la logique pure (leveling, distance de Levenshtein, parseurs de customId) — `npm test`
 
 ## Architecture
 
@@ -79,6 +80,39 @@ bout — les fondations de la Phase 1 sont posées.
 | `npm run prisma:migrate` | Applique une migration DB |
 | `npm run prisma:studio` | Interface graphique pour inspecter la DB |
 | `npm run typecheck` | Vérifie les types sans compiler |
+| `npm test` | Lance la suite de tests (vitest) |
+| `npm run test:watch` | Tests en mode watch |
+
+## Améliorations (post-Phase 9)
+
+Une passe d'amélioration après la V1 fonctionnelle, sur 11 points identifiés :
+
+- **Sync des rôles Discord** (`src/setup/roleSyncService.ts`) — jusqu'ici les
+  rôles de niveau créés par `/setup` n'étaient jamais attribués à personne,
+  et les rôles de compétence prévus par le prompt fondateur n'existaient
+  pas. Après chaque leçon Academy validée, le rôle de niveau global est mis
+  à jour sur la guild courante, et un rôle de compétence (ex: `💡 JavaScript`)
+  est créé dynamiquement à la première XP gagnée dessus
+- **Prérequis entre cours appliqués** — le champ `Course.prerequisiteCourseKeys`
+  existait depuis la Phase 5 mais n'était jamais vérifié ; `/learn` bloque
+  maintenant un cours tant qu'un prérequis n'est pas terminé (ex: Red Team
+  Fundamentals nécessite Cybersecurity Fundamentals)
+- **`/help`** — liste toutes les commandes groupées par domaine
+- **Autocomplete** sur `/learn cours` et `/cyber ctf challenge cle` — plus
+  besoin de deviner/copier une clé exacte
+- **Rate limiting IA** (`src/utils/rateLimiter.ts`) — 8 requêtes IA / 2 min
+  par utilisateur, appliqué une seule fois au point de passage commun
+  (`aiService.ts`), pas dupliqué dans chaque commande
+- **3 nouveaux cours Academy** : Python, TypeScript pour devs JS, Docker Basics
+- **`/plan`** — Learning Planner IA : recommande un parcours **uniquement**
+  parmi les cours réellement présents sur Nodify (jamais un cours inventé)
+- **Mémoire de suivi sur `/explainme`** — bouton "Question de suivi" pour
+  continuer la conversation sans tout réexpliquer (contexte à un tour,
+  en mémoire courte)
+- **`/stats`** (admin) — utilisateurs, XP totale, streak moyen, leçons
+  validées, défis CTF résolus, cours le plus démarré
+- **Tests automatisés** (vitest) — 34 tests sur la logique pure, exclus du
+  build de production (`tsconfig.build.json`)
 
 ## Roadmap
 

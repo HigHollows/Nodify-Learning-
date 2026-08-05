@@ -7,7 +7,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.build.json",
     "start": "node dist/index.js",
     "deploy:commands": "tsx src/deploy-commands.ts",
     "prisma:generate": "prisma generate",
@@ -15,7 +15,9 @@
     "prisma:studio": "prisma studio",
     "prisma:seed": "prisma db seed",
     "lint": "eslint src --ext .ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -35,7 +37,8 @@
     "@types/node": "^22.7.4",
     "prisma": "^5.20.0",
     "tsx": "^4.19.1",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "vitest": "^4.1.10"
   },
   "engines": {
     "node": ">=20.0.0"

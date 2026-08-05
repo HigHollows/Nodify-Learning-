@@ -11,8 +11,10 @@ import {
   buildCourseListReply,
   buildLessonContentReply,
   buildLessonFinishReply,
+  buildPrerequisitesBlockedReply,
   buildQuestionReply,
 } from "../commands/education/learnView.js";
+import { syncUserRolesForGuild } from "../setup/roleSyncService.js";
 import { AppError } from "../utils/errors.js";
 
 /**
@@ -28,11 +30,18 @@ export async function handleListButton(interaction: ButtonInteraction): Promise<
 }
 
 export async function handleStartCourse(interaction: ButtonInteraction, courseKey: string): Promise<void> {
-  const lesson = await startOrResumeCourse(interaction.user.id, courseKey);
-  if (!lesson) {
+  const result = await startOrResumeCourse(interaction.user.id, courseKey);
+
+  if (result.type === "not_found") {
     throw new AppError("Ce cours est introuvable ou déjà entièrement terminé.");
   }
-  await interaction.update(buildLessonContentReply(lesson));
+
+  if (result.type === "blocked") {
+    await interaction.update(buildPrerequisitesBlockedReply(result.missingPrerequisites));
+    return;
+  }
+
+  await interaction.update(buildLessonContentReply(result.lesson));
 }
 
 export async function handleBeginQuiz(interaction: ButtonInteraction, lessonId: string): Promise<void> {
@@ -91,6 +100,11 @@ export async function handleFinishLesson(
   }
 
   await interaction.update(buildLessonFinishReply(lesson.courseKey, lessonId, result));
+
+  // En arrière-plan, après la réponse : ne doit jamais retarder ni casser l'UX de la leçon.
+  if (result.xpAwarded > 0 && interaction.inCachedGuild()) {
+    void syncUserRolesForGuild(interaction.guild, interaction.user.id);
+  }
 }
 
 export async function handleRestartLesson(interaction: ButtonInteraction, lessonId: string): Promise<void> {

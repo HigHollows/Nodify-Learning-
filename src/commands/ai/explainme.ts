@@ -1,6 +1,7 @@
-import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
-import { explainConcept, getActiveProviderName } from "../../ai/aiService.js";
+import { SlashCommandBuilder } from "discord.js";
+import { explainConcept } from "../../ai/aiService.js";
 import { resolveConcept } from "../../knowledge/conceptService.js";
+import { buildExplainReply, storeExplainContext } from "../../interactions/explainMemory.js";
 import { getProfile } from "../../services/userService.js";
 import type { Command } from "../../types/command.js";
 import { levelForXp } from "../../utils/leveling.js";
@@ -10,7 +11,8 @@ import { levelForXp } from "../../utils/leveling.js";
  * terme, pas seulement ceux déjà catalogués. Si le terme existe dans le
  * dictionnaire, sa définition est passée en contexte à l'IA pour éviter
  * qu'elle réponde à côté ou invente — sinon elle répond de ses connaissances
- * générales.
+ * générales. Un bouton "Question de suivi" permet de continuer la
+ * conversation sans tout réexpliquer (mémoire courte, un seul tour).
  */
 const command: Command = {
   data: new SlashCommandBuilder()
@@ -36,24 +38,14 @@ const command: Command = {
     // vulgarisée, sinon explication technique directe.
     const levelHint = !profile || levelForXp(profile.totalXp).index <= 1 ? "beginner" : "advanced";
 
-    const explanation = await explainConcept({
+    const explanation = await explainConcept(interaction.user.id, {
       term,
       levelHint,
       ...(resolution.type === "exact" ? { context: resolution.concept.definition } : {}),
     });
 
-    const embed = new EmbedBuilder()
-      .setTitle(`🤖 Explication : ${term}`)
-      .setColor("Purple")
-      .setDescription(explanation)
-      .setFooter({
-        text:
-          getActiveProviderName() === "stub"
-            ? "⚠️ Mode démonstration — aucune clé API IA configurée"
-            : "Généré par IA — vérifie les informations critiques avant de t'y fier",
-      });
-
-    await interaction.editReply({ embeds: [embed] });
+    const contextId = storeExplainContext(term, explanation, levelHint);
+    await interaction.editReply(buildExplainReply(term, explanation, contextId));
   },
 };
 

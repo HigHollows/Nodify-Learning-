@@ -67,7 +67,7 @@ export async function handleSecurityReviewSubmit(interaction: ModalSubmitInterac
   const code = interaction.fields.getTextInputValue(CODE_INPUT_ID);
   await interaction.deferReply();
 
-  const findings = await reviewCodeSecurity(code);
+  const findings = await reviewCodeSecurity(interaction.user.id, code);
   const reviewId = storeContext(pendingReviews, { code, findings });
 
   await interaction.editReply(buildSecurityReviewReply(findings, reviewId));
@@ -86,7 +86,7 @@ export async function handleSecurityFixButton(
   }
 
   await interaction.deferUpdate();
-  const fix = await suggestCodeFix(context.code, context.findings);
+  const fix = await suggestCodeFix(interaction.user.id, context.code, context.findings);
   await interaction.editReply(buildCodeFixReply(fix));
 }
 
@@ -96,7 +96,7 @@ export async function handleCodeReviewSubmit(interaction: ModalSubmitInteraction
   const code = interaction.fields.getTextInputValue(CODE_INPUT_ID);
   await interaction.deferReply();
 
-  const feedback = await reviewCodeQuality(code);
+  const feedback = await reviewCodeQuality(interaction.user.id, code);
   await interaction.editReply(buildCodeReviewReply(feedback));
 }
 
@@ -107,7 +107,7 @@ export async function handleDebugSubmit(interaction: ModalSubmitInteraction): Pr
   const code = interaction.fields.getTextInputValue(CODE_INPUT_ID) || undefined;
   await interaction.deferReply();
 
-  const guidance = await debugGuide(errorMessage, code);
+  const guidance = await debugGuide(interaction.user.id, errorMessage, code);
   const debugId = storeContext(pendingDebugSessions, {
     errorMessage,
     code,
@@ -128,6 +128,11 @@ export async function handleDebugHintButton(
   }
 
   await interaction.deferUpdate();
-  const hint = await debugHint(context.errorMessage, context.code, context.lastGuidance);
+  const hint = await debugHint(
+    interaction.user.id,
+    context.errorMessage,
+    context.code,
+    context.lastGuidance,
+  );
   await interaction.editReply(buildDebugHintReply(hint));
 }

@@ -8,6 +8,11 @@ export async function findCourseByKey(key: string) {
   return prisma.course.findUnique({ where: { key } });
 }
 
+export async function findCoursesByKeys(keys: string[]) {
+  if (keys.length === 0) return [];
+  return prisma.course.findMany({ where: { key: { in: keys } } });
+}
+
 export async function countLessonsForCourse(courseId: string): Promise<number> {
   return prisma.lesson.count({ where: { courseId } });
 }

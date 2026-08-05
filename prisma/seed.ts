@@ -322,6 +322,7 @@ interface CourseSeed {
   category: SkillCategory;
   skillKey: string; // doit correspondre à un Skill.key existant (voir SKILLS)
   level: number;
+  prerequisiteCourseKeys?: string[]; // clés d'autres CourseSeed.key
   lessons: LessonSeed[];
 }
 
@@ -562,6 +563,7 @@ const COURSES: CourseSeed[] = [
     category: "CYBERSECURITY",
     skillKey: "red-team-fundamentals",
     level: 2,
+    prerequisiteCourseKeys: ["cyber-fundamentals"],
     lessons: [
       {
         order: 1,
@@ -663,6 +665,230 @@ const COURSES: CourseSeed[] = [
             correctIndex: 1,
             explanation:
               "Un rapport actionnable est ce qui permet au client de corriger réellement les failles — c'est le vrai livrable d'un test d'intrusion, pas l'exploit.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "python-intro",
+    title: "Introduction à Python",
+    description: "Les bases de Python : variables, structures de contrôle et fonctions.",
+    category: "DEVELOPMENT",
+    skillKey: "python",
+    level: 1,
+    lessons: [
+      {
+        order: 1,
+        title: "Variables et types",
+        content:
+          "Python n'exige pas de déclarer le type d'une variable : `age = 25` suffit (typage dynamique). Les types de base sont `int` (entiers), `float` (décimaux), `str` (texte), `bool` (`True`/`False`).\n\n" +
+          "Contrairement à JavaScript ou C, Python utilise l'**indentation** (espaces en début de ligne) pour délimiter les blocs de code, pas des accolades `{ }`. Une indentation incohérente provoque une erreur (`IndentationError`), pas juste un problème de style.",
+        xpReward: 20,
+        questions: [
+          {
+            order: 1,
+            prompt: "Comment Python délimite-t-il un bloc de code (dans un `if`, une fonction...) ?",
+            choices: [
+              "Avec des accolades { }",
+              "Avec des mots-clés begin/end",
+              "Avec l'indentation (espaces en début de ligne)",
+              "Avec des points-virgules",
+            ],
+            correctIndex: 2,
+            explanation:
+              "L'indentation n'est pas qu'une convention de style en Python : elle fait partie de la syntaxe et délimite réellement les blocs.",
+          },
+          {
+            order: 2,
+            prompt: "Que faut-il écrire pour déclarer une variable `age` valant 25 en Python ?",
+            choices: ["int age = 25", "var age = 25", "age = 25", "let age: int = 25"],
+            correctIndex: 2,
+            explanation:
+              "Pas de mot-clé de déclaration ni de type explicite requis : `age = 25` suffit, Python déduit le type dynamiquement.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Structures de contrôle et fonctions",
+        content:
+          "Une condition : `if age >= 18:` suivi d'un bloc indenté (pas de parenthèses obligatoires autour de la condition). Une boucle sur une collection : `for item in liste:`. Une fonction se déclare avec `def` : `def addition(a, b):` suivi d'un bloc indenté contenant `return a + b`.\n\n" +
+          "Pas de point-virgule en fin de ligne, et les commentaires commencent par `#` (pas `//`).",
+        xpReward: 20,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quel mot-clé déclare une fonction en Python ?",
+            choices: ["function", "def", "func", "fn"],
+            correctIndex: 1,
+            explanation: "`def nom_fonction(paramètres):` suivi d'un bloc indenté.",
+          },
+          {
+            order: 2,
+            prompt: "Quelle syntaxe parcourt chaque élément d'une liste `liste` en Python ?",
+            choices: [
+              "for (item in liste)",
+              "foreach item in liste",
+              "for item in liste:",
+              "for (let item of liste)",
+            ],
+            correctIndex: 2,
+            explanation: "`for item in liste:` — pas de parenthèses, et un `:` avant le bloc indenté.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "typescript-for-js-devs",
+    title: "TypeScript pour devs JavaScript",
+    description: "Pourquoi et comment adopter TypeScript quand on connaît déjà JavaScript.",
+    category: "DEVELOPMENT",
+    skillKey: "typescript",
+    level: 2,
+    lessons: [
+      {
+        order: 1,
+        title: "Pourquoi TypeScript ?",
+        content:
+          "TypeScript ajoute un système de types statiques par-dessus JavaScript : les erreurs de type (ex: appeler une méthode qui n'existe pas sur une variable) sont détectées **à la compilation**, avant même d'exécuter le code — pas seulement au runtime comme en JS pur.\n\n" +
+          "Le code TypeScript (`.ts`) est **transpilé** vers du JavaScript classique (`.js`) avant d'être exécuté — les navigateurs et Node.js n'exécutent jamais directement du TypeScript. Le fichier `tsconfig.json` configure cette compilation (version JS cible, niveau de strictness, etc.).",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quand une erreur de type est-elle détectée avec TypeScript ?",
+            choices: [
+              "Uniquement au runtime, comme en JavaScript",
+              "À la compilation, avant même d'exécuter le code",
+              "Jamais, TypeScript ne vérifie pas les types",
+              "Seulement si on active un plugin spécial",
+            ],
+            correctIndex: 1,
+            explanation:
+              "C'est tout l'intérêt du typage statique : une classe entière de bugs est détectée avant l'exécution, pas seulement quand le code passe par ce chemin précis.",
+          },
+          {
+            order: 2,
+            prompt: "Qu'exécutent réellement les navigateurs et Node.js ?",
+            choices: [
+              "Le code TypeScript directement",
+              "Le code JavaScript obtenu après transpilation du TypeScript",
+              "Un bytecode spécial",
+              "Rien, TypeScript est juste de la documentation",
+            ],
+            correctIndex: 1,
+            explanation:
+              "TypeScript doit toujours être transpilé (compilé) vers du JavaScript classique avant exécution — le typage n'existe qu'au moment du développement.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Types de base et interfaces",
+        content:
+          "On annote une variable avec `:` suivi du type : `let age: number = 25;`, `let nom: string = \"Alice\";`. Une **interface** décrit la forme d'un objet : `interface User { id: number; nom: string; email?: string; }` — le `?` rend une propriété optionnelle.\n\n" +
+          "`type` et `interface` se ressemblent beaucoup pour décrire un objet ; `interface` est généralement préféré pour les objets/classes (extensible via `extends`), `type` est plus flexible pour des unions (`type Status = \"actif\" | \"inactif\"`).",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que signifie le `?` après une propriété dans une interface (ex: `email?: string`) ?",
+            choices: [
+              "La propriété est obligatoire",
+              "La propriété est optionnelle",
+              "La propriété est en lecture seule",
+              "Ça n'a aucun effet",
+            ],
+            correctIndex: 1,
+            explanation:
+              "`email?: string` signifie que la propriété `email` peut être omise sur un objet respectant cette interface.",
+          },
+          {
+            order: 2,
+            prompt: "Quelle syntaxe annote correctement une variable `age` de type `number` ?",
+            choices: ["let age<number> = 25;", "let age: number = 25;", "let number age = 25;", "let age = number(25);"],
+            correctIndex: 1,
+            explanation: "L'annotation de type se place après `:` : `let age: number = 25;`.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "docker-basics",
+    title: "Docker Basics",
+    description: "Construire une image et lancer un conteneur : les bases pratiques de Docker.",
+    category: "CLOUD",
+    skillKey: "docker",
+    level: 2,
+    lessons: [
+      {
+        order: 1,
+        title: "Dockerfile et images",
+        content:
+          "Un `Dockerfile` décrit comment construire une image : `FROM node:20` (image de base), `COPY . .` (copier les fichiers du projet), `RUN npm install` (exécuter une commande pendant le build), `CMD [\"node\", \"index.js\"]` (commande lancée au démarrage du conteneur).\n\n" +
+          "Chaque instruction du Dockerfile crée une **couche** (layer) mise en cache : si seule la dernière instruction change, Docker réutilise les couches précédentes sans les refaire — d'où l'intérêt de placer `COPY package.json` et `RUN npm install` **avant** de copier tout le reste du code, pour ne pas invalider ce cache à chaque changement de code source.",
+        xpReward: 20,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quelle instruction Dockerfile exécute une commande PENDANT la construction de l'image ?",
+            choices: ["CMD", "RUN", "FROM", "ENTRYPOINT"],
+            correctIndex: 1,
+            explanation:
+              "`RUN` s'exécute au moment du build (ex: `npm install`). `CMD` définit la commande lancée au démarrage du conteneur, pas pendant le build.",
+          },
+          {
+            order: 2,
+            prompt:
+              "Pourquoi copier `package.json` et faire `npm install` AVANT de copier tout le reste du code dans le Dockerfile ?",
+            choices: [
+              "Ça n'a aucune importance, l'ordre est arbitraire",
+              "Pour profiter du cache de build : si seul le code change (pas les dépendances), npm install n'est pas refait",
+              "C'est obligatoire, Docker refuse sinon",
+              "Pour réduire la taille de l'image finale",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Docker met en cache chaque couche : tant que package.json ne change pas, la couche npm install est réutilisée telle quelle, même si le code source change constamment.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Conteneurs et volumes",
+        content:
+          "`docker run -p 3000:3000 mon-image` lance un conteneur et mappe le port 3000 du conteneur vers le port 3000 de la machine hôte. `docker ps` liste les conteneurs en cours d'exécution.\n\n" +
+          "Un conteneur est **éphémère** par défaut : ses données disparaissent quand il est supprimé. Un **volume** (`docker run -v mes-donnees:/data ...`) persiste les données en dehors du cycle de vie du conteneur — indispensable pour une base de données par exemple, qui ne doit pas perdre son contenu à chaque redéploiement.",
+        xpReward: 20,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que fait l'option `-p 3000:3000` sur `docker run` ?",
+            choices: [
+              "Elle limite le conteneur à 3000 Mo de RAM",
+              "Elle mappe le port 3000 du conteneur vers le port 3000 de la machine hôte",
+              "Elle lance 3000 conteneurs",
+              "Elle définit un délai d'expiration de 3000 secondes",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Le format est `-p <port-hôte>:<port-conteneur>` — sans ça, le service à l'intérieur du conteneur n'est pas accessible depuis l'extérieur.",
+          },
+          {
+            order: 2,
+            prompt: "À quoi sert un volume Docker ?",
+            choices: [
+              "À accélérer le démarrage du conteneur",
+              "À persister des données en dehors du cycle de vie éphémère du conteneur",
+              "À compresser l'image",
+              "À isoler le réseau du conteneur",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Sans volume, toutes les données écrites dans un conteneur disparaissent quand il est supprimé — un volume les fait survivre, essentiel pour une base de données par exemple.",
           },
         ],
       },
@@ -993,11 +1219,12 @@ async function main() {
   console.log(`✅ ${CONCEPTS.length} concept(s) synchronisé(s)`);
 
   for (const course of COURSES) {
-    const { lessons, ...courseData } = course;
+    const { lessons, prerequisiteCourseKeys, ...courseData } = course;
+    const prereqJson = JSON.stringify(prerequisiteCourseKeys ?? []);
     const savedCourse = await prisma.course.upsert({
       where: { key: course.key },
-      create: { ...courseData, prerequisiteCourseKeys: "[]" },
-      update: { ...courseData },
+      create: { ...courseData, prerequisiteCourseKeys: prereqJson },
+      update: { ...courseData, prerequisiteCourseKeys: prereqJson },
     });
 
     for (const lesson of lessons) {

@@ -1,6 +1,7 @@
 import { env } from "../config/env.js";
 import { AppError } from "../utils/errors.js";
 import { childLogger } from "../utils/logger.js";
+import { checkRateLimit } from "../utils/rateLimiter.js";
 import { AnthropicProvider } from "./providers/anthropicProvider.js";
 import { GroqProvider } from "./providers/groqProvider.js";
 import { StubProvider } from "./providers/stubProvider.js";
@@ -28,7 +29,29 @@ export function getActiveProviderName(): string {
   return activeProvider.name;
 }
 
-async function complete(system: string, user: string, maxTokens?: number): Promise<string> {
+/** Quota anti-abus : au-delà, on bloque plutôt que de laisser exploser la conso du provider actif. */
+const AI_RATE_LIMIT = 8;
+const AI_RATE_LIMIT_WINDOW_MS = 2 * 60 * 1000;
+
+/**
+ * Point de passage unique pour tout appel IA — c'est ici, et nulle part
+ * ailleurs, qu'on applique le rate limiting : peu importe la feature qui
+ * appelle (ExplainMe, Security Review...), la protection s'applique de la
+ * même façon sans devoir être dupliquée dans chaque commande.
+ */
+async function complete(
+  userId: string,
+  system: string,
+  user: string,
+  maxTokens?: number,
+): Promise<string> {
+  const rateLimit = checkRateLimit(`ai:${userId}`, AI_RATE_LIMIT, AI_RATE_LIMIT_WINDOW_MS);
+  if (!rateLimit.allowed) {
+    throw new AppError(
+      `Trop de requêtes IA d'affilée — réessaie dans ${rateLimit.retryAfterSeconds}s.`,
+    );
+  }
+
   try {
     return await activeProvider.complete({ system, user, ...(maxTokens ? { maxTokens } : {}) });
   } catch (error) {
@@ -45,7 +68,7 @@ export interface ExplainRequest {
   context?: string;
 }
 
-export async function explainConcept(request: ExplainRequest): Promise<string> {
+export async function explainConcept(userId: string, request: ExplainRequest): Promise<string> {
   const system =
     "Tu es Nodify, un mentor technique pédagogue pour développeurs sur Discord. " +
     "Explique le concept demandé de façon claire et concise (150 mots maximum), " +
@@ -62,12 +85,35 @@ export async function explainConcept(request: ExplainRequest): Promise<string> {
     .filter((line): line is string => line !== null)
     .join("\n");
 
-  return complete(system, user, 600);
+  return complete(userId, system, user, 600);
+}
+
+/** Question de suivi sur une explication précédente — mémoire courte, un seul tour en arrière. */
+export async function explainFollowUp(
+  userId: string,
+  term: string,
+  previousExplanation: string,
+  followUpQuestion: string,
+  levelHint: LevelHint,
+): Promise<string> {
+  const system =
+    "Tu es Nodify, un mentor technique. Tu poursuis une conversation : l'utilisateur " +
+    "a déjà reçu une explication et pose maintenant une question de suivi dessus. " +
+    "Réponds en français, en te basant sur le fil de la conversation (ne réexplique " +
+    "pas depuis le début), 150 mots maximum. Adapte au niveau indiqué.";
+
+  const user =
+    `Terme initial : "${term}".\n` +
+    `Ton explication précédente : ${previousExplanation}\n\n` +
+    `Question de suivi : ${followUpQuestion}\n` +
+    `Niveau de l'utilisateur : ${levelHint}.`;
+
+  return complete(userId, system, user, 500);
 }
 
 // --- Security Review (Phase 7) --------------------------------------------
 
-export async function reviewCodeSecurity(code: string): Promise<string> {
+export async function reviewCodeSecurity(userId: string, code: string): Promise<string> {
   const system =
     "Tu es un ingénieur en sécurité senior qui audite du code pour des développeurs. " +
     "Réponds en français, en markdown. Structure ta réponse par sections de sévérité " +
@@ -78,10 +124,14 @@ export async function reviewCodeSecurity(code: string): Promise<string> {
     "au lieu d'inventer des problèmes. Ne réponds qu'avec l'analyse, pas de préambule.";
 
   const user = `Analyse ce code :\n\`\`\`\n${code}\n\`\`\``;
-  return complete(system, user, 900);
+  return complete(userId, system, user, 900);
 }
 
-export async function suggestCodeFix(code: string, findings: string): Promise<string> {
+export async function suggestCodeFix(
+  userId: string,
+  code: string,
+  findings: string,
+): Promise<string> {
   const system =
     "Tu es un ingénieur senior. On te donne du code et une liste de problèmes de " +
     "sécurité identifiés dessus. Réponds UNIQUEMENT avec la version corrigée du " +
@@ -90,12 +140,12 @@ export async function suggestCodeFix(code: string, findings: string): Promise<st
     "fonctionnalités qui n'existaient pas dans l'original.";
 
   const user = `Code original :\n\`\`\`\n${code}\n\`\`\`\n\nProblèmes identifiés :\n${findings}`;
-  return complete(system, user, 900);
+  return complete(userId, system, user, 900);
 }
 
 // --- Threat Modeling (Phase 8) ---------------------------------------------
 
-export async function analyzeThreatModel(description: string): Promise<string> {
+export async function analyzeThreatModel(userId: string, description: string): Promise<string> {
   const system =
     "Tu es un architecte sécurité qui fait du threat modeling pour un développeur. " +
     "On te décrit une architecture ou un flux applicatif (pas du code). Réponds en " +
@@ -107,12 +157,12 @@ export async function analyzeThreatModel(description: string): Promise<string> {
     "sérieusement, dis-le et demande les précisions nécessaires plutôt que d'inventer.";
 
   const user = `Architecture/flux à analyser :\n${description}`;
-  return complete(system, user, 800);
+  return complete(userId, system, user, 800);
 }
 
 // --- Code Review qualité (Phase 7) ----------------------------------------
 
-export async function reviewCodeQuality(code: string): Promise<string> {
+export async function reviewCodeQuality(userId: string, code: string): Promise<string> {
   const system =
     "Tu es un lead developer qui relit du code pour un développeur junior. " +
     "Réponds en français, en markdown, sous forme de liste à puces courte " +
@@ -123,12 +173,16 @@ export async function reviewCodeQuality(code: string): Promise<string> {
     "plutôt que d'inventer des remarques.";
 
   const user = `Relis ce code :\n\`\`\`\n${code}\n\`\`\``;
-  return complete(system, user, 700);
+  return complete(userId, system, user, 700);
 }
 
 // --- Debug Coach (Phase 7) -------------------------------------------------
 
-export async function debugGuide(errorMessage: string, code: string | undefined): Promise<string> {
+export async function debugGuide(
+  userId: string,
+  errorMessage: string,
+  code: string | undefined,
+): Promise<string> {
   const system =
     "Tu es un mentor qui aide un développeur à déboguer SEUL, façon tuteur " +
     "socratique. INTERDICTION de donner directement la solution ou le code " +
@@ -143,10 +197,11 @@ export async function debugGuide(errorMessage: string, code: string | undefined)
     .filter((line): line is string => line !== null)
     .join("\n\n");
 
-  return complete(system, user, 400);
+  return complete(userId, system, user, 400);
 }
 
 export async function debugHint(
+  userId: string,
   errorMessage: string,
   code: string | undefined,
   previousGuidance: string,
@@ -166,7 +221,7 @@ export async function debugHint(
     .filter((line): line is string => line !== null)
     .join("\n\n");
 
-  return complete(system, user, 400);
+  return complete(userId, system, user, 400);
 }
 
 // --- Documentation RAG (Phase 6) -------------------------------------------
@@ -177,7 +232,11 @@ export interface DocChunkRef {
   content: string;
 }
 
-export async function answerFromDocs(question: string, chunks: DocChunkRef[]): Promise<string> {
+export async function answerFromDocs(
+  userId: string,
+  question: string,
+  chunks: DocChunkRef[],
+): Promise<string> {
   const system =
     "Tu es Nodify, assistant documentaire pour développeurs. Réponds à la " +
     "question UNIQUEMENT en te basant sur les extraits de documentation " +
@@ -190,5 +249,41 @@ export async function answerFromDocs(question: string, chunks: DocChunkRef[]): P
     .join("\n\n");
 
   const user = `Question : ${question}\n\nExtraits disponibles :\n${context}`;
-  return complete(system, user, 600);
+  return complete(userId, system, user, 600);
+}
+
+// --- Learning Planner (amélioration) ---------------------------------------
+
+export interface PlannerCourse {
+  key: string;
+  title: string;
+  description: string;
+  category: string;
+  level: number;
+  status: "not_started" | "in_progress" | "completed";
+}
+
+export async function generateLearningPlan(
+  userId: string,
+  goal: string,
+  availableCourses: PlannerCourse[],
+): Promise<string> {
+  const system =
+    "Tu es un conseiller pédagogique pour Nodify Academy. Voici la liste EXHAUSTIVE " +
+    "des cours réellement disponibles sur la plateforme — n'en invente ou n'en " +
+    "mentionne AUCUN autre. Pour chaque cours pertinent par rapport à l'objectif " +
+    "de l'utilisateur, indique sa clé exacte (entre backticks) et une phrase de " +
+    "justification, dans un ordre recommandé. Si aucun cours listé n'est pertinent " +
+    "pour l'objectif, dis-le honnêtement plutôt que d'inventer un parcours. Réponds " +
+    "en français, en markdown, 200 mots maximum.";
+
+  const catalogue = availableCourses
+    .map(
+      (c) =>
+        `- \`${c.key}\` (${c.title}, ${c.category}, niveau ${c.level}, statut: ${c.status}) — ${c.description}`,
+    )
+    .join("\n");
+
+  const user = `Objectif de l'utilisateur : ${goal}\n\nCatalogue de cours disponibles :\n${catalogue}`;
+  return complete(userId, system, user, 700);
 }

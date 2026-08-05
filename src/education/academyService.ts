@@ -4,6 +4,7 @@ import {
   completeCourseProgress,
   countLessonsForCourse,
   findCourseByKey,
+  findCoursesByKeys,
   findLessonByCourseAndOrder,
   findLessonById,
   getCourseProgress,
@@ -23,6 +24,7 @@ export interface CourseSummary {
   key: string;
   title: string;
   description: string;
+  category: string;
   level: number;
   status: "not_started" | "in_progress" | "completed";
   currentLessonOrder: number;
@@ -49,6 +51,7 @@ export async function listCourseSummaries(
         key: course.key,
         title: course.title,
         description: course.description,
+        category: course.category,
         level: course.level,
         status: !progress
           ? "not_started"
@@ -73,28 +76,71 @@ export interface LessonView {
   questions: { order: number; prompt: string; choices: string[] }[];
 }
 
+function parseKeys(json: string): string[] {
+  try {
+    const parsed: unknown = JSON.parse(json);
+    return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
 /**
- * Démarre (ou reprend) un cours pour un utilisateur et retourne la leçon
- * courante à afficher, ou `null` si le cours est déjà entièrement terminé.
+ * Titres des cours prérequis pas encore terminés par l'utilisateur — vide
+ * si tous sont satisfaits (ou si le cours n'a aucun prérequis).
+ */
+async function getMissingPrerequisites(
+  userId: string,
+  course: { prerequisiteCourseKeys: string },
+): Promise<string[]> {
+  const prereqKeys = parseKeys(course.prerequisiteCourseKeys);
+  if (prereqKeys.length === 0) return [];
+
+  const prereqCourses = await findCoursesByKeys(prereqKeys);
+  const missing: string[] = [];
+
+  for (const prereq of prereqCourses) {
+    const progress = await getCourseProgress(userId, prereq.id);
+    if (progress?.status !== "COMPLETED") missing.push(prereq.title);
+  }
+
+  return missing;
+}
+
+export type StartCourseResult =
+  | { type: "not_found" }
+  | { type: "blocked"; missingPrerequisites: string[] }
+  | { type: "lesson"; lesson: LessonView };
+
+/**
+ * Démarre (ou reprend) un cours pour un utilisateur. Renvoie `blocked` si
+ * un prérequis (Course.prerequisiteCourseKeys) n'est pas encore terminé —
+ * appliqué ici pour la première fois : le champ existait depuis la Phase 5
+ * mais n'était encore vérifié nulle part.
  */
 export async function startOrResumeCourse(
   userId: string,
   courseKey: string,
-): Promise<LessonView | null> {
+): Promise<StartCourseResult> {
   const course = await findCourseByKey(courseKey);
-  if (!course) return null;
+  if (!course) return { type: "not_found" };
+
+  const missingPrerequisites = await getMissingPrerequisites(userId, course);
+  if (missingPrerequisites.length > 0) {
+    return { type: "blocked", missingPrerequisites };
+  }
 
   const progress = await getOrCreateCourseProgress(userId, course.id);
   const totalLessons = await countLessonsForCourse(course.id);
 
   if (progress.status === "COMPLETED" || progress.currentLessonOrder > totalLessons) {
-    return null;
+    return { type: "not_found" };
   }
 
   const lesson = await findLessonByCourseAndOrder(course.id, progress.currentLessonOrder);
-  if (!lesson) return null;
+  if (!lesson) return { type: "not_found" };
 
-  return toLessonView(lesson, course.title, totalLessons);
+  return { type: "lesson", lesson: toLessonView(lesson, course.title, totalLessons) };
 }
 
 function toLessonView(

@@ -2,7 +2,11 @@ import { SlashCommandBuilder } from "discord.js";
 import { listCourseSummaries, startOrResumeCourse } from "../../education/academyService.js";
 import type { Command } from "../../types/command.js";
 import { AppError } from "../../utils/errors.js";
-import { buildCourseListReply, buildLessonContentReply } from "./learnView.js";
+import {
+  buildCourseListReply,
+  buildLessonContentReply,
+  buildPrerequisitesBlockedReply,
+} from "./learnView.js";
 
 const command: Command = {
   data: new SlashCommandBuilder()
@@ -12,7 +16,8 @@ const command: Command = {
       option
         .setName("cours")
         .setDescription("Clé du cours à démarrer/continuer directement (optionnel)")
-        .setRequired(false),
+        .setRequired(false)
+        .setAutocomplete(true),
     ),
 
   async execute(interaction) {
@@ -24,14 +29,20 @@ const command: Command = {
       return;
     }
 
-    const lesson = await startOrResumeCourse(interaction.user.id, courseKey);
-    if (!lesson) {
+    const result = await startOrResumeCourse(interaction.user.id, courseKey);
+
+    if (result.type === "not_found") {
       throw new AppError(
         "Ce cours est introuvable ou déjà entièrement terminé — tape `/learn` sans argument pour voir la liste.",
       );
     }
 
-    await interaction.reply(buildLessonContentReply(lesson));
+    if (result.type === "blocked") {
+      await interaction.reply(buildPrerequisitesBlockedReply(result.missingPrerequisites));
+      return;
+    }
+
+    await interaction.reply(buildLessonContentReply(result.lesson));
   },
 };
 

@@ -52,6 +52,13 @@ import {
   handleSecurityReviewSubmit,
 } from "../interactions/devtoolsInteractions.js";
 import { handleThreatModelSubmit } from "../interactions/threatModelInteractions.js";
+import {
+  handleFollowUpButton,
+  handleFollowUpModal,
+  parseFollowUpButtonId,
+  parseFollowUpModalId,
+} from "../interactions/explainMemory.js";
+import { handleAutocomplete } from "../interactions/autocompleteInteractions.js";
 import { THREAT_MODEL_MODAL_ID } from "../cybersecurity/threatModelView.js";
 import { handleDailyAnswer } from "../interactions/dailyQuestionInteractions.js";
 import { handleBlueTeamLineChoice } from "../interactions/blueTeamInteractions.js";
@@ -115,6 +122,13 @@ async function runWithGuards(
 const event: Event<"interactionCreate"> = {
   name: "interactionCreate",
   async execute(interaction: Interaction) {
+    if (interaction.isAutocomplete()) {
+      await handleAutocomplete(interaction).catch((error: unknown) => {
+        log.warn({ err: error, commandName: interaction.commandName }, "Échec de l'autocomplete");
+      });
+      return;
+    }
+
     if (interaction.isChatInputCommand()) {
       const client = interaction.client as NodifyClient;
       const command = client.commands.get(interaction.commandName);
@@ -188,6 +202,14 @@ const event: Event<"interactionCreate"> = {
         const index = Number(interaction.customId.slice(BLUE_TEAM_CUSTOM_ID_PREFIX.length));
         await runWithGuards(interaction, interaction.customId, () =>
           handleBlueTeamLineChoice(interaction, index),
+        );
+        return;
+      }
+
+      const followUpContextId = parseFollowUpButtonId(interaction.customId);
+      if (followUpContextId) {
+        await runWithGuards(interaction, interaction.customId, () =>
+          handleFollowUpButton(interaction, followUpContextId),
         );
         return;
       }
@@ -275,6 +297,14 @@ const event: Event<"interactionCreate"> = {
       if (interaction.customId === THREAT_MODEL_MODAL_ID) {
         await runWithGuards(interaction, interaction.customId, () =>
           handleThreatModelSubmit(interaction),
+        );
+        return;
+      }
+
+      const followUpModalContextId = parseFollowUpModalId(interaction.customId);
+      if (followUpModalContextId) {
+        await runWithGuards(interaction, interaction.customId, () =>
+          handleFollowUpModal(interaction, followUpModalContextId),
         );
         return;
       }
