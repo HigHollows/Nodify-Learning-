@@ -87,8 +87,10 @@ Voir les phases dans le prompt fondateur du projet. Statut actuel :
 - ✅ **Phase 2** — `/setup` (rôles de niveau + salon hub), auto-recovery idempotente
 - ✅ **Phase 3** — User Profile global, Skills, Streak, Achievements
 - ✅ **Phase 4** — Knowledge Engine : `/dictionary` (+ alias `/dict` `/term` `/define`)
+- ✅ **Phase 5** — Academy : `/learn`, cours/leçons/quiz, XP réelle, progression adaptative
 
-Prochaine étape : Phase 5 (Academy — cours, quiz, apprentissage adaptatif).
+Prochaine étape : Phase 6 (IA — ExplainMe, mémoire, RAG documentation). C'est
+la première phase qui nécessite un vrai choix de provider IA.
 
 ### `/dictionary` (alias `/dict` `/term` `/define`)
 
@@ -103,6 +105,21 @@ Prochaine étape : Phase 5 (Academy — cours, quiz, apprentissage adaptatif).
 - 12 concepts rédigés à la main pour démarrer (JWT, Promise, API, DNS, XSS,
   Docker, RAG, HTTP, Git, SQL Injection, Event Loop, REST), liés entre eux
   (concepts liés / prérequis) et seedés via `npm run prisma:seed`
+
+### `/learn` — Nodify Academy
+
+- `/learn` liste les cours disponibles (un seul pour l'instant : *Introduction
+  à JavaScript*, 3 leçons) avec le statut de progression de l'utilisateur
+- Chaque leçon : contenu pédagogique → quiz (boutons Discord, une question à
+  la fois) → validation si ≥ 50% de bonnes réponses
+- **Échec** → la progression n'avance pas, bouton "Recommencer la leçon"
+  (vraie boucle adaptative, pas de contenu IA généré)
+- **Réussite** → +XP sur la vraie compétence liée (`javascript`), passage à
+  la leçon suivante, et achievement "Premier cours terminé" au dernier
+  cours complété
+- Anti-farming : rejouer une leçon déjà validée n'accorde plus d'XP (testé)
+- L'état du quiz en cours (question actuelle, score accumulé) est encodé
+  dans les customId des boutons Discord — pas de table de session éphémère
 
 ### `/profile`
 

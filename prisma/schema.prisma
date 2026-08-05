@@ -60,8 +60,8 @@ model User {
   id       String @id // Discord user ID (snowflake)
   username String // dernier username connu, mis à jour à chaque interaction
 
-  // XP global : reste à 0 tant qu'aucune vraie source d'apprentissage
-  // (Academy, Phase 5) n'existe. Pas de gain d'XP fabriqué artificiellement.
+  // XP global, gagnée uniquement en terminant de vraies leçons d'Academy
+  // (Phase 5) — jamais fabriquée artificiellement.
   totalXp Int @default(0)
 
   // Streak : mesure réelle d'engagement (jours consécutifs avec au moins
@@ -73,8 +73,10 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  skills       UserSkill[]
-  achievements UserAchievement[]
+  skills           UserSkill[]
+  achievements     UserAchievement[]
+  courseProgress   UserCourseProgress[]
+  lessonCompletions UserLessonCompletion[]
 
   @@map("users")
 }
@@ -184,4 +186,109 @@ model ConceptAlias {
   concept   Concept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
 
   @@map("concept_aliases")
+}
+
+/// Academy (Phase 5) : un cours = un parcours linéaire de leçons sur une
+/// compétence précise (`skillKey` pointe vers Skill.key). Terminer un cours
+/// est la SEULE vraie source d'XP dans Nodify.
+///
+/// `prerequisiteCourseKeys` existe déjà pour permettre de bloquer un cours
+/// tant qu'un autre n'est pas terminé, mais n'est pas encore appliqué : avec
+/// un seul cours au lancement, il n'y a rien à bloquer. Le champ est prêt
+/// pour quand il y aura plusieurs cours à enchaîner.
+model Course {
+  id          String @id @default(cuid())
+  key         String @unique // slug stable, ex: "js-intro"
+  title       String
+  description String
+  category    String // même taxonomie que Skill.category
+  skillKey    String // Skill.key crédité en XP à la complétion des leçons
+  level       Int // 1 (Beginner) à 5 (Expert)
+
+  prerequisiteCourseKeys String @default("[]") // JSON array de Course.key — pas encore appliqué
+
+  lessons  Lesson[]
+  progress UserCourseProgress[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("courses")
+}
+
+/// Une leçon = du contenu pédagogique + un quiz de validation.
+/// `order` définit la progression linéaire au sein du cours (1, 2, 3...).
+model Lesson {
+  id       String @id @default(cuid())
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  order     Int
+  title     String
+  content   String // texte pédagogique de la leçon
+  xpReward  Int    @default(20)
+
+  questions   Question[]
+  completions UserLessonCompletion[]
+
+  @@unique([courseId, order])
+  @@map("lessons")
+}
+
+/// Question à choix multiples de validation d'une leçon.
+/// `choices` : JSON array de strings. `correctIndex` : index (0-based) de
+/// la bonne réponse dans `choices`.
+model Question {
+  id       String @id @default(cuid())
+  lessonId String
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  order        Int
+  prompt       String
+  choices      String // JSON array de strings
+  correctIndex Int
+  explanation  String // affichée après réponse, bonne ou mauvaise — renforce l'apprentissage
+
+  @@unique([lessonId, order])
+  @@map("questions")
+}
+
+/// Progression d'un utilisateur sur un cours entier.
+/// `currentLessonOrder` = prochaine leçon à faire (pas encore complétée).
+model UserCourseProgress {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  status             String    @default("IN_PROGRESS") // "IN_PROGRESS" | "COMPLETED"
+  currentLessonOrder Int       @default(1)
+  startedAt          DateTime  @default(now())
+  completedAt        DateTime?
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([userId, courseId])
+  @@map("user_course_progress")
+}
+
+/// Résultat d'une leçon terminée par un utilisateur (score au quiz).
+/// Ré-écrasé si la leçon est refaite (une seule ligne par (user, lesson) —
+/// on garde le dernier essai, pas l'historique complet des tentatives).
+model UserLessonCompletion {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  lessonId String
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  score          Int
+  totalQuestions Int
+  passed         Boolean
+  completedAt    DateTime @default(now())
+
+  @@unique([userId, lessonId])
+  @@map("user_lesson_completions")
 }

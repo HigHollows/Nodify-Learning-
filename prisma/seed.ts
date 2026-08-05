@@ -49,6 +49,12 @@ const ACHIEVEMENTS = [
     description: "Ta toute première interaction avec Nodify.",
     icon: "👋",
   },
+  {
+    key: "first-course-complete",
+    name: "Premier cours terminé",
+    description: "Tu as terminé ton premier cours sur Nodify Academy.",
+    icon: "🎓",
+  },
 ];
 
 /**
@@ -266,6 +272,146 @@ const CONCEPTS: ConceptSeed[] = [
   },
 ];
 
+/**
+ * Premier cours complet de l'Academy (Phase 5), rédigé à la main — pas de
+ * contenu généré par IA. Un seul cours pour valider le moteur (Course →
+ * Lesson → Question → progression) contre du vrai contenu avant d'en
+ * écrire d'autres.
+ */
+interface QuestionSeed {
+  order: number;
+  prompt: string;
+  choices: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
+interface LessonSeed {
+  order: number;
+  title: string;
+  content: string;
+  xpReward: number;
+  questions: QuestionSeed[];
+}
+
+interface CourseSeed {
+  key: string;
+  title: string;
+  description: string;
+  category: SkillCategory;
+  skillKey: string; // doit correspondre à un Skill.key existant (voir SKILLS)
+  level: number;
+  lessons: LessonSeed[];
+}
+
+const COURSES: CourseSeed[] = [
+  {
+    key: "js-intro",
+    title: "Introduction à JavaScript",
+    description:
+      "Les bases du langage le plus utilisé du web : variables, fonctions, boucles et conditions.",
+    category: "DEVELOPMENT",
+    skillKey: "javascript",
+    level: 1,
+    lessons: [
+      {
+        order: 1,
+        title: "Qu'est-ce que JavaScript ?",
+        content:
+          "JavaScript est un langage de programmation créé en 1995, exécuté à l'origine dans les navigateurs pour rendre les pages web interactives. Depuis Node.js (2009), il tourne aussi côté serveur.\n\n" +
+          "On déclare une variable avec `let` (valeur qui peut changer) ou `const` (valeur qui ne peut plus être réassignée après sa déclaration) — `var` existe encore mais est déconseillé en code moderne à cause de son comportement de portée moins prévisible.\n\n" +
+          "Les types primitifs de base sont : `string` (texte), `number` (nombres, entiers et décimaux confondus), `boolean` (`true`/`false`), `undefined` (valeur absente) et `null` (absence volontaire de valeur).",
+        xpReward: 20,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quelle instruction déclare une variable qui ne peut plus être réassignée ?",
+            choices: ["var", "let", "const", "static"],
+            correctIndex: 2,
+            explanation:
+              "`const` empêche la réassignation de la variable (attention : si c'est un objet/tableau, son *contenu* reste modifiable, seule la référence est verrouillée).",
+          },
+          {
+            order: 2,
+            prompt: "Quel est le type de la valeur `true` en JavaScript ?",
+            choices: ["string", "boolean", "number", "object"],
+            correctIndex: 1,
+            explanation: "`true` et `false` sont des valeurs du type primitif `boolean`.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Fonctions et portée",
+        content:
+          "Une fonction regroupe du code réutilisable. Syntaxe classique : `function add(a, b) { return a + b; }`. Les fonctions fléchées (arrow functions) offrent une syntaxe plus courte : `(a, b) => a + b`.\n\n" +
+          "La portée (scope) détermine où une variable est accessible. `let` et `const` ont une portée de bloc : une variable déclarée dans un `{ }` (y compris dans un `if` ou une boucle) n'existe qu'à l'intérieur de ce bloc. `var`, elle, a une portée de fonction entière — une source classique de bugs, une raison de plus de préférer `let`/`const`.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quelle syntaxe déclare une fonction fléchée qui additionne deux nombres ?",
+            choices: [
+              "function add(a,b) { return a+b }",
+              "(a, b) => a + b",
+              "def add(a,b): return a+b",
+              "add(a,b) => { a+b }",
+            ],
+            correctIndex: 1,
+            explanation:
+              "`(a, b) => a + b` est une fonction fléchée avec retour implicite (pas besoin de `return` ni d'accolades pour une expression unique).",
+          },
+          {
+            order: 2,
+            prompt: "Une variable déclarée avec `let` à l'intérieur d'un bloc `{ }` est visible :",
+            choices: [
+              "Dans tout le fichier",
+              "Uniquement dans ce bloc",
+              "Uniquement dans les fonctions fléchées",
+              "Jamais",
+            ],
+            correctIndex: 1,
+            explanation:
+              "C'est la portée de bloc : en dehors des accolades où elle a été déclarée, la variable n'existe plus.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Boucles et conditions",
+        content:
+          "`if`/`else` exécute du code selon une condition. Pour répéter du code : `for` quand on connaît à l'avance le nombre d'itérations (souvent en parcourant un tableau), `while` quand on répète tant qu'une condition reste vraie, sans savoir combien de fois à l'avance.\n\n" +
+          "Sur les tableaux, `array.map(fn)` est très utilisé : il retourne un **nouveau** tableau où chaque élément est le résultat de `fn` appliqué à l'élément original — le tableau de départ n'est jamais modifié.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt:
+              "Quelle boucle est la plus adaptée pour répéter du code tant qu'une condition reste vraie, sans savoir à l'avance combien de fois ?",
+            choices: ["for", "while", "switch", "const"],
+            correctIndex: 1,
+            explanation:
+              "`while (condition) { ... }` répète tant que la condition est vraie — idéal quand le nombre d'itérations n'est pas connu à l'avance.",
+          },
+          {
+            order: 2,
+            prompt: "Que fait `array.map(fn)` ?",
+            choices: [
+              "Modifie le tableau original en place et ne retourne rien",
+              "Retourne un nouveau tableau avec le résultat de fn appliqué à chaque élément",
+              "Supprime les éléments qui ne satisfont pas fn",
+              "Trie le tableau",
+            ],
+            correctIndex: 1,
+            explanation:
+              "`map` transforme chaque élément et retourne un nouveau tableau — le tableau original n'est jamais modifié (contrairement à des méthodes comme `sort` ou `splice`).",
+          },
+        ],
+      },
+    ],
+  },
+];
+
 async function main() {
   for (const skill of SKILLS) {
     await prisma.skill.upsert({
@@ -310,6 +456,34 @@ async function main() {
     }
   }
   console.log(`✅ ${CONCEPTS.length} concept(s) synchronisé(s)`);
+
+  for (const course of COURSES) {
+    const { lessons, ...courseData } = course;
+    const savedCourse = await prisma.course.upsert({
+      where: { key: course.key },
+      create: { ...courseData, prerequisiteCourseKeys: "[]" },
+      update: { ...courseData },
+    });
+
+    for (const lesson of lessons) {
+      const { questions, ...lessonData } = lesson;
+      const savedLesson = await prisma.lesson.upsert({
+        where: { courseId_order: { courseId: savedCourse.id, order: lesson.order } },
+        create: { ...lessonData, courseId: savedCourse.id },
+        update: { ...lessonData },
+      });
+
+      for (const question of questions) {
+        const { choices, ...questionData } = question;
+        await prisma.question.upsert({
+          where: { lessonId_order: { lessonId: savedLesson.id, order: question.order } },
+          create: { ...questionData, choices: JSON.stringify(choices), lessonId: savedLesson.id },
+          update: { ...questionData, choices: JSON.stringify(choices) },
+        });
+      }
+    }
+  }
+  console.log(`✅ ${COURSES.length} cours synchronisé(s)`);
 }
 
 main()

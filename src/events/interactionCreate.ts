@@ -5,11 +5,21 @@ import {
   type RepliableInteraction,
 } from "discord.js";
 import type { NodifyClient } from "../client.js";
+import { parseAcademyCustomId } from "../commands/education/academyCustomId.js";
 import {
   DICTIONARY_SEARCH_BUTTON_ID,
   DICTIONARY_SEARCH_MODAL_ID,
   parseExplainCustomId,
 } from "../commands/knowledge/dictionaryView.js";
+import {
+  handleAnswer,
+  handleBeginQuiz,
+  handleFinishLesson,
+  handleListButton,
+  handleNextQuestion,
+  handleRestartLesson,
+  handleStartCourse,
+} from "../interactions/academyInteractions.js";
 import {
   handleExplainToggle,
   handleSearchButton,
@@ -94,6 +104,45 @@ const event: Event<"interactionCreate"> = {
         await runWithGuards(interaction, interaction.customId, () =>
           handleExplainToggle(interaction),
         );
+        return;
+      }
+
+      const academyAction = parseAcademyCustomId(interaction.customId);
+      if (academyAction) {
+        await runWithGuards(interaction, interaction.customId, async () => {
+          switch (academyAction.type) {
+            case "list":
+              return handleListButton(interaction);
+            case "start":
+              return handleStartCourse(interaction, academyAction.courseKey);
+            case "begin-quiz":
+              return handleBeginQuiz(interaction, academyAction.lessonId);
+            case "next-question":
+              return handleNextQuestion(
+                interaction,
+                academyAction.lessonId,
+                academyAction.questionOrder,
+                academyAction.runningCorrect,
+              );
+            case "answer":
+              return handleAnswer(
+                interaction,
+                academyAction.lessonId,
+                academyAction.questionOrder,
+                academyAction.runningCorrect,
+                academyAction.choiceIndex,
+              );
+            case "finish":
+              return handleFinishLesson(
+                interaction,
+                academyAction.lessonId,
+                academyAction.score,
+                academyAction.totalQuestions,
+              );
+            case "restart":
+              return handleRestartLesson(interaction, academyAction.lessonId);
+          }
+        });
         return;
       }
 
