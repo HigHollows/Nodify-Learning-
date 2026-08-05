@@ -1,0 +1,50 @@
+name: Discord Notify
+
+# Envoie une notification dans un salon Discord à chaque push sur main.
+# L'URL du webhook est lue depuis un secret GitHub Actions (DISCORD_WEBHOOK_URL),
+# jamais écrite en clair ici — sinon elle resterait exposée pour toujours
+# dans l'historique git.
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Envoyer une notification Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          # Passés en variables d'env plutôt qu'interpolés directement dans le
+          # script `run:` : un message de commit contenant des guillemets ou
+          # des backticks casserait (ou pire, injecterait dans) le shell si
+          # on écrivait ${{ ... }} en clair dans les lignes ci-dessous.
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          COMMIT_URL: ${{ github.event.head_commit.url }}
+          REPO_NAME: ${{ github.repository }}
+          BRANCH_NAME: ${{ github.ref_name }}
+          AUTHOR_NAME: ${{ github.actor }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "⚠️ Secret DISCORD_WEBHOOK_URL non configuré — notification ignorée."
+            exit 0
+          fi
+
+          PAYLOAD=$(jq -n \
+            --arg title "📦 Push sur $REPO_NAME ($BRANCH_NAME)" \
+            --arg desc "$COMMIT_MESSAGE" \
+            --arg url "$COMMIT_URL" \
+            --arg author "$AUTHOR_NAME" \
+            --arg avatar "https://github.com/$AUTHOR_NAME.png" \
+            '{
+              embeds: [{
+                title: $title,
+                description: $desc,
+                url: $url,
+                color: 5793266,
+                author: { name: $author, icon_url: $avatar }
+              }]
+            }')
+
+          curl -sf -H "Content-Type: application/json" -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
