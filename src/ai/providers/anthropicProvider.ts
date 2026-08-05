@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import type { AIProvider, CompletionRequest } from "../types.js";
+import type { AIProvider, CompletionRequest, CompletionResult } from "../types.js";
 
 export class AnthropicProvider implements AIProvider {
   readonly name = "anthropic";
@@ -11,7 +11,7 @@ export class AnthropicProvider implements AIProvider {
     this.model = model;
   }
 
-  async complete(request: CompletionRequest): Promise<string> {
+  async complete(request: CompletionRequest): Promise<CompletionResult> {
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens: request.maxTokens ?? 600,
@@ -20,8 +20,13 @@ export class AnthropicProvider implements AIProvider {
     });
 
     const textBlock = response.content.find((block) => block.type === "text");
-    return textBlock && "text" in textBlock
-      ? textBlock.text
-      : "Je n'ai pas réussi à générer de réponse cette fois-ci.";
+    const text =
+      textBlock && "text" in textBlock ? textBlock.text : "Je n'ai pas réussi à générer de réponse cette fois-ci.";
+
+    return {
+      text,
+      usage: { inputTokens: response.usage.input_tokens, outputTokens: response.usage.output_tokens },
+      model: this.model,
+    };
   }
 }

@@ -1,5 +1,5 @@
 import Groq from "groq-sdk";
-import type { AIProvider, CompletionRequest } from "../types.js";
+import type { AIProvider, CompletionRequest, CompletionResult } from "../types.js";
 
 /**
  * Groq héberge des modèles ouverts (Llama, etc.) avec une inférence très
@@ -16,7 +16,7 @@ export class GroqProvider implements AIProvider {
     this.model = model;
   }
 
-  async complete(request: CompletionRequest): Promise<string> {
+  async complete(request: CompletionRequest): Promise<CompletionResult> {
     const response = await this.client.chat.completions.create({
       model: this.model,
       max_completion_tokens: request.maxTokens ?? 600,
@@ -26,9 +26,14 @@ export class GroqProvider implements AIProvider {
       ],
     });
 
-    return (
-      response.choices[0]?.message?.content ??
-      "Je n'ai pas réussi à générer de réponse cette fois-ci."
-    );
+    const text = response.choices[0]?.message?.content ?? "Je n'ai pas réussi à générer de réponse cette fois-ci.";
+
+    return {
+      text,
+      ...(response.usage
+        ? { usage: { inputTokens: response.usage.prompt_tokens, outputTokens: response.usage.completion_tokens } }
+        : {}),
+      model: this.model,
+    };
   }
 }

@@ -39,11 +39,15 @@ const command: Command = {
     // vulgarisée, sinon explication technique directe.
     const levelHint = !profile || levelForXp(profile.totalXp).index <= 1 ? "beginner" : "advanced";
 
-    const explanation = await explainConcept(interaction.user.id, {
-      term,
-      levelHint,
-      ...(resolution.type === "exact" ? { context: resolution.concept.definition } : {}),
-    });
+    const explanation = await explainConcept(
+      interaction.user.id,
+      {
+        term,
+        levelHint,
+        ...(resolution.type === "exact" ? { context: resolution.concept.definition } : {}),
+      },
+      interaction.guildId ?? undefined,
+    );
 
     const contextId = storeExplainContext(term, explanation, levelHint);
     await interaction.editReply(buildExplainReply(term, explanation, contextId));

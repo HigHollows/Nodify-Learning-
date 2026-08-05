@@ -84,3 +84,23 @@ export async function updateModuleFlags(
   await getOrCreateGuildConfig(guildId); // s'assure que la ligne existe avant l'update
   await prisma.guildConfig.update({ where: { guildId }, data: updates });
 }
+
+export interface AiBudgetOverrides {
+  maxDailyAiSpend: number | null;
+  maxMonthlyAiSpend: number | null;
+}
+
+/** `null` = pas d'override pour ce serveur, retomber sur MAX_DAILY/MONTHLY_AI_SPEND (.env, global). */
+export async function getAiBudgetOverrides(guildId: string): Promise<AiBudgetOverrides> {
+  const config = await getOrCreateGuildConfig(guildId);
+  return { maxDailyAiSpend: config.maxDailyAiSpend, maxMonthlyAiSpend: config.maxMonthlyAiSpend };
+}
+
+/** Passer `null` retire l'override et retombe sur le défaut global. */
+export async function setAiBudgetOverrides(
+  guildId: string,
+  updates: Partial<AiBudgetOverrides>,
+): Promise<void> {
+  await getOrCreateGuildConfig(guildId);
+  await prisma.guildConfig.update({ where: { guildId }, data: updates });
+}

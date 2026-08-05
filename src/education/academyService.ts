@@ -12,6 +12,7 @@ import {
   listCourses,
   upsertLessonCompletion,
 } from "../database/repositories/academyRepository.js";
+import { awardCourseCompleted, awardLessonPassed } from "../credits/rewardService.js";
 import { unlockAchievement } from "../services/achievementService.js";
 import { childLogger } from "../utils/logger.js";
 
@@ -252,6 +253,7 @@ export async function finishLesson(
   }
 
   await addSkillXp(userId, lesson.course.skillKey, lesson.xpReward);
+  await awardLessonPassed(userId); // Learning Reward — quiz réussi (+5 crédits, voir rewardService.ts)
 
   const totalLessons = await countLessonsForCourse(lesson.course.id);
   let courseCompleted = false;
@@ -260,6 +262,7 @@ export async function finishLesson(
   if (lesson.order >= totalLessons) {
     await completeCourseProgress(userId, lesson.course.id);
     achievementUnlocked = await unlockAchievement(userId, "first-course-complete");
+    await awardCourseCompleted(userId); // Learning Reward — cours terminé (+10 crédits)
     courseCompleted = true;
   } else {
     await advanceCourseProgress(userId, lesson.course.id, lesson.order + 1);

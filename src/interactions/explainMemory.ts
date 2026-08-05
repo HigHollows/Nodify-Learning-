@@ -131,6 +131,7 @@ export async function handleFollowUpModal(
     ctx.lastExplanation,
     question,
     ctx.levelHint,
+    interaction.guildId ?? undefined,
   );
 
   const newContextId = storeExplainContext(ctx.term, answer, ctx.levelHint);

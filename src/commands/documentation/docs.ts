@@ -18,7 +18,7 @@ const command: Command = {
     const question = interaction.options.getString("question", true);
     await interaction.deferReply();
 
-    const result = await answerDocsQuestion(interaction.user.id, question);
+    const result = await answerDocsQuestion(interaction.user.id, question, interaction.guildId ?? undefined);
 
     if (result.sources.length === 0) {
       const embed = new EmbedBuilder()

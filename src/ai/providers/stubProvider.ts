@@ -1,4 +1,4 @@
-import type { AIProvider, CompletionRequest } from "../types.js";
+import type { AIProvider, CompletionRequest, CompletionResult } from "../types.js";
 
 /**
  * Provider par défaut, actif tant qu'aucune clé API IA n'est configurée.
@@ -9,14 +9,16 @@ import type { AIProvider, CompletionRequest } from "../types.js";
 export class StubProvider implements AIProvider {
   readonly name = "stub";
 
-  async complete(request: CompletionRequest): Promise<string> {
+  async complete(request: CompletionRequest): Promise<CompletionResult> {
     const preview = request.user.length > 200 ? `${request.user.slice(0, 200)}...` : request.user;
 
-    return [
+    const text = [
       "*(Mode démonstration — aucune clé API IA n'est configurée sur ce bot)*",
       "",
-      "Une fois `ANTHROPIC_API_KEY` renseignée dans le `.env`, Nodify répondrait ici à :",
+      "Une fois `GEMINI_API_KEY` renseignée dans le `.env`, Nodify répondrait ici à :",
       `> ${preview}`,
     ].join("\n");
+
+    return { text }; // pas de usage — aucun appel réseau réel
   }
 }

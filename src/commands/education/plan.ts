@@ -40,6 +40,7 @@ const command: Command = {
         level: c.level,
         status: c.status,
       })),
+      interaction.guildId ?? undefined,
     );
 
     const embed = new EmbedBuilder()

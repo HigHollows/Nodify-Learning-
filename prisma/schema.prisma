@@ -54,6 +54,13 @@ model GuildConfig {
   managedChannelIds String @default("{}")
   managedRoleIds    String @default("{}")
 
+  // Budgets IA par serveur (crédits) — `null` = pas d'override, on retombe
+  // sur MAX_DAILY_AI_SPEND / MAX_MONTHLY_AI_SPEND (.env, global). Permet à
+  // un serveur d'être plus restrictif (ou plus généreux) que le défaut
+  // global sans toucher à la config du bot entier.
+  maxDailyAiSpend   Int?
+  maxMonthlyAiSpend Int?
+
   updatedAt DateTime @updatedAt
 
   @@map("guild_configs")
@@ -76,6 +83,12 @@ model User {
   longestStreak  Int       @default(0)
   lastActiveDate String? // date UTC "YYYY-MM-DD" du dernier jour actif
 
+  // Statut "supporter" non-monétaire (attribué par un admin, pas acheté —
+  // les crédits ne sont pas une monnaie réelle) : donne un bonus sur la
+  // récompense MONTHLY. Prépare une future vraie souscription sans
+  // l'implémenter (aucun paiement ici).
+  isSupporter Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -85,6 +98,11 @@ model User {
   lessonCompletions UserLessonCompletion[]
   dailyAnswers      DailyQuestionAnswer[]
   ctfSolves         CtfSolve[]
+
+  creditAccount      UserCreditAccount?
+  creditTransactions CreditTransaction[]
+  rewardClaims       RewardClaim[]
+  aiCalls            AICall[]
 
   @@map("users")
 }
@@ -414,4 +432,158 @@ model PostedNewsArticle {
   postedAt DateTime @default(now())
 
   @@map("posted_news_articles")
+}
+
+// ============================================================================
+// AI Credit System & AI Control Center
+//
+// Les crédits ne sont PAS une monnaie réelle et ne sont PAS achetables.
+// Rôle : contrôler les coûts IA, éviter les abus, récompenser
+// l'apprentissage réel. Tout le système reste désactivable via
+// CREDITS_ENABLED=false (voir src/credits/), sans casser AIService.
+// ============================================================================
+
+/// Portefeuille de crédits d'un utilisateur — 1:1 avec User, créé à la
+/// demande (getOrCreateAccount), jamais négatif par construction (voir
+/// creditRepository.spendCredits : update atomique conditionné sur le solde).
+model UserCreditAccount {
+  userId String @id
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  balance       Int @default(0)
+  totalEarned   Int @default(0)
+  totalSpent    Int @default(0)
+  totalRefunded Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_credit_accounts")
+}
+
+/// Historique complet des mouvements de crédits — jamais de modification
+/// silencieuse du solde sans une ligne ici. `status` porte le cycle de
+/// réservation (RESERVED → COMPLETED | REFUNDED | FAILED) utilisé pour les
+/// dépenses IA : réserver avant l'appel, confirmer ou rembourser après.
+model CreditTransaction {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  guildId String? // pertinent si l'action a eu lieu dans le contexte d'une guild
+
+  amount Int // positif (EARN/REFUND/BONUS/ADMIN_GRANT...) ou négatif (SPEND/ADMIN_REMOVE)
+  type   String // EARN | SPEND | REFUND | BONUS | ADMIN_GRANT | ADMIN_REMOVE | DAILY | WEEKLY | MONTHLY | LEARNING_REWARD | ACHIEVEMENT | SYSTEM_ADJUSTMENT
+  status String @default("COMPLETED") // RESERVED | COMPLETED | REFUNDED | FAILED
+
+  reason  String // description lisible (ex: "Récompense quotidienne", "Participation au CTF")
+  feature String? // clé de la fonctionnalité IA concernée (ex: "explainme"), si pertinent
+
+  metadata String? // JSON libre (ex: { adminId, tokensUsed... }), optionnel
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("credit_transactions")
+}
+
+/// Un enregistrement par claim de récompense périodique (daily/weekly/monthly).
+/// Le cooldown est vérifié côté serveur via `nextAvailableAt`, jamais côté
+/// Discord seul — voir src/credits/rewardService.ts.
+model RewardClaim {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  rewardType String // DAILY | WEEKLY | MONTHLY
+  amount     Int
+  claimedAt  DateTime @default(now())
+  nextAvailableAt DateTime
+
+  @@index([userId, rewardType])
+  @@map("reward_claims")
+}
+
+/// Journal de chaque appel au provider IA — sert à la fois d'audit et de
+/// base pour les statistiques admin (/ai stats, /ai usage). Le tracking de
+/// tokens est prévu (nullable) pour une évolution future vers un coût basé
+/// sur l'usage réel, sans devoir changer le schéma.
+model AICall {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  guildId String?
+
+  feature  String // ex: "explainme", "securityreview"
+  provider String // ex: "gemini", "anthropic", "groq", "stub"
+  model    String?
+
+  status     String // SUCCESS | ERROR | TIMEOUT
+  creditCost Int
+  refunded   Boolean @default(false)
+
+  tokensInput  Int?
+  tokensOutput Int?
+  latencyMs    Int?
+
+  errorMessage String? // jamais de secret/donnée sensible ici
+
+  createdAt DateTime @default(now())
+
+  @@index([feature])
+  @@index([createdAt])
+  @@map("ai_calls")
+}
+
+/// Configuration système dynamique modifiable depuis Discord (contrairement
+/// aux secrets et interrupteurs maîtres, qui restent en .env — voir
+/// src/config/env.ts). Singleton : une seule ligne, id fixe "singleton".
+model SystemConfig {
+  id String @id @default("singleton")
+
+  // Intention admin (via /ai open|close|maintenance|limited) — persiste au
+  // redémarrage, contrairement à un simple flag .env qu'il faudrait éditer
+  // et redéployer pour changer.
+  aiMode            String    @default("OPEN") // OPEN | LIMITED | MAINTENANCE | CLOSED
+  maintenanceReason String?
+  maintenanceSince  DateTime?
+
+  // Panneau de statut IA persistant (voir src/credits/statusPanelService.ts)
+  statusChannelId String?
+  statusMessageId String?
+
+  // Télémétrie pour calculer le statut affiché (DEGRADED/ERROR/QUOTA...)
+  lastSuccessfulRequestAt DateTime?
+  lastErrorAt             DateTime?
+  lastErrorMessage        String?
+  // Classification structurée de la dernière erreur (QUOTA/TIMEOUT/NETWORK/
+  // INVALID_KEY/PROVIDER_ERROR) — computeAiStatus() s'appuie dessus plutôt
+  // que de deviner en cherchant "quota" dans lastErrorMessage.
+  lastErrorCode String?
+
+  // Dernier statut pour lequel une alerte "AI Incident" a été postée (voir
+  // statusPanelService.ts) — évite de spammer le salon à chaque refresh
+  // tant que le statut n'a pas réellement changé.
+  lastNotifiedStatus String?
+
+  updatedAt DateTime @updatedAt
+
+  @@map("system_config")
+}
+
+/// Journal d'audit des actions administratives (AI Control Center + Credit
+/// Admin Grants) — jamais d'action admin sensible sans trace.
+model AdminAuditLog {
+  id      String @id @default(cuid())
+  adminId String
+  action  String // ex: "AI_CLOSED", "AI_OPENED", "CREDITS_GRANTED"...
+
+  targetUserId String?
+  reason       String?
+  metadata     String? // JSON libre
+
+  createdAt DateTime @default(now())
+
+  @@map("admin_audit_logs")
 }

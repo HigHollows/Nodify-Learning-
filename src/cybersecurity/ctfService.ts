@@ -6,6 +6,7 @@ import {
   recordCtfSolve,
   type CtfLeaderboardRow,
 } from "../database/repositories/ctfRepository.js";
+import { awardChallengeCompleted } from "../credits/rewardService.js";
 import { unlockAchievement } from "../services/achievementService.js";
 
 /** Normalise pour comparer les réponses sans se soucier des accents/casse/espaces superflus. */
@@ -112,6 +113,7 @@ export async function submitFlag(
   }
 
   const achievementUnlocked = await unlockAchievement(userId, "first-flag");
+  await awardChallengeCompleted(userId); // Learning Reward — challenge terminé (+10 crédits)
   return { correct: true, alreadySolved: false, points: challenge.points, achievementUnlocked };
 }
 

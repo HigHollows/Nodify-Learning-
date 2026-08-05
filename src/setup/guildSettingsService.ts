@@ -30,7 +30,7 @@ export async function setModuleFlags(guildId: string, updates: Partial<ModuleFla
 
 /**
  * À appeler en tête de commande pour les modules désactivables (/learn,
- * /cyber, /daily). Hors guild (DM) : pas de restriction, les réglages de
+ * /cyber, /trivia). Hors guild (DM) : pas de restriction, les réglages de
  * modules sont un concept par-serveur, une DM n'a pas de guild à consulter.
  */
 export async function assertModuleEnabled(

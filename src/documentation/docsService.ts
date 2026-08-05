@@ -64,7 +64,11 @@ export interface DocsAnswer {
   sources: DocSearchResult[];
 }
 
-export async function answerDocsQuestion(userId: string, question: string): Promise<DocsAnswer> {
+export async function answerDocsQuestion(
+  userId: string,
+  question: string,
+  guildId?: string,
+): Promise<DocsAnswer> {
   const sources = await findRelevantChunks(question);
   if (sources.length === 0) {
     return { synthesized: null, sources: [] };
@@ -78,6 +82,7 @@ export async function answerDocsQuestion(userId: string, question: string): Prom
     userId,
     question,
     sources.map((s) => ({ title: s.title, source: s.source, content: s.content })),
+    guildId,
   );
 
   return { synthesized, sources };

@@ -1,3 +1,4 @@
+import { awardStreakMilestone } from "../credits/rewardService.js";
 import {
   getOrCreateUser,
   getUserProfile,
@@ -40,6 +41,12 @@ export async function recordActivity(discordUser: DiscordUserLike): Promise<void
 
   await updateStreak(user.id, { currentStreak, longestStreak, lastActiveDate: today });
   log.debug({ userId: user.id, currentStreak }, "Streak mis à jour");
+
+  // Learning Reward — palier de streak (+25 crédits tous les 7 jours). Le
+  // gate "une fois par jour" ci-dessus empêche déjà tout déclenchement en double.
+  if (currentStreak > 0 && currentStreak % 7 === 0) {
+    await awardStreakMilestone(user.id, currentStreak);
+  }
 }
 
 export async function getProfile(discordId: string) {

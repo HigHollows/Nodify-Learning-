@@ -6,6 +6,6 @@ export async function handleThreatModelSubmit(interaction: ModalSubmitInteractio
   const description = interaction.fields.getTextInputValue(THREAT_MODEL_INPUT_ID);
   await interaction.deferReply();
 
-  const analysis = await analyzeThreatModel(interaction.user.id, description);
+  const analysis = await analyzeThreatModel(interaction.user.id, description, interaction.guildId ?? undefined);
   await interaction.editReply(buildThreatModelReply(analysis));
 }

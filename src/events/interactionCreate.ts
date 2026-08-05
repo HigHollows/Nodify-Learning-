@@ -70,8 +70,29 @@ import {
 } from "../cybersecurity/ctfView.js";
 import { recordActivity } from "../services/userService.js";
 import type { Event } from "../types/event.js";
-import { AppError } from "../utils/errors.js";
+import { AIUnavailableError, AppError, InsufficientCreditsError } from "../utils/errors.js";
 import { childLogger } from "../utils/logger.js";
+import { buildAiUnavailableReply } from "../credits/aiStatusView.js";
+import { buildInsufficientCreditsReply } from "../credits/creditView.js";
+import {
+  handleAiCostsButton,
+  handleClaimDailyButton,
+  handleCreditAdminSetZero,
+  handleCreditsGuideButton,
+  handleCreditStatsButton,
+  handleHistoryPage,
+  handleRewardsButton,
+} from "../interactions/creditInteractions.js";
+import { CREDIT_ADMIN_SET_ZERO_PREFIX } from "../commands/credits/creditAdmin.js";
+import {
+  handleAdminCloseAi,
+  handleAdminControlCenterRefresh,
+  handleAdminMaintenanceAi,
+  handleAdminReasonModalSubmit,
+  handleStatusPanelRefresh,
+  parseReasonModalId,
+} from "../interactions/aiInteractions.js";
+import { CREDIT_BUTTON_IDS } from "../credits/creditView.js";
 
 const log = childLogger("interactionCreate");
 
@@ -96,6 +117,38 @@ async function runWithGuards(
   try {
     await handler();
   } catch (error) {
+    // Ces deux erreurs ont un rendu dédié (embeds stylés, pas un message brut)
+    // et doivent être interceptées AVANT le fallback générique AppError.
+    if (error instanceof AIUnavailableError) {
+      const reply = buildAiUnavailableReply(error);
+      const payload: InteractionReplyOptions = {
+        embeds: reply.embeds ?? [],
+        components: reply.components ?? [],
+        flags: MessageFlags.Ephemeral,
+      };
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp(payload).catch(() => undefined);
+      } else {
+        await interaction.reply(payload).catch(() => undefined);
+      }
+      return;
+    }
+
+    if (error instanceof InsufficientCreditsError) {
+      const reply = buildInsufficientCreditsReply(error);
+      const payload: InteractionReplyOptions = {
+        embeds: reply.embeds ?? [],
+        components: reply.components ?? [],
+        flags: MessageFlags.Ephemeral,
+      };
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp(payload).catch(() => undefined);
+      } else {
+        await interaction.reply(payload).catch(() => undefined);
+      }
+      return;
+    }
+
     const userMessage =
       error instanceof AppError
         ? error.userMessage
@@ -261,6 +314,74 @@ const event: Event<"interactionCreate"> = {
         return;
       }
 
+      if (interaction.customId === CREDIT_BUTTON_IDS.stats) {
+        await runWithGuards(interaction, interaction.customId, () => handleCreditStatsButton(interaction));
+        return;
+      }
+
+      if (interaction.customId === CREDIT_BUTTON_IDS.history) {
+        await runWithGuards(interaction, interaction.customId, () => handleHistoryPage(interaction, 0));
+        return;
+      }
+
+      if (interaction.customId === CREDIT_BUTTON_IDS.rewards) {
+        await runWithGuards(interaction, interaction.customId, () => handleRewardsButton(interaction));
+        return;
+      }
+
+      if (interaction.customId === CREDIT_BUTTON_IDS.costs) {
+        await runWithGuards(interaction, interaction.customId, () => handleAiCostsButton(interaction));
+        return;
+      }
+
+      if (interaction.customId === CREDIT_BUTTON_IDS.daily) {
+        await runWithGuards(interaction, interaction.customId, () => handleClaimDailyButton(interaction));
+        return;
+      }
+
+      if (interaction.customId === "credits:guide") {
+        await runWithGuards(interaction, interaction.customId, () => handleCreditsGuideButton(interaction));
+        return;
+      }
+
+      if (interaction.customId.startsWith("credits:history:")) {
+        // Format `credits:history:<page>:<type>` — <type> vide = pas de filtre.
+        const [, , pageStr, type] = interaction.customId.split(":");
+        const page = Number(pageStr);
+        await runWithGuards(interaction, interaction.customId, () =>
+          handleHistoryPage(interaction, page, type || undefined),
+        );
+        return;
+      }
+
+      if (interaction.customId === "ai:status:refresh") {
+        await runWithGuards(interaction, interaction.customId, () => handleStatusPanelRefresh(interaction));
+        return;
+      }
+
+      if (interaction.customId === "ai:admin:refresh") {
+        await runWithGuards(interaction, interaction.customId, () => handleAdminControlCenterRefresh(interaction));
+        return;
+      }
+
+      if (interaction.customId === "ai:admin:close") {
+        await runWithGuards(interaction, interaction.customId, () => handleAdminCloseAi(interaction));
+        return;
+      }
+
+      if (interaction.customId === "ai:admin:maintenance") {
+        await runWithGuards(interaction, interaction.customId, () => handleAdminMaintenanceAi(interaction));
+        return;
+      }
+
+      if (interaction.customId.startsWith(CREDIT_ADMIN_SET_ZERO_PREFIX)) {
+        const targetUserId = interaction.customId.slice(CREDIT_ADMIN_SET_ZERO_PREFIX.length);
+        await runWithGuards(interaction, interaction.customId, () =>
+          handleCreditAdminSetZero(interaction, targetUserId),
+        );
+        return;
+      }
+
       log.warn({ customId: interaction.customId }, "Bouton inconnu reçu");
       return;
     }
@@ -313,6 +434,14 @@ const event: Event<"interactionCreate"> = {
         const challengeKey = interaction.customId.slice(`${CTF_SUBMIT_MODAL_ID}:`.length);
         await runWithGuards(interaction, interaction.customId, () =>
           handleCtfSubmitModal(interaction, challengeKey),
+        );
+        return;
+      }
+
+      const aiReasonMode = parseReasonModalId(interaction.customId);
+      if (aiReasonMode) {
+        await runWithGuards(interaction, interaction.customId, () =>
+          handleAdminReasonModalSubmit(interaction, aiReasonMode),
         );
         return;
       }

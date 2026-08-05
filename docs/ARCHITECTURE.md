@@ -193,8 +193,9 @@ moyen, leçons validées, défis CTF résolus, cours le plus démarré.
 ## AIService (`src/ai/`)
 
 - **ModelRouter** minimal : un seul provider actif, choisi au démarrage
-  selon la config. Priorité : `AnthropicProvider` (si `ANTHROPIC_API_KEY`)
-  > `GroqProvider` (si `GROQ_API_KEY`, modèles ouverts type Llama, inférence
+  selon la config. Priorité : `GeminiProvider` (si `GEMINI_API_KEY`, provider
+  principal de Nodify) > `AnthropicProvider` (si `ANTHROPIC_API_KEY`) >
+  `GroqProvider` (si `GROQ_API_KEY`, modèles ouverts type Llama, inférence
   très rapide) > `StubProvider` (par défaut, aucun appel réseau, réponses
   clairement labellées "mode démonstration")
 - **Contrat unique** : `AIProvider.complete({system, user})` — chaque
@@ -203,6 +204,122 @@ moyen, leçons validées, défis CTF résolus, cours le plus démarré.
 - **Rate limiting** centralisé (`src/utils/rateLimiter.ts`) : 8 requêtes /
   2 min par utilisateur, appliqué une seule fois au point de passage commun
 - Aucun appel LLM dispersé dans les commandes
+- Chaque appel passe par le Credit Engine et l'AI Control Center avant
+  d'atteindre le provider — voir section suivante. Flux complet :
+  `Commande → AIService.complete() → assertAiAvailable() → rate limit →
+  reserveForFeature() → provider.complete() → confirmReservation()/
+  refundReservation() → recordAiSuccess()/recordAiFailure() → logAiCall()`
+
+## Credit System & AI Control Center (`src/credits/`)
+
+Système de crédits **non-monétaire** (pas de paiement, pas d'achat pour
+l'instant — architecture volontairement prête pour ça plus tard) qui
+contrôle l'usage des fonctionnalités IA : coût fixe par feature, remboursé
+automatiquement si l'appel IA échoue, jamais de solde négatif.
+
+- **Interrupteur maître** `CREDITS_ENABLED` (`.env`) : à `false`, tout le
+  Credit Engine devient un no-op qui accepte toujours — aucune commande IA
+  ne bloque, aucune transaction n'est écrite en base. Seule
+  `creditsEnabled()` (`creditService.ts`) lit ce flag ; le reste du code ne
+  s'en préoccupe pas.
+- **Atomicité** : `spendCredits` (`creditRepository.ts`) utilise
+  `updateMany` avec `where: { balance: { gte: amount } }` — sous concurrence
+  réelle (`Promise.all`), exactement une des requêtes en compétition réussit
+  jamais un solde négatif. Vérifié par script réel avec deux réservations
+  simultanées sur un solde insuffisant pour les deux.
+- **Flux de réservation** (jamais de crédits perdus sur une erreur IA) :
+  `reserveForFeature` (statut `RESERVED`) → appel provider → succès
+  → `confirmReservation` (`COMPLETED`) ; échec → `refundReservation`
+  (`REFUNDED`, idempotent — un double remboursement ou une confirmation
+  tardive d'une réservation déjà remboursée sont des no-op sûrs, jamais un
+  double crédit).
+- **Coûts** centralisés dans `creditCosts.ts` (`AI_FEATURE_COSTS`) — jamais
+  `if (feature === "x") cost = 1` dispersé dans les commandes.
+- **Reward Engine** générique (`rewardService.ts`) : un seul moteur pour
+  DAILY/WEEKLY/MONTHLY (cooldown vérifié **côté serveur**, pas seulement
+  Discord, via `tryClaimReward` transactionnel) et pour les récompenses
+  d'apprentissage (`awardCourseCompleted`, `awardLessonPassed`,
+  `awardChallengeCompleted`, `awardStreakMilestone`,
+  `awardAchievementUnlocked` — branchées sur de vrais événements Academy/CTF/
+  streak/achievements, jamais un déclencheur fabriqué). Tout gated par
+  `LEARNING_REWARDS_ENABLED`.
+- **AI Control Center** (`aiControlService.ts`) : mode admin
+  (`OPEN`/`LIMITED`/`MAINTENANCE`/`CLOSED`) persisté en base
+  (`SystemConfig`, pas en `.env` — doit changer sans redémarrage), commande
+  `/ai`. `/ai close` ne coupe que les features IA, jamais le reste de
+  Nodify. Le **statut public affiché** (🟢 OPERATIONAL → 🔴 OFFLINE, 🟡
+  DEGRADED, 🟠 LIMITED, 🔧 MAINTENANCE, ⚠️ QUOTA, ❌ ERROR) est **calculé**
+  (`computeAiStatus`) à partir du mode admin + de la télémétrie réelle des
+  derniers appels — jamais stocké tel quel.
+- **Panneau de statut persistant** (`statusPanelService.ts`) : un seul
+  panneau par déploiement, son salon/message sont sauvegardés
+  (`SystemConfig.statusChannelId/statusMessageId`). Au démarrage et
+  périodiquement (`AI_STATUS_AUTO_UPDATE`, toutes les 10 min), le panneau
+  existant est retrouvé et mis à jour ; s'il a été supprimé, il est recréé
+  automatiquement au même endroit (jamais deux panneaux actifs, jamais
+  recréé sans raison).
+- **Anti-abus** configurable/désactivable individuellement (mettre à `0`) :
+  `MAX_AI_REQUESTS_PER_MINUTE`, `MAX_DAILY_AI_SPEND`, `MAX_MONTHLY_AI_SPEND`.
+- **Audit** (`auditService.ts`) : toute action admin sensible (changement de
+  mode IA, grant/remove/set de crédits) est journalisée avec l'admin, la
+  raison et un horodatage (`AdminAuditLog`).
+- **Design System** (`embedTheme.ts`) : palette de couleurs limitée et
+  cohérente (`EmbedColors`), embeds sobres — pas de spam d'emojis, un emoji
+  identifie une catégorie, il ne décore pas.
+- **3 cas critiques vérifiés par script réel contre la vraie base** (pas
+  seulement en théorie) : `CREDITS_ENABLED=false` → `/explainme` fonctionne
+  sans jamais vérifier de solde ; mode IA `CLOSED` → erreur propre, zéro
+  crédit consommé ; échec provider → remboursement exact, pas de double
+  remboursement, pas de perte permanente.
+
+### Évolutions v2 (multi-provider, budgets par serveur, incidents, bonus)
+
+- **Multi-provider** (`aiService.ts`) : tous les providers dont la clé est
+  configurée sont instanciés simultanément (pas un seul choisi une fois pour
+  toutes) dans un `providerRegistry`. `AI_FEATURE_PROVIDER_OVERRIDES` (JSON
+  `.env`, ex: `{"threatmodel":"anthropic"}`) force un provider précis pour
+  une feature donnée ; sans override, priorité par défaut Gemini > Anthropic
+  > Groq > stub. `AI_PROVIDER_COST_MULTIPLIERS` (JSON `.env`) fait coûter
+  plus cher les features qui tournent sur un provider premium
+  (`getCreditCost(feature, providerName)`, arrondi au-dessus, jamais < 1).
+- **Classification structurée des erreurs IA** (`aiErrorClassifier.ts`) :
+  duck-typée sur `status`/`name`/message (pas d'import des classes d'erreur
+  spécifiques à chaque SDK) → `QUOTA`/`TIMEOUT`/`NETWORK`/`INVALID_KEY`/
+  `PROVIDER_ERROR`. `SystemConfig.lastErrorCode` remplace la détection
+  approximative par mot-clé ("quota" dans le message) qui existait avant.
+- **Timeout centralisé** (`AI_REQUEST_TIMEOUT_MS`, défaut 30s) : appliqué au
+  point de passage unique (`aiService.complete`), pas par provider — un
+  appel qui traîne est remboursé et classifié `TIMEOUT` plutôt que de
+  bloquer indéfiniment l'utilisateur.
+- **Tokens IA** (`AICall.tokensInput/tokensOutput`) : remontés par Gemini,
+  Anthropic et Groq quand le SDK les expose (`CompletionResult.usage`),
+  jamais fabriqués si absents.
+- **Budgets IA par serveur** (`GuildConfig.maxDailyAiSpend/maxMonthlyAiSpend`,
+  commande `/ai budget`) : `null` = pas d'override, retombe sur
+  `MAX_DAILY_AI_SPEND`/`MAX_MONTHLY_AI_SPEND` (`.env`, global) ; un serveur
+  peut être plus restrictif (ou plus généreux) sans toucher à la config du
+  bot entier. `getSpendBudgetStatus` expose la consommation vs. plafond
+  effectif dans `/balance`.
+- **AI Incidents** (`buildAiIncidentEmbed`, `statusPanelService.ts`) : un
+  nouveau message (jamais une édition du panneau) est posté dans le salon de
+  statut uniquement quand le statut public change réellement
+  (`SystemConfig.lastNotifiedStatus` évite le spam à chaque refresh), à la
+  fois pour une dégradation et pour un retour à `OPERATIONAL`.
+- **Bonus & statut supporter** (`rewardService.awardEventBonus`,
+  `User.isSupporter`) : `/credit-admin bonus` accorde un bonus ponctuel
+  (type `BONUS`, traçable séparément dans l'historique) ; `/credit-admin
+  subscriber` attribue un statut non-monétaire (jamais acheté) qui ajoute
+  `SUPPORTER_MONTHLY_BONUS_AMOUNT` à la récompense MONTHLY suivante.
+- **Historique filtrable** (`/credit-history type:`) et **wallet enrichi**
+  (`/balance` affiche désormais les 3 statuts de récompense DAILY/WEEKLY/
+  MONTHLY et la consommation vs. plafond anti-abus, plus qu'un simple Daily).
+- **Bug corrigé pendant ces évolutions** (trouvé par test réel, pas par
+  relecture) : `getStatsSince` comptait une réservation **remboursée**
+  (`status: REFUNDED`, `type` reste `SPEND`) comme une dépense réelle,
+  grugeant à tort le plafond anti-abus quotidien/mensuel d'un utilisateur
+  dont un appel IA avait simplement échoué puis été remboursé. Un
+  utilisateur malchanceux pouvait ainsi se retrouver bloqué par sa propre
+  limite sans avoir réellement consommé les crédits.
 
 ## Sync des rôles Discord (`src/setup/roleSyncService.ts`)
 

@@ -39,3 +39,36 @@ export class NotFoundError extends AppError {
     super(userMessage);
   }
 }
+
+/**
+ * L'IA est temporairement indisponible (fermée par un admin, en maintenance,
+ * ou en panne réelle). Portée par une classe dédiée (pas juste un AppError
+ * générique) pour que le handler d'interactions puisse afficher un embed de
+ * statut IA stylé plutôt qu'un simple message d'erreur — voir interactionCreate.ts.
+ */
+export class AIUnavailableError extends AppError {
+  constructor(
+    public readonly mode: string,
+    reason?: string,
+  ) {
+    super(
+      reason
+        ? `L'IA de Nodify est indisponible pour l'instant : ${reason}`
+        : "L'IA de Nodify est indisponible pour l'instant — réessaie plus tard.",
+    );
+  }
+}
+
+/**
+ * Solde de crédits insuffisant pour une fonctionnalité IA. Porte les
+ * montants (requis/actuel) pour construire un embed qui guide l'utilisateur
+ * (récompenses disponibles) plutôt qu'un simple texte d'erreur.
+ */
+export class InsufficientCreditsError extends AppError {
+  constructor(
+    public readonly required: number,
+    public readonly current: number,
+  ) {
+    super(`Il te faut ${required} crédits pour ça, tu en as ${current}.`);
+  }
+}

@@ -3,6 +3,7 @@ import { checkAndPostDailyQuestions } from "./community/dailyQuestionService.js"
 import { checkAndPostNews } from "./community/newsService.js";
 import { env } from "./config/env.js";
 import { connectDatabase, disconnectDatabase } from "./database/client.js";
+import { refreshStatusPanel } from "./credits/statusPanelService.js";
 import { loadCommands } from "./loaders/commandLoader.js";
 import { loadEvents } from "./loaders/eventLoader.js";
 import { logger } from "./utils/logger.js";
@@ -11,6 +12,8 @@ import { logger } from "./utils/logger.js";
 const DAILY_QUESTION_CHECK_INTERVAL_MS = 15 * 60 * 1000;
 /** Les flux RSS bougent moins souvent — vérification toutes les 30 minutes suffit. */
 const NEWS_CHECK_INTERVAL_MS = 30 * 60 * 1000;
+/** Le panneau de statut IA n'a pas besoin d'un rafraîchissement temps réel. */
+const AI_STATUS_PANEL_REFRESH_INTERVAL_MS = 10 * 60 * 1000;
 
 async function main() {
   logger.info(`🚀 Démarrage de Nodify (env: ${env.NODE_ENV})`);
@@ -38,6 +41,12 @@ async function main() {
     checkAndPostNews(client).catch((error: unknown) => {
       logger.error({ err: error }, "Échec de la vérification initiale des actus");
     });
+    // Récupère/vérifie/met à jour le panneau de statut IA existant (jamais
+    // recréé sans raison) — le recrée automatiquement si le message a été
+    // supprimé. No-op si /ai panel n'a jamais été lancé une première fois.
+    refreshStatusPanel(client).catch((error: unknown) => {
+      logger.error({ err: error }, "Échec du rafraîchissement initial du panneau de statut IA");
+    });
   });
 
   // Hacktualités : jamais d'actu inventée — uniquement de vrais flux RSS
@@ -48,12 +57,23 @@ async function main() {
     });
   }, NEWS_CHECK_INTERVAL_MS);
 
+  // env.AI_STATUS_AUTO_UPDATE vérifié à l'intérieur de refreshStatusPanel
+  // lui-même (via env.AI_STATUS_ENABLED) — pas la peine de dupliquer la
+  // condition ici, l'appel reste un simple no-op si désactivé.
+  const aiStatusPanelInterval = setInterval(() => {
+    if (!env.AI_STATUS_AUTO_UPDATE) return;
+    refreshStatusPanel(client).catch((error: unknown) => {
+      logger.error({ err: error }, "Échec du rafraîchissement du panneau de statut IA");
+    });
+  }, AI_STATUS_PANEL_REFRESH_INTERVAL_MS);
+
   // Arrêt propre : on ferme la connexion DB et le client Discord avant de quitter,
   // pour ne jamais couper une requête ou une écriture en plein vol.
   const shutdown = async (signal: string) => {
     logger.info(`Signal ${signal} reçu, arrêt de Nodify...`);
     clearInterval(dailyQuestionInterval);
     clearInterval(newsInterval);
+    clearInterval(aiStatusPanelInterval);
     client.destroy();
     await disconnectDatabase();
     process.exit(0);

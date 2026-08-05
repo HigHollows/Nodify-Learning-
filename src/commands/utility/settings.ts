@@ -59,7 +59,7 @@ const command: Command = {
           statusLine("Academy (`/learn`, `/plan`)", flags.academyEnabled),
           statusLine("Cyber Academy (`/cyber`)", flags.cyberEnabled),
           statusLine("Hacktualités (post automatique)", flags.newsEnabled),
-          statusLine("Question du jour (`/daily` + post auto)", flags.dailyQuestionEnabled),
+          statusLine("Question du jour (`/trivia` + post auto)", flags.dailyQuestionEnabled),
         ].join("\n"),
       )
       .setFooter({

@@ -38,11 +38,24 @@ const CATEGORIES: { title: string; commands: string[] }[] = [
   },
   {
     title: "🌐 Communauté",
-    commands: ["/daily", "/news"],
+    commands: ["/trivia", "/news"],
+  },
+  {
+    title: "💳 Crédits & Récompenses",
+    commands: [
+      "/credits",
+      "/balance",
+      "/credit-stats",
+      "/credit-history",
+      "/ai-costs",
+      "/daily",
+      "/weekly",
+      "/monthly",
+    ],
   },
   {
     title: "⚙️ Admin",
-    commands: ["/stats", "/settings"],
+    commands: ["/stats", "/settings", "/credit-admin give|remove|set", "/ai status|open|close|maintenance|limited|stats|usage|panel"],
   },
   {
     title: "🔧 Divers",

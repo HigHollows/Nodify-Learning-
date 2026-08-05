@@ -1,8 +1,15 @@
+import { logAiCall } from "../database/repositories/aiCallRepository.js";
 import { env } from "../config/env.js";
+import { assertAiAvailable, recordAiFailure, recordAiSuccess } from "../credits/aiControlService.js";
+import { confirmReservation, refundReservation, reserveForFeature } from "../credits/creditService.js";
+import { InsufficientCreditsError } from "../utils/errors.js";
 import { AppError } from "../utils/errors.js";
 import { childLogger } from "../utils/logger.js";
 import { checkRateLimit } from "../utils/rateLimiter.js";
+import { classifyProviderError } from "./aiErrorClassifier.js";
+import { getFeatureProviderOverrides } from "./providerConfig.js";
 import { AnthropicProvider } from "./providers/anthropicProvider.js";
+import { GeminiProvider } from "./providers/geminiProvider.js";
 import { GroqProvider } from "./providers/groqProvider.js";
 import { StubProvider } from "./providers/stubProvider.js";
 import type { AIProvider, LevelHint } from "./types.js";
@@ -10,53 +17,159 @@ import type { AIProvider, LevelHint } from "./types.js";
 const log = childLogger("aiService");
 
 /**
- * ModelRouter minimal : un seul provider actif à la fois, choisi une fois
- * au démarrage selon la config disponible. Priorité si plusieurs clés sont
- * présentes : Anthropic > Groq > stub — Anthropic reste le choix par défaut
- * recommandé (Phase 1), Groq est une alternative rapide/gratuite.
+ * ModelRouter : instancie TOUS les providers pour lesquels une clé est
+ * configurée (pas un seul choisi une fois pour toutes) — permet à
+ * `AI_FEATURE_PROVIDER_OVERRIDES` (src/ai/providerConfig.ts) de forcer un
+ * provider différent selon la feature (ex: un modèle plus capable sur
+ * `/threatmodel`, un plus rapide sur `/debugme`), sans jamais complexifier
+ * les commandes elles-mêmes : elles continuent d'appeler `complete()` sans
+ * savoir quel provider répond. `StubProvider` est toujours disponible en
+ * dernier recours (aucune clé requise).
  */
-function selectProvider(): AIProvider {
-  if (env.ANTHROPIC_API_KEY) return new AnthropicProvider(env.ANTHROPIC_API_KEY, env.ANTHROPIC_MODEL);
-  if (env.GROQ_API_KEY) return new GroqProvider(env.GROQ_API_KEY, env.GROQ_MODEL);
-  return new StubProvider();
+const providerRegistry = new Map<string, AIProvider>();
+if (env.GEMINI_API_KEY) providerRegistry.set("gemini", new GeminiProvider(env.GEMINI_API_KEY, env.GEMINI_MODEL));
+if (env.ANTHROPIC_API_KEY) {
+  providerRegistry.set("anthropic", new AnthropicProvider(env.ANTHROPIC_API_KEY, env.ANTHROPIC_MODEL));
+}
+if (env.GROQ_API_KEY) providerRegistry.set("groq", new GroqProvider(env.GROQ_API_KEY, env.GROQ_MODEL));
+providerRegistry.set("stub", new StubProvider());
+
+/** Ordre de priorité par défaut quand une feature n'a pas d'override explicite. */
+const DEFAULT_PROVIDER_PRIORITY = ["gemini", "anthropic", "groq", "stub"];
+
+function defaultProvider(): AIProvider {
+  for (const name of DEFAULT_PROVIDER_PRIORITY) {
+    const provider = providerRegistry.get(name);
+    if (provider) return provider;
+  }
+  return providerRegistry.get("stub")!; // toujours présent, voir plus haut
 }
 
-const activeProvider: AIProvider = selectProvider();
+/** Résout le provider à utiliser pour une feature donnée (override si configuré et disponible, sinon défaut). */
+function resolveProviderForFeature(feature: string): AIProvider {
+  const overrides = getFeatureProviderOverrides();
+  const overrideName = overrides[feature];
+  if (overrideName) {
+    const overridden = providerRegistry.get(overrideName);
+    if (overridden) return overridden;
+    log.warn({ feature, overrideName }, "Provider demandé en override indisponible — fallback sur le défaut");
+  }
+  return defaultProvider();
+}
 
-log.info(`AIService initialisé — provider actif : ${activeProvider.name}`);
+log.info(
+  { providers: [...providerRegistry.keys()], default: defaultProvider().name },
+  "AIService initialisé",
+);
 
+/** Nom du provider par défaut — utilisé pour l'affichage (AI Control Center) quand aucune feature précise n'est en jeu. */
 export function getActiveProviderName(): string {
-  return activeProvider.name;
+  return defaultProvider().name;
 }
 
 /** Quota anti-abus : au-delà, on bloque plutôt que de laisser exploser la conso du provider actif. */
-const AI_RATE_LIMIT = 8;
-const AI_RATE_LIMIT_WINDOW_MS = 2 * 60 * 1000;
+const AI_RATE_LIMIT_WINDOW_MS = 60 * 1000;
+
+/** Empêche un provider en rade de bloquer indéfiniment l'utilisateur — la requête réseau peut continuer en arrière-plan, mais on rembourse et on répond proprement après ce délai. */
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`AI request timed out after ${ms}ms`)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error: unknown) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
 
 /**
- * Point de passage unique pour tout appel IA — c'est ici, et nulle part
- * ailleurs, qu'on applique le rate limiting : peu importe la feature qui
- * appelle (ExplainMe, Security Review...), la protection s'applique de la
- * même façon sans devoir être dupliquée dans chaque commande.
+ * Point de passage UNIQUE pour tout appel IA. C'est ici, et nulle part
+ * ailleurs, que se fait : la vérification du statut IA (AI Control Center),
+ * le rate limiting, la réservation/confirmation/remboursement de crédits
+ * (Credit Service), et la journalisation (AICall). Architecture :
+ *
+ *   AI Command → AIService.complete() → Credit Service → AI Provider
+ *
+ * Aucune commande ne parle jamais directement à un provider IA.
  */
 async function complete(
   userId: string,
+  feature: string,
   system: string,
   user: string,
   maxTokens?: number,
+  guildId?: string,
 ): Promise<string> {
-  const rateLimit = checkRateLimit(`ai:${userId}`, AI_RATE_LIMIT, AI_RATE_LIMIT_WINDOW_MS);
-  if (!rateLimit.allowed) {
+  await assertAiAvailable(feature);
+
+  const rateLimit = checkRateLimit(
+    `ai:${userId}`,
+    env.MAX_AI_REQUESTS_PER_MINUTE || Number.POSITIVE_INFINITY,
+    AI_RATE_LIMIT_WINDOW_MS,
+  );
+  if (env.MAX_AI_REQUESTS_PER_MINUTE > 0 && !rateLimit.allowed) {
     throw new AppError(
       `Trop de requêtes IA d'affilée — réessaie dans ${rateLimit.retryAfterSeconds}s.`,
     );
   }
 
+  const provider = resolveProviderForFeature(feature);
+  const reservation = await reserveForFeature(userId, guildId, feature, provider.name);
+  if (!reservation.ok) {
+    throw new InsufficientCreditsError(reservation.required, reservation.current);
+  }
+
+  const startedAt = Date.now();
+
   try {
-    return await activeProvider.complete({ system, user, ...(maxTokens ? { maxTokens } : {}) });
+    const result = await withTimeout(
+      provider.complete({ system, user, ...(maxTokens ? { maxTokens } : {}) }),
+      env.AI_REQUEST_TIMEOUT_MS,
+    );
+
+    await confirmReservation(reservation.transactionId);
+    await recordAiSuccess();
+    await logAiCall({
+      userId,
+      feature,
+      provider: provider.name,
+      status: "SUCCESS",
+      creditCost: reservation.cost,
+      latencyMs: Date.now() - startedAt,
+      ...(guildId !== undefined ? { guildId } : {}),
+      ...(result.model !== undefined ? { model: result.model } : {}),
+      ...(result.usage?.inputTokens !== undefined ? { tokensInput: result.usage.inputTokens } : {}),
+      ...(result.usage?.outputTokens !== undefined ? { tokensOutput: result.usage.outputTokens } : {}),
+    });
+
+    return result.text;
   } catch (error) {
-    log.error({ err: error, provider: activeProvider.name }, "Échec de l'appel au provider IA");
-    throw new AppError("Le service IA est momentanément indisponible, réessaie plus tard.");
+    const classified = classifyProviderError(error);
+
+    await refundReservation(reservation.transactionId);
+    await recordAiFailure(classified.message, classified.code);
+    await logAiCall({
+      userId,
+      feature,
+      provider: provider.name,
+      status: classified.code === "TIMEOUT" ? "TIMEOUT" : "ERROR",
+      creditCost: reservation.cost,
+      refunded: reservation.transactionId !== null,
+      latencyMs: Date.now() - startedAt,
+      errorMessage: classified.message,
+      ...(guildId !== undefined ? { guildId } : {}),
+    });
+
+    log.error(
+      { err: error, provider: provider.name, feature, errorCode: classified.code },
+      "Échec de l'appel au provider IA",
+    );
+    throw new AppError("Le service IA est momentanément indisponible — tes crédits ont été remboursés, réessaie plus tard.");
   }
 }
 
@@ -68,7 +181,11 @@ export interface ExplainRequest {
   context?: string;
 }
 
-export async function explainConcept(userId: string, request: ExplainRequest): Promise<string> {
+export async function explainConcept(
+  userId: string,
+  request: ExplainRequest,
+  guildId?: string,
+): Promise<string> {
   const system =
     "Tu es Nodify, un mentor technique pédagogue pour développeurs sur Discord. " +
     "Explique le concept demandé de façon claire et concise (150 mots maximum), " +
@@ -85,7 +202,7 @@ export async function explainConcept(userId: string, request: ExplainRequest): P
     .filter((line): line is string => line !== null)
     .join("\n");
 
-  return complete(userId, system, user, 600);
+  return complete(userId, "explainme", system, user, 600, guildId);
 }
 
 /** Question de suivi sur une explication précédente — mémoire courte, un seul tour en arrière. */
@@ -95,6 +212,7 @@ export async function explainFollowUp(
   previousExplanation: string,
   followUpQuestion: string,
   levelHint: LevelHint,
+  guildId?: string,
 ): Promise<string> {
   const system =
     "Tu es Nodify, un mentor technique. Tu poursuis une conversation : l'utilisateur " +
@@ -108,12 +226,12 @@ export async function explainFollowUp(
     `Question de suivi : ${followUpQuestion}\n` +
     `Niveau de l'utilisateur : ${levelHint}.`;
 
-  return complete(userId, system, user, 500);
+  return complete(userId, "explainme", system, user, 500, guildId);
 }
 
 // --- Security Review (Phase 7) --------------------------------------------
 
-export async function reviewCodeSecurity(userId: string, code: string): Promise<string> {
+export async function reviewCodeSecurity(userId: string, code: string, guildId?: string): Promise<string> {
   const system =
     "Tu es un ingénieur en sécurité senior qui audite du code pour des développeurs. " +
     "Réponds en français, en markdown. Structure ta réponse par sections de sévérité " +
@@ -124,13 +242,14 @@ export async function reviewCodeSecurity(userId: string, code: string): Promise<
     "au lieu d'inventer des problèmes. Ne réponds qu'avec l'analyse, pas de préambule.";
 
   const user = `Analyse ce code :\n\`\`\`\n${code}\n\`\`\``;
-  return complete(userId, system, user, 900);
+  return complete(userId, "securityreview", system, user, 900, guildId);
 }
 
 export async function suggestCodeFix(
   userId: string,
   code: string,
   findings: string,
+  guildId?: string,
 ): Promise<string> {
   const system =
     "Tu es un ingénieur senior. On te donne du code et une liste de problèmes de " +
@@ -140,12 +259,16 @@ export async function suggestCodeFix(
     "fonctionnalités qui n'existaient pas dans l'original.";
 
   const user = `Code original :\n\`\`\`\n${code}\n\`\`\`\n\nProblèmes identifiés :\n${findings}`;
-  return complete(userId, system, user, 900);
+  return complete(userId, "securityreview", system, user, 900, guildId);
 }
 
 // --- Threat Modeling (Phase 8) ---------------------------------------------
 
-export async function analyzeThreatModel(userId: string, description: string): Promise<string> {
+export async function analyzeThreatModel(
+  userId: string,
+  description: string,
+  guildId?: string,
+): Promise<string> {
   const system =
     "Tu es un architecte sécurité qui fait du threat modeling pour un développeur. " +
     "On te décrit une architecture ou un flux applicatif (pas du code). Réponds en " +
@@ -157,12 +280,12 @@ export async function analyzeThreatModel(userId: string, description: string): P
     "sérieusement, dis-le et demande les précisions nécessaires plutôt que d'inventer.";
 
   const user = `Architecture/flux à analyser :\n${description}`;
-  return complete(userId, system, user, 800);
+  return complete(userId, "threatmodel", system, user, 800, guildId);
 }
 
 // --- Code Review qualité (Phase 7) ----------------------------------------
 
-export async function reviewCodeQuality(userId: string, code: string): Promise<string> {
+export async function reviewCodeQuality(userId: string, code: string, guildId?: string): Promise<string> {
   const system =
     "Tu es un lead developer qui relit du code pour un développeur junior. " +
     "Réponds en français, en markdown, sous forme de liste à puces courte " +
@@ -173,7 +296,7 @@ export async function reviewCodeQuality(userId: string, code: string): Promise<s
     "plutôt que d'inventer des remarques.";
 
   const user = `Relis ce code :\n\`\`\`\n${code}\n\`\`\``;
-  return complete(userId, system, user, 700);
+  return complete(userId, "codereview", system, user, 700, guildId);
 }
 
 // --- Debug Coach (Phase 7) -------------------------------------------------
@@ -182,6 +305,7 @@ export async function debugGuide(
   userId: string,
   errorMessage: string,
   code: string | undefined,
+  guildId?: string,
 ): Promise<string> {
   const system =
     "Tu es un mentor qui aide un développeur à déboguer SEUL, façon tuteur " +
@@ -197,7 +321,7 @@ export async function debugGuide(
     .filter((line): line is string => line !== null)
     .join("\n\n");
 
-  return complete(userId, system, user, 400);
+  return complete(userId, "debugme", system, user, 400, guildId);
 }
 
 export async function debugHint(
@@ -205,6 +329,7 @@ export async function debugHint(
   errorMessage: string,
   code: string | undefined,
   previousGuidance: string,
+  guildId?: string,
 ): Promise<string> {
   const system =
     "Tu es un mentor qui aide un développeur à déboguer. Il est déjà bloqué " +
@@ -221,7 +346,7 @@ export async function debugHint(
     .filter((line): line is string => line !== null)
     .join("\n\n");
 
-  return complete(userId, system, user, 400);
+  return complete(userId, "debugme", system, user, 400, guildId);
 }
 
 // --- Documentation RAG (Phase 6) -------------------------------------------
@@ -236,6 +361,7 @@ export async function answerFromDocs(
   userId: string,
   question: string,
   chunks: DocChunkRef[],
+  guildId?: string,
 ): Promise<string> {
   const system =
     "Tu es Nodify, assistant documentaire pour développeurs. Réponds à la " +
@@ -249,7 +375,7 @@ export async function answerFromDocs(
     .join("\n\n");
 
   const user = `Question : ${question}\n\nExtraits disponibles :\n${context}`;
-  return complete(userId, system, user, 600);
+  return complete(userId, "docs", system, user, 600, guildId);
 }
 
 // --- Learning Planner (amélioration) ---------------------------------------
@@ -267,6 +393,7 @@ export async function generateLearningPlan(
   userId: string,
   goal: string,
   availableCourses: PlannerCourse[],
+  guildId?: string,
 ): Promise<string> {
   const system =
     "Tu es un conseiller pédagogique pour Nodify Academy. Voici la liste EXHAUSTIVE " +
@@ -285,5 +412,5 @@ export async function generateLearningPlan(
     .join("\n");
 
   const user = `Objectif de l'utilisateur : ${goal}\n\nCatalogue de cours disponibles :\n${catalogue}`;
-  return complete(userId, system, user, 700);
+  return complete(userId, "plan", system, user, 700, guildId);
 }

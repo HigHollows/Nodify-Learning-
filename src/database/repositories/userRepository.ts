@@ -49,3 +49,17 @@ export async function listTopUsersByXp(limit: number) {
     take: limit,
   });
 }
+
+/**
+ * Statut "supporter" non-monétaire (attribué par un admin, pas acheté — les
+ * crédits ne sont pas une monnaie réelle). Donne un bonus sur la récompense
+ * MONTHLY — voir rewardService.ts.
+ */
+export async function setSupporterStatus(discordId: string, isSupporter: boolean): Promise<void> {
+  await prisma.user.update({ where: { id: discordId }, data: { isSupporter } });
+}
+
+export async function isSupporter(discordId: string): Promise<boolean> {
+  const user = await prisma.user.findUnique({ where: { id: discordId }, select: { isSupporter: true } });
+  return user?.isSupporter ?? false;
+}
