@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+*.log
+
+# SQLite dev database
+prisma/dev.db
+prisma/dev.db-journal
+
+# OS / editor
+.DS_Store
+.vscode/

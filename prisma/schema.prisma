@@ -1,0 +1,49 @@
+// Nodify — schéma Prisma
+//
+// Phase 1 : uniquement les fondations multi-guild (Guild + config).
+// Les modèles Skills/Courses/Progress/Concepts/etc. arriveront avec
+// les phases 3 (User Profile) et 4 (Knowledge Engine) pour éviter
+// de figer un schéma qu'on n'a pas encore vraiment conçu.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// Un serveur Discord sur lequel Nodify est installé.
+/// Nodify est multi-guild : chaque Guild a sa propre configuration.
+model Guild {
+  id        String   @id // Discord guild ID (snowflake), pas d'auto-increment
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  config GuildConfig?
+
+  @@map("guilds")
+}
+
+/// Configuration modulaire d'une guild (créée par /setup).
+/// Un seul enregistrement par guild, en relation 1:1.
+model GuildConfig {
+  id      String @id @default(cuid())
+  guildId String @unique
+  guild   Guild  @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  // Modules activables indépendamment par serveur
+  academyEnabled  Boolean @default(true)
+  cyberEnabled    Boolean @default(true)
+  newsEnabled     Boolean @default(true)
+
+  // Salons/rôles créés automatiquement par /setup, pour l'auto-recovery
+  managedChannelIds String @default("[]") // JSON array de snowflakes
+  managedRoleIds    String @default("[]") // JSON array de snowflakes
+
+  updatedAt DateTime @updatedAt
+
+  @@map("guild_configs")
+}
