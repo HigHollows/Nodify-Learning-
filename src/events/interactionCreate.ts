@@ -1,5 +1,6 @@
 import {
   MessageFlags,
+  type ButtonInteraction,
   type Interaction,
   type InteractionReplyOptions,
   type RepliableInteraction,
@@ -25,6 +26,19 @@ import {
   handleSearchButton,
   handleSearchModalSubmit,
 } from "../interactions/dictionaryInteractions.js";
+import {
+  handleTrustExecute,
+  handleTrustIgnore,
+  handleTrustRestart,
+  handleTrustVerify,
+  handleTrustVerifyExecuteAnyway,
+  handleTrustVerifyRefuse,
+} from "../interactions/trustSimulationInteractions.js";
+import {
+  TRUST_RESTART_CUSTOM_ID,
+  TRUST_START_CUSTOM_ID,
+  TRUST_VERIFY_CUSTOM_ID,
+} from "../cybersecurity/trustSimulationView.js";
 import { recordActivity } from "../services/userService.js";
 import type { Event } from "../types/event.js";
 import { AppError } from "../utils/errors.js";
@@ -104,6 +118,21 @@ const event: Event<"interactionCreate"> = {
         await runWithGuards(interaction, interaction.customId, () =>
           handleExplainToggle(interaction),
         );
+        return;
+      }
+
+      const trustHandlers: Record<string, (i: ButtonInteraction) => Promise<void>> = {
+        [TRUST_START_CUSTOM_ID.execute]: handleTrustExecute,
+        [TRUST_START_CUSTOM_ID.verify]: handleTrustVerify,
+        [TRUST_START_CUSTOM_ID.ignore]: handleTrustIgnore,
+        [TRUST_VERIFY_CUSTOM_ID.refuse]: handleTrustVerifyRefuse,
+        [TRUST_VERIFY_CUSTOM_ID.executeAnyway]: handleTrustVerifyExecuteAnyway,
+        [TRUST_RESTART_CUSTOM_ID]: handleTrustRestart,
+      };
+
+      const trustHandler = trustHandlers[interaction.customId];
+      if (trustHandler) {
+        await runWithGuards(interaction, interaction.customId, () => trustHandler(interaction));
         return;
       }
 

@@ -29,8 +29,14 @@ export interface CourseSummary {
   totalLessons: number;
 }
 
-export async function listCourseSummaries(userId: string): Promise<CourseSummary[]> {
-  const courses = await listCourses();
+export async function listCourseSummaries(
+  userId: string,
+  categoryFilter?: string,
+): Promise<CourseSummary[]> {
+  const allCourses = await listCourses();
+  const courses = categoryFilter
+    ? allCourses.filter((c) => c.category === categoryFilter)
+    : allCourses;
 
   return Promise.all(
     courses.map(async (course) => {

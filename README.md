@@ -89,10 +89,11 @@ Voir les phases dans le prompt fondateur du projet. Statut actuel :
 - ✅ **Phase 4** — Knowledge Engine : `/dictionary` (+ alias `/dict` `/term` `/define`)
 - ✅ **Phase 5** — Academy : `/learn`, cours/leçons/quiz, XP réelle, progression adaptative
 - ✅ **Phase 6 (partielle)** — AIService/ModelRouter + `/explainme`
+- ✅ **Phase 8 (partielle)** — Cyber Academy (`/cyber learn`) + Trust Nothing Simulation
 
-Prochaine étape : RAG documentation (`/docs`), volontairement pas fait dans
-la même passe que l'AIService — trop gros pour ne pas le valider d'abord
-contre un cas d'usage simple.
+Prochaine étape : RAG documentation (`/docs`), `/securityreview`, ou CTF/Labs
+(ces derniers nécessitent une vraie infrastructure de sandbox — pas encore
+construite volontairement, voir section Cyber Academy ci-dessous).
 
 ### AIService (`src/ai/`)
 
@@ -110,6 +111,25 @@ seulement ceux catalogués. Si le terme existe dans le dictionnaire, sa
 définition est injectée en contexte à l'IA (évite les réponses à côté) ;
 sinon l'IA répond de ses connaissances générales. Le niveau (débutant/avancé)
 est déduit du profil réel de l'utilisateur (`/profile`).
+
+### `/cyber` — Cyber Academy
+
+- **`/cyber learn`** — réutilise entièrement le moteur Academy (Phase 5),
+  filtré sur la catégorie `CYBERSECURITY` : aucun système parallèle. Premier
+  cours : *Cybersecurity Fundamentals* (menaces/phishing, mots de passe &
+  hashing, réseaux/pare-feu — 3 leçons, XP réelle sur la compétence
+  `cyber-fundamentals`)
+- **`/cyber simulation`** — Trust Nothing Simulation : un scénario de
+  phishing 100% fictif et sûr (`Nodify_Update.exe` envoyé en DM par un faux
+  compte de support). Aucun vrai fichier, aucune collecte de données, aucune
+  modification système — uniquement des embeds/boutons Discord. Bonne
+  décision → débloque l'achievement **Esprit critique** ; mauvaise décision
+  → explique précisément les signaux d'alerte manqués et propose de
+  recommencer
+- **Volontairement pas construit** : CTF, Labs, Red Team/Blue Team,
+  Threat Modeling — nécessitent une vraie infrastructure de sandbox/VM
+  isolée qui n'existe pas encore. Les simuler sans vraie infra serait
+  fabriquer une fausse capacité.
 
 ### `/dictionary` (alias `/dict` `/term` `/define`)
 

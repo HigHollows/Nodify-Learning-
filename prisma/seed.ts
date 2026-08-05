@@ -55,6 +55,12 @@ const ACHIEVEMENTS = [
     description: "Tu as terminé ton premier cours sur Nodify Academy.",
     icon: "🎓",
   },
+  {
+    key: "critical-thinker",
+    name: "Esprit critique",
+    description: "Tu as déjoué une tentative d'ingénierie sociale dans la Trust Nothing Simulation.",
+    icon: "🕵️",
+  },
 ];
 
 /**
@@ -405,6 +411,129 @@ const COURSES: CourseSeed[] = [
             correctIndex: 1,
             explanation:
               "`map` transforme chaque élément et retourne un nouveau tableau — le tableau original n'est jamais modifié (contrairement à des méthodes comme `sort` ou `splice`).",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "cyber-fundamentals",
+    title: "Cybersecurity Fundamentals",
+    description:
+      "Les bases pour ne plus faire confiance aveuglément : menaces courantes, mots de passe, réseaux.",
+    category: "CYBERSECURITY",
+    skillKey: "cyber-fundamentals",
+    level: 1,
+    lessons: [
+      {
+        order: 1,
+        title: "Comprendre les menaces",
+        content:
+          "La règle d'or de la cybersécurité : **ne fais jamais confiance aveuglément, vérifie**. La majorité des attaques ne visent pas une faille technique, mais la confiance humaine.\n\n" +
+          "Le **phishing** consiste à se faire passer pour une entité de confiance (banque, support technique, collègue) pour pousser la victime à révéler des informations sensibles ou exécuter une action dangereuse. L'**ingénierie sociale** (social engineering) est le terme plus large : manipuler une personne plutôt qu'une machine.\n\n" +
+          "Le signal d'alerte le plus fiable n'est presque jamais le design du message (les faux messages sont souvent très soignés), mais un **sentiment d'urgence artificiel** : « fais-le maintenant, sinon... ». Une vraie urgence légitime laisse presque toujours le temps de vérifier.",
+        xpReward: 20,
+        questions: [
+          {
+            order: 1,
+            prompt: "Qu'est-ce que le phishing ?",
+            choices: [
+              "Un outil de chiffrement de données",
+              "Une technique visant à tromper une personne pour lui voler des informations sensibles en se faisant passer pour une entité de confiance",
+              "Un type de pare-feu",
+              "Un protocole réseau",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Le phishing exploite la confiance, pas une faille technique — d'où l'importance de vérifier l'expéditeur avant d'agir.",
+          },
+          {
+            order: 2,
+            prompt: "Quel est le signal d'alerte le plus courant d'une tentative de phishing ?",
+            choices: [
+              "Un design de message très soigné",
+              "Un sentiment d'urgence artificiel poussant à agir vite sans réfléchir",
+              "Une adresse email très longue",
+              "Un message envoyé le matin",
+            ],
+            correctIndex: 1,
+            explanation:
+              "L'urgence artificielle (« sinon ton compte sera supprimé ») est conçue pour court-circuiter ta réflexion — c'est le signal le plus fiable, bien plus que l'apparence du message.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Mots de passe et hashing",
+        content:
+          "Un service sérieux ne stocke JAMAIS ton mot de passe en clair. Il stocke un **hash** : le résultat d'une fonction à sens unique (impossible à inverser mathématiquement) appliquée à ton mot de passe. Même si la base de données fuite, l'attaquant récupère des hashs, pas les mots de passe.\n\n" +
+          "Un **sel** (salt) est une valeur aléatoire ajoutée avant le hashing, unique par utilisateur : elle empêche les attaques par table arc-en-ciel (rainbow tables — des hashs précalculés pour des mots de passe courants), puisque deux utilisateurs avec le même mot de passe auront des hashs différents.\n\n" +
+          "Bonnes pratiques : un mot de passe unique par service (un gestionnaire de mots de passe aide énormément), et l'activation de l'authentification à deux facteurs (2FA/MFA) partout où c'est possible — un mot de passe volé ne suffit alors plus à se connecter.",
+        xpReward: 20,
+        questions: [
+          {
+            order: 1,
+            prompt:
+              "Pourquoi les mots de passe sont-ils stockés sous forme de hash plutôt qu'en clair ?",
+            choices: [
+              "Pour économiser de l'espace disque",
+              "Parce que le hash est une fonction à sens unique : même en cas de fuite de la base, l'attaquant ne peut pas retrouver facilement le mot de passe original",
+              "Parce que c'est plus rapide à vérifier qu'un mot de passe en clair",
+              "Ce n'est pas vrai, ils sont toujours stockés en clair",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Le hashing est mathématiquement à sens unique : on ne peut pas « dé-hasher » pour retrouver le mot de passe d'origine, seulement vérifier qu'un mot de passe donné produit le même hash.",
+          },
+          {
+            order: 2,
+            prompt: "À quoi sert un sel (salt) dans le hashing de mots de passe ?",
+            choices: [
+              "À accélérer la connexion",
+              "À empêcher les attaques par table arc-en-ciel en rendant chaque hash unique même pour deux mots de passe identiques",
+              "À chiffrer la base de données entière",
+              "À compresser le mot de passe",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Sans sel, deux comptes avec le même mot de passe auraient le même hash — un attaquant pourrait utiliser des tables précalculées. Le sel rend chaque hash unique.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Réseaux et défenses de base",
+        content:
+          "Un **pare-feu (firewall)** filtre le trafic réseau entrant et sortant selon des règles définies (ex: bloquer tout sauf le port 443). C'est une barrière, pas une garantie absolue — il ne protège pas contre une attaque qui passe par un canal autorisé (ex: un site web légitime compromis).\n\n" +
+          "Un **VPN** crée un tunnel chiffré entre ton appareil et un serveur intermédiaire : utile pour cacher ton trafic aux intermédiaires du réseau (ex: sur un Wi-Fi public non fiable), mais ce n'est ni un antivirus, ni une protection contre le phishing.\n\n" +
+          "Le principe du **moindre privilège** (least privilege) s'applique aussi bien aux réseaux qu'aux comptes utilisateurs : n'accorder que les accès strictement nécessaires, jamais plus « au cas où ».",
+        xpReward: 20,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que fait un pare-feu (firewall) ?",
+            choices: [
+              "Il chiffre automatiquement tout le trafic",
+              "Il filtre le trafic réseau entrant/sortant selon des règles définies, pour bloquer ce qui n'est pas autorisé",
+              "Il accélère la connexion internet",
+              "Il stocke les mots de passe",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un pare-feu applique des règles de filtrage — ce n'est pas un outil de chiffrement, et il ne protège pas contre tout (ex: phishing via un canal autorisé).",
+          },
+          {
+            order: 2,
+            prompt: "Quel est le principal avantage d'un VPN ?",
+            choices: [
+              "Il rend ton ordinateur plus rapide",
+              "Il crée un tunnel chiffré entre ton appareil et un serveur, cachant ton trafic aux intermédiaires du réseau (ex: Wi-Fi public)",
+              "Il empêche tous les virus",
+              "Il remplace un antivirus",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un VPN protège la confidentialité de ton trafic réseau vis-à-vis des intermédiaires — il ne remplace ni un antivirus, ni la vigilance face au phishing.",
           },
         ],
       },
