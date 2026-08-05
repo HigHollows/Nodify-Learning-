@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    env:
+      # Valeurs factices : suffisantes pour que la validation de config
+      # (src/config/env.ts) passe en CI, sans exposer de vrai secret.
+      DISCORD_TOKEN: ci-placeholder-token
+      DISCORD_CLIENT_ID: "000000000000000000"
+      DATABASE_URL: "file:./ci-test.db"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies (+ génère le client Prisma et compile)
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
