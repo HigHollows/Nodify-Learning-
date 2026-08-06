@@ -31,6 +31,7 @@ export async function handleCtfSubmitModal(
       result.alreadySolved,
       result.points,
       result.unlockedAchievements,
+      challengeKey,
     ),
   );
 }

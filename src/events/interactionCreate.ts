@@ -90,6 +90,10 @@ import {
   parseDuelAnswerButtonId,
   parseDuelDeclineButtonId,
 } from "../social/duelView.js";
+import { handleShareCourseButton, handleShareCtfButton } from "../interactions/shareInteractions.js";
+import { parseShareCourseButtonId, parseShareCtfButtonId } from "../social/shareView.js";
+import { handlePlacementAnswerButton } from "../interactions/placementInteractions.js";
+import { parsePlacementAnswerButtonId } from "../placement/placementView.js";
 import { recordActivity } from "../services/userService.js";
 import type { Event } from "../types/event.js";
 import { AIUnavailableError, AppError, InsufficientCreditsError } from "../utils/errors.js";
@@ -328,6 +332,26 @@ const event: Event<"interactionCreate"> = {
       if (duelAnswer) {
         await runWithGuards(interaction, interaction.customId, () =>
           handleDuelAnswerButton(interaction, duelAnswer.duelId, duelAnswer.index),
+        );
+        return;
+      }
+
+      const shareCourseKey = parseShareCourseButtonId(interaction.customId);
+      if (shareCourseKey) {
+        await runWithGuards(interaction, interaction.customId, () => handleShareCourseButton(interaction, shareCourseKey));
+        return;
+      }
+
+      const shareCtfKey = parseShareCtfButtonId(interaction.customId);
+      if (shareCtfKey) {
+        await runWithGuards(interaction, interaction.customId, () => handleShareCtfButton(interaction, shareCtfKey));
+        return;
+      }
+
+      const placementAnswer = parsePlacementAnswerButtonId(interaction.customId);
+      if (placementAnswer) {
+        await runWithGuards(interaction, interaction.customId, () =>
+          handlePlacementAnswerButton(interaction, placementAnswer.questionId, placementAnswer.index),
         );
         return;
       }

@@ -7,6 +7,7 @@ import type {
 } from "../../education/academyService.js";
 import { labelForLevelOrder } from "../../utils/leveling.js";
 import { baseContainer, containerPayload, textDisplay, type ContainerPayload } from "../../ui/container.js";
+import { buildShareCourseButton } from "../../social/shareView.js";
 
 export const ACADEMY_LIST_BUTTON_ID = "academy:list";
 
@@ -159,8 +160,11 @@ export function buildLessonFinishReply(courseKey: string, lessonId: string, resu
   container.addActionRowComponents(
     new ActionRowBuilder<ButtonBuilder>().addComponents(
       result.courseCompleted
-        ? new ButtonBuilder().setCustomId(ACADEMY_LIST_BUTTON_ID).setLabel("📚 Voir les cours").setStyle(ButtonStyle.Secondary)
-        : new ButtonBuilder().setCustomId(`academy:start:${courseKey}`).setLabel("➡️ Leçon suivante").setStyle(ButtonStyle.Primary),
+        ? [
+            new ButtonBuilder().setCustomId(ACADEMY_LIST_BUTTON_ID).setLabel("📚 Voir les cours").setStyle(ButtonStyle.Secondary),
+            buildShareCourseButton(courseKey),
+          ]
+        : [new ButtonBuilder().setCustomId(`academy:start:${courseKey}`).setLabel("➡️ Leçon suivante").setStyle(ButtonStyle.Primary)],
     ),
   );
 

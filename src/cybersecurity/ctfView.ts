@@ -7,6 +7,7 @@ import type { CtfLeaderboardRow } from "../database/repositories/ctfRepository.j
 import type { UnlockedAchievementInfo } from "../services/achievementService.js";
 import { labelForLevelOrder } from "../utils/leveling.js";
 import { baseContainer, containerPayload, fieldText, textDisplay, thinSeparator, type ContainerPayload } from "../ui/container.js";
+import { buildShareCtfRow } from "../social/shareView.js";
 
 export const CTF_SUBMIT_MODAL_ID = "ctf:submit_modal";
 export const CTF_FLAG_INPUT_ID = "flag";
@@ -102,6 +103,7 @@ export function buildCtfSubmitResultReply(
   alreadySolved: boolean,
   points: number,
   unlockedAchievements: UnlockedAchievementInfo[],
+  challengeKey: string,
 ) {
   if (alreadySolved) {
     return {
@@ -116,7 +118,7 @@ export function buildCtfSubmitResultReply(
   const lines = [`✅ **Flag validé !** +${points} points.`];
   for (const a of unlockedAchievements) lines.push(`🏆 Succès débloqué : **${a.icon} ${a.name}**`);
 
-  return { content: lines.join("\n") };
+  return { content: lines.join("\n"), components: [buildShareCtfRow(challengeKey)] };
 }
 
 export function buildCtfLeaderboardReply(entries: CtfLeaderboardRow[]): ContainerPayload {

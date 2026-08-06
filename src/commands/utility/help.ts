@@ -20,7 +20,7 @@ const CATEGORIES: { title: string; commands: string[] }[] = [
   },
   {
     title: "🎓 Academy",
-    commands: ["/learn", "/plan", "/roadmap"],
+    commands: ["/learn", "/plan", "/roadmap", "/placement"],
   },
   {
     title: "🏋️ Exercices pratiques",
