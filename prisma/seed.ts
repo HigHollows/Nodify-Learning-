@@ -1532,6 +1532,54 @@ const CONCEPTS: ConceptSeed[] = [
     prerequisiteKeys: [],
     aliases: ["social engineering", "ingenierie sociale"],
   },
+  {
+    key: "caching",
+    name: "Caching",
+    category: "DEVELOPMENT",
+    level: 2,
+    definition:
+      "La pratique de stocker temporairement le résultat d'une opération coûteuse pour éviter de la refaire à chaque demande identique.",
+    explanationBeginner:
+      "Un cache garde sous la main le résultat déjà calculé d'une requête coûteuse — la prochaine demande identique récupère ce résultat instantanément, sans refaire le calcul ou la requête base de données originale.",
+    explanationAdvanced:
+      "Le vrai défi du caching n'est pas de le mettre en place mais de l'invalider correctement : si la donnée sous-jacente change sans que le cache correspondant soit mis à jour, les utilisateurs reçoivent une donnée périmée (stale) de façon silencieuse. Redis est très utilisé comme cache applicatif en mémoire, avec des stratégies d'expiration (TTL) pour limiter automatiquement la durée de vie des entrées périmées.",
+    docUrl: "https://web.dev/articles/http-cache",
+    relatedKeys: ["cdn"],
+    prerequisiteKeys: [],
+    aliases: ["mise en cache"],
+  },
+  {
+    key: "memory-leak",
+    name: "Fuite mémoire (Memory Leak)",
+    category: "DEVELOPMENT",
+    level: 3,
+    definition:
+      "Une situation où un programme conserve une référence à de la mémoire qui n'est plus réellement utilisée, empêchant le garbage collector de la libérer — la consommation mémoire du programme augmente alors progressivement sans jamais redescendre.",
+    explanationBeginner:
+      "Même dans des langages avec ramasse-miettes automatique (JavaScript, Python, Java), une fuite mémoire reste possible : si le code garde quelque part une référence oubliée à un objet (ex: un event listener jamais retiré sur un élément DOM supprimé), le garbage collector considère cet objet encore utilisé et ne le libère jamais.",
+    explanationAdvanced:
+      "Les sources classiques en JavaScript incluent les event listeners non retirés, les closures qui capturent involontairement de grosses structures de données, ou des caches applicatifs sans limite de taille qui grossissent indéfiniment. Sur une application longue durée (un serveur Node.js qui tourne des jours sans redémarrer), même une petite fuite s'accumule progressivement jusqu'à épuiser la mémoire disponible — les outils de profiling mémoire des DevTools permettent de repérer ces références oubliées.",
+    docUrl: "https://developer.mozilla.org/docs/Web/JavaScript/Memory_management",
+    relatedKeys: [],
+    prerequisiteKeys: [],
+    aliases: ["fuite de memoire"],
+  },
+  {
+    key: "arp-spoofing",
+    name: "ARP Spoofing",
+    category: "CYBERSECURITY",
+    level: 3,
+    definition:
+      "Une attaque réseau local où un attaquant envoie de fausses réponses ARP pour associer sa propre adresse MAC à l'adresse IP d'une autre machine (souvent la passerelle par défaut), interceptant ainsi le trafic qui lui était destiné.",
+    explanationBeginner:
+      "Sur un réseau local, ARP associe les adresses IP aux adresses MAC physiques — un attaquant peut mentir sur cette association pour se faire passer pour la passerelle, interceptant tout le trafic destiné à internet avant de le relayer (une attaque de type Man-in-the-Middle).",
+    explanationAdvanced:
+      "ARP n'a aucune authentification native — n'importe quelle machine sur le réseau local peut annoncer une association IP-MAC sans vérification, ce qui rend cette attaque possible. Des défenses existent : l'inspection ARP dynamique (DAI) sur des switches gérés, des tables ARP statiques pour des machines critiques, ou la détection d'anomalies (deux MAC différentes revendiquant la même IP en peu de temps).",
+    docUrl: "https://en.wikipedia.org/wiki/ARP_spoofing",
+    relatedKeys: ["man-in-the-middle"],
+    prerequisiteKeys: [],
+    aliases: ["arp poisoning", "empoisonnement arp"],
+  },
 ];
 
 /**
@@ -4816,6 +4864,130 @@ const COURSES: CourseSeed[] = [
       },
     ],
   },
+  {
+    key: "js-dom-modules-performance",
+    title: "JavaScript : DOM, Modules et Performance",
+    description: "Manipuler le DOM efficacement, organiser son code en modules ES, et repérer les pièges de performance les plus courants côté navigateur.",
+    category: "DEVELOPMENT",
+    skillKey: "javascript",
+    level: 2,
+    prerequisiteCourseKeys: ["js-closures-scope"],
+    lessons: [
+      {
+        order: 1,
+        title: "Manipuler le DOM",
+        content:
+          "Le **DOM** (Document Object Model) est la représentation en mémoire d'une page HTML, sous forme d'arbre d'objets manipulables en JavaScript.\n\n" +
+          "```js\nconst bouton = document.querySelector('#envoyer');\nbouton.addEventListener('click', () => {\n  const champ = document.querySelector('input[name=\"email\"]');\n  console.log(champ.value);\n});\n```\n\n" +
+          "`querySelector`/`querySelectorAll` utilisent la syntaxe des sélecteurs CSS pour trouver des éléments — plus flexible que les anciennes méthodes (`getElementById`, `getElementsByClassName`). Chaque manipulation du DOM (ajouter un élément, changer un style) déclenche potentiellement un **reflow** (recalcul de la mise en page) — modifier le DOM en boucle, un élément à la fois, est bien plus coûteux que de préparer les changements puis les appliquer en un seul lot.",
+        xpReward: 20,
+        questions: [
+          {
+            order: 1,
+            prompt: "Qu'est-ce que le DOM ?",
+            choices: [
+              "Un langage de programmation séparé de JavaScript",
+              "La représentation en mémoire d'une page HTML, sous forme d'arbre d'objets manipulables en JavaScript",
+              "Un format de fichier CSS",
+              "Un serveur web",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Le DOM (Document Object Model) est l'interface que le navigateur expose pour que JavaScript puisse lire et modifier la structure/le contenu/le style d'une page HTML déjà chargée.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi modifier le DOM en boucle, un élément à la fois, est-il coûteux en performance ?",
+            choices: [
+              "Ce n'est jamais coûteux, le DOM est instantané",
+              "Chaque modification peut déclencher un reflow (recalcul de mise en page) — les faire une par une multiplie ce coût au lieu de le regrouper",
+              "Le DOM ne peut être modifié qu'une seule fois par page",
+              "JavaScript interdit techniquement les boucles sur le DOM",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Chaque modification du DOM peut forcer le navigateur à recalculer la mise en page (reflow) — regrouper les changements (ex: construire d'abord une structure hors-DOM, puis l'insérer une seule fois) évite de payer ce coût à chaque itération.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Modules ES : organiser son code",
+        content:
+          "Les **modules ES** (`import`/`export`) permettent de découper du code JavaScript en fichiers séparés avec une portée isolée par défaut — contrairement à un simple script classique où tout partage un même scope global.\n\n" +
+          "```js\n// math.js\nexport function addition(a, b) { return a + b; }\nexport const PI = 3.14159;\n\n// main.js\nimport { addition, PI } from './math.js';\nconsole.log(addition(2, 3));\n```\n\n" +
+          "Chaque module a son propre scope : une variable non exportée dans `math.js` reste totalement invisible depuis `main.js`, contrairement à des scripts classiques chargés côte à côte qui partagent le même objet `window` global. Les modules sont aussi chargés une seule fois et mis en cache, peu importe le nombre de fois qu'ils sont importés ailleurs dans l'application — leur code ne s'exécute qu'une fois.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi une variable non exportée dans un module ES reste-t-elle invisible depuis un autre fichier qui l'importe ?",
+            choices: [
+              "Ce n'est pas vrai, tout est automatiquement accessible",
+              "Chaque module ES a son propre scope isolé — seul ce qui est explicitement exporté devient accessible ailleurs",
+              "JavaScript interdit les variables privées",
+              "Il faut toujours utiliser `var` pour qu'une variable soit accessible",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Contrairement aux scripts classiques qui partagent un même scope global (`window`), chaque module ES est isolé par défaut — l'export explicite est le seul moyen de rendre quelque chose accessible depuis un autre module.",
+          },
+          {
+            order: 2,
+            prompt: "Que se passe-t-il si le même module est importé plusieurs fois dans une application ?",
+            choices: [
+              "Son code s'exécute une fois à chaque import, dupliquant l'état",
+              "Il est chargé et exécuté une seule fois, puis mis en cache — les imports suivants réutilisent le même résultat",
+              "Ça provoque toujours une erreur",
+              "Chaque import crée une copie totalement indépendante des variables du module",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Le moteur JavaScript met en cache un module après son premier chargement — les imports suivants du même module réutilisent l'instance déjà exécutée, sans réexécuter le code une seconde fois.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Pièges de performance courants",
+        content:
+          "Quelques pièges de performance fréquents côté navigateur :\n\n" +
+          "- **Fuites mémoire** : garder une référence oubliée à un élément DOM déjà retiré de la page (ex: un event listener jamais retiré sur un élément supprimé) empêche le garbage collector de libérer cette mémoire, même si l'élément n'est plus visible.\n" +
+          "- **Debounce/throttle** manquants sur des événements fréquents (`scroll`, `resize`, `input`) : sans limiter la fréquence d'exécution d'un callback coûteux, un événement qui se déclenche des dizaines de fois par seconde peut saturer le thread principal.\n" +
+          "- **Bundle JavaScript trop lourd** : charger tout le code de l'application dès le premier chargement, même les parties pas encore utilisées, ralentit le temps avant que la page devienne interactive — le **code splitting** (charger certaines parties seulement quand nécessaire, ex: `import()` dynamique) répond à ce problème.\n\n" +
+          "Le principe général : mesurer avant d'optimiser (via les DevTools du navigateur, onglet Performance) — optimiser à l'aveugle une partie du code qui n'est en réalité pas le goulot d'étranglement réel est du temps perdu qui n'améliore rien de mesurable.",
+        xpReward: 30,
+        questions: [
+          {
+            order: 1,
+            prompt: "Comment un event listener jamais retiré sur un élément DOM supprimé peut-il causer une fuite mémoire ?",
+            choices: [
+              "Ça ne cause jamais de fuite mémoire",
+              "La référence conservée par le listener empêche le garbage collector de libérer cette mémoire, même si l'élément n'est plus visible sur la page",
+              "Les event listeners sont automatiquement supprimés après 1 minute",
+              "Ça ralentit uniquement le CSS, pas la mémoire",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un event listener actif maintient une référence vivante à l'élément (et à tout ce que sa closure capture) — sans le retirer explicitement, le garbage collector ne peut jamais libérer cette mémoire, même après suppression visuelle de l'élément.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi mesurer avant d'optimiser (plutôt qu'optimiser à l'aveugle) est-il important ?",
+            choices: [
+              "Ce n'est pas important, optimiser n'importe quelle partie du code est toujours bénéfique",
+              "Optimiser une partie du code qui n'est pas réellement le goulot d'étranglement ne produit aucune amélioration mesurable, et fait perdre du temps",
+              "Mesurer ralentit toujours le développement sans bénéfice",
+              "Les DevTools ne peuvent pas mesurer les performances JavaScript",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Sans mesure préalable (profiling), on risque d'optimiser une partie du code qui n'a jamais été le vrai problème de performance — le temps investi n'apporte alors aucune amélioration perceptible pour l'utilisateur final.",
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 /**
@@ -6612,6 +6784,46 @@ const DAILY_QUESTIONS: DailyQuestionSeed[] = [
     choices: ["Il coûte toujours plus cher", "Il a une limite matérielle physique dure et représente un point de panne unique", "Il ne fonctionne pas dans le cloud", "Il est incompatible avec les bases de données"],
     correctIndex: 1,
     explanation: "Le scaling vertical (augmenter la puissance d'une seule machine) est plafonné par la machine la plus puissante disponible et concentre tout le risque sur une seule instance — le scaling horizontal évite ces deux limites.",
+  },
+  {
+    key: "dom-queryselector-purpose",
+    category: "DEVELOPMENT",
+    prompt: "Quel avantage `document.querySelector()` offre-t-il par rapport à `document.getElementById()` ?",
+    choices: ["Aucun, ce sont des synonymes stricts", "Il accepte n'importe quel sélecteur CSS (classe, attribut, imbrication), pas seulement un id", "Il est toujours plus rapide", "Il ne fonctionne que sur des éléments `<div>`"],
+    correctIndex: 1,
+    explanation: "`querySelector()` accepte la syntaxe complète des sélecteurs CSS (`.classe`, `[attribut]`, `parent > enfant`...), bien plus flexible que `getElementById()` limité aux id.",
+  },
+  {
+    key: "es-modules-caching",
+    category: "DEVELOPMENT",
+    prompt: "Que se passe-t-il si un même module ES est importé depuis plusieurs fichiers différents d'une application ?",
+    choices: ["Son code s'exécute une fois par import, dupliquant l'état", "Il est chargé et exécuté une seule fois puis mis en cache — tous les imports partagent la même instance", "Ça provoque systématiquement une erreur", "Chaque import reçoit une copie indépendante des variables du module"],
+    correctIndex: 1,
+    explanation: "Le moteur JS met en cache un module après son premier chargement — les imports suivants réutilisent la même instance déjà exécutée, sans réexécuter le code.",
+  },
+  {
+    key: "debounce-vs-throttle",
+    category: "DEVELOPMENT",
+    prompt: "Quelle est la différence entre 'debounce' et 'throttle' pour limiter la fréquence d'un callback (ex: sur un événement scroll) ?",
+    choices: ["Ce sont des synonymes exacts", "Debounce attend une pause dans les événements avant d'exécuter ; throttle exécute au maximum une fois par intervalle fixe, peu importe la fréquence des événements", "Throttle ne fonctionne que sur les clics", "Debounce exécute toujours immédiatement"],
+    correctIndex: 1,
+    explanation: "Debounce retarde l'exécution jusqu'à ce que les événements cessent pendant un délai donné (utile pour une recherche en temps réel) ; throttle garantit un espacement régulier des exécutions même sous un flux continu d'événements (utile pour un scroll).",
+  },
+  {
+    key: "arp-no-authentication",
+    category: "NETWORKING",
+    prompt: "Pourquoi le protocole ARP est-il vulnérable au spoofing par nature ?",
+    choices: ["Il est chiffré mais mal implémenté", "Il n'inclut aucun mécanisme d'authentification natif — n'importe quelle machine du réseau local peut annoncer une association IP-MAC sans vérification", "Il ne fonctionne que sur des réseaux sans fil", "ARP a été remplacé par un protocole plus récent partout"],
+    correctIndex: 1,
+    explanation: "ARP a été conçu dans les débuts d'internet sans considération de sécurité — aucune vérification ne garantit qu'une réponse ARP provient réellement de la machine qu'elle prétend représenter.",
+  },
+  {
+    key: "code-splitting-purpose",
+    category: "DEVELOPMENT",
+    prompt: "À quoi sert le 'code splitting' dans une application web ?",
+    choices: ["À supprimer du code mort automatiquement", "À charger certaines parties du code JavaScript seulement quand elles sont nécessaires, plutôt que tout charger dès le premier affichage", "À diviser un fichier CSS en plusieurs fichiers", "À répartir le code entre plusieurs langages de programmation"],
+    correctIndex: 1,
+    explanation: "Charger tout le JavaScript de l'application dès le départ ralentit le temps avant que la page devienne interactive — le code splitting (via `import()` dynamique par exemple) ne charge une partie du code qu'au moment où elle devient réellement nécessaire.",
   },
 ];
 
