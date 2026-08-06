@@ -23,6 +23,10 @@ const CATEGORIES: { title: string; commands: string[] }[] = [
     commands: ["/learn", "/plan"],
   },
   {
+    title: "🏋️ Exercices pratiques",
+    commands: ["/exercise list", "/exercise practice"],
+  },
+  {
     title: "🤖 IA",
     commands: ["/explainme", "/docs"],
   },

@@ -148,6 +148,12 @@ export async function awardChallengeCompleted(userId: string): Promise<void> {
   await earnReward(userId, 10, "LEARNING_REWARD", "Challenge terminé");
 }
 
+/** Exercice pratique résolu (première fois — pas de refarm sur les tentatives suivantes). */
+export async function awardExerciseCompleted(userId: string): Promise<void> {
+  if (!learningRewardsEnabled()) return;
+  await earnReward(userId, 5, "LEARNING_REWARD", "Exercice résolu");
+}
+
 /** Palier de streak d'engagement atteint (tous les 7 jours). */
 export async function awardStreakMilestone(userId: string, streakDays: number): Promise<void> {
   if (!learningRewardsEnabled()) return;

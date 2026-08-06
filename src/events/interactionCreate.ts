@@ -68,6 +68,16 @@ import {
   CTF_SUBMIT_MODAL_ID,
   parseCtfSubmitButtonId,
 } from "../cybersecurity/ctfView.js";
+import {
+  handleExerciseAnswerButton,
+  handleExerciseSubmitButton,
+  handleExerciseSubmitModal,
+} from "../interactions/exerciseInteractions.js";
+import {
+  EXERCISE_SUBMIT_MODAL_ID,
+  parseExerciseAnswerButtonId,
+  parseExerciseSubmitButtonId,
+} from "../practice/exerciseView.js";
 import { recordActivity } from "../services/userService.js";
 import type { Event } from "../types/event.js";
 import { AIUnavailableError, AppError, InsufficientCreditsError } from "../utils/errors.js";
@@ -269,6 +279,22 @@ const event: Event<"interactionCreate"> = {
         return;
       }
 
+      const exerciseAnswer = parseExerciseAnswerButtonId(interaction.customId);
+      if (exerciseAnswer) {
+        await runWithGuards(interaction, interaction.customId, () =>
+          handleExerciseAnswerButton(interaction, exerciseAnswer.key, exerciseAnswer.index),
+        );
+        return;
+      }
+
+      const exerciseSubmitKey = parseExerciseSubmitButtonId(interaction.customId);
+      if (exerciseSubmitKey) {
+        await runWithGuards(interaction, interaction.customId, () =>
+          handleExerciseSubmitButton(interaction, exerciseSubmitKey),
+        );
+        return;
+      }
+
       const academyAction = parseAcademyCustomId(interaction.customId);
       if (academyAction) {
         await runWithGuards(interaction, interaction.customId, async () => {
@@ -447,6 +473,14 @@ const event: Event<"interactionCreate"> = {
         const challengeKey = interaction.customId.slice(`${CTF_SUBMIT_MODAL_ID}:`.length);
         await runWithGuards(interaction, interaction.customId, () =>
           handleCtfSubmitModal(interaction, challengeKey),
+        );
+        return;
+      }
+
+      if (interaction.customId.startsWith(`${EXERCISE_SUBMIT_MODAL_ID}:`)) {
+        const exerciseKey = interaction.customId.slice(`${EXERCISE_SUBMIT_MODAL_ID}:`.length);
+        await runWithGuards(interaction, interaction.customId, () =>
+          handleExerciseSubmitModal(interaction, exerciseKey),
         );
         return;
       }

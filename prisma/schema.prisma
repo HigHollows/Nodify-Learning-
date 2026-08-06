@@ -98,6 +98,7 @@ model User {
   lessonCompletions UserLessonCompletion[]
   dailyAnswers      DailyQuestionAnswer[]
   ctfSolves         CtfSolve[]
+  exerciseCompletions UserExerciseCompletion[]
 
   creditAccount      UserCreditAccount?
   creditTransactions CreditTransaction[]
@@ -416,6 +417,57 @@ model CtfSolve {
 
   @@unique([userId, challengeId])
   @@map("ctf_solves")
+}
+
+/// Exercices pratiques (Phase 10) — courts, ciblés, complémentaires aux
+/// cours Academy (progression linéaire longue) et au CTF (défis autonomes
+/// thématiques). Deux formats couvrent les types du spec sans exploser la
+/// complexité : "MCQ" (QCM classique, `choices`+`correctIndex`) et "TEXT"
+/// (Debug/Trouve le bug/Complète le code — réponse courte comparée à
+/// `acceptedAnswers`, même pattern de normalisation que CtfChallenge).
+/// "Explique ce code"/"Analyse sécurité"/"Architecture review" restent
+/// servis par les outils IA existants (/explainme, /securityreview,
+/// /codereview) — un format libre évalué par IA, pas un exercice à
+/// réponse unique comme ceux-ci.
+model Exercise {
+  id         String @id @default(cuid())
+  key        String @unique
+  type       String // "MCQ" | "TEXT"
+  category   String // même taxonomie que Skill.category
+  difficulty Int // 1 (Beginner) à 5 (Expert), voir LEVEL_ROLES
+  title      String
+  prompt     String // énoncé, souvent avec un extrait de code en Markdown
+
+  choices      String? // JSON array de strings — uniquement type "MCQ"
+  correctIndex Int? // uniquement type "MCQ"
+
+  acceptedAnswers String? // JSON array de strings normalisées — uniquement type "TEXT"
+
+  explanation String
+  xpReward    Int    @default(10)
+  skillKey    String? // Skill.key crédité en XP à la résolution, si pertinent
+
+  createdAt   DateTime @default(now())
+  completions UserExerciseCompletion[]
+
+  @@map("exercises")
+}
+
+/// Résolution d'un exercice par un utilisateur. Contrainte unique : ne
+/// rapporte sa récompense qu'une seule fois par utilisateur (rejouable
+/// pour s'entraîner, mais pas pour refarmer XP/crédits).
+model UserExerciseCompletion {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  exerciseId String
+  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  solvedAt DateTime @default(now())
+
+  @@unique([userId, exerciseId])
+  @@map("user_exercise_completions")
 }
 
 /// Hacktualités (Phase 9) — jamais d'actualité inventée : uniquement des

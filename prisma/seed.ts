@@ -138,6 +138,12 @@ const ACHIEVEMENTS = [
     description: "Tu as terminé le cours Prompt Engineering sur Nodify Academy.",
     icon: "✨",
   },
+  {
+    key: "exercise-practitioner",
+    name: "Praticien assidu",
+    description: "Tu as résolu 10 exercices pratiques différents sur Nodify.",
+    icon: "🏋️",
+  },
 ];
 
 /**
@@ -7249,6 +7255,292 @@ const CTF_CHALLENGES: CtfChallengeSeed[] = [
   },
 ];
 
+/**
+ * Exercices pratiques (Phase 10) — courts et rejouables, complémentaires aux
+ * cours Academy (progression longue) et au CTF (défis thématiques autonomes).
+ * "MCQ" = QCM classique. "TEXT" = Debug/Trouve le bug/Complète le code,
+ * réponse courte comparée à `acceptedAnswers` (même normalisation que le CTF).
+ */
+interface ExerciseSeed {
+  key: string;
+  type: "MCQ" | "TEXT";
+  category: SkillCategory;
+  difficulty: number;
+  title: string;
+  prompt: string;
+  choices?: string[]; // MCQ uniquement
+  correctIndex?: number; // MCQ uniquement
+  acceptedAnswers?: string[]; // TEXT uniquement
+  explanation: string;
+  xpReward: number;
+  skillKey?: string;
+}
+
+const EXERCISES: ExerciseSeed[] = [
+  {
+    key: "debug-js-off-by-one",
+    type: "TEXT",
+    category: "DEVELOPMENT",
+    difficulty: 2,
+    title: "Trouve le bug : boucle qui dépasse",
+    prompt:
+      "Ce code doit afficher les 3 premiers éléments d'un tableau, mais lève une erreur pour certains tableaux plus courts :\n\n" +
+      "```js\nfunction premiers3(arr) {\n  for (let i = 0; i <= 3; i++) {\n    console.log(arr[i]);\n  }\n}\n```\n\n" +
+      "Quel est le bug précis dans la condition de la boucle (réponds par la correction exacte à apporter, ex: `i < 3`) ?",
+    acceptedAnswers: ["i < 3", "i<3"],
+    explanation:
+      "`i <= 3` fait 4 itérations (0,1,2,3) au lieu de 3 — une erreur classique « off-by-one ». `i < 3` (0,1,2) est la correction correcte.",
+    xpReward: 10,
+    skillKey: "javascript",
+  },
+  {
+    key: "debug-js-async-forgotten-await",
+    type: "TEXT",
+    category: "DEVELOPMENT",
+    difficulty: 3,
+    title: "Trouve le bug : Promise non attendue",
+    prompt:
+      "Cette fonction affiche `Promise { <pending> }` au lieu des données attendues :\n\n" +
+      "```js\nasync function getData() {\n  const res = fetch('/api/data');\n  console.log(res.json());\n}\n```\n\n" +
+      "Quel mot-clé manque-t-il, à ajouter avant `fetch(...)` (un seul mot en anglais) ?",
+    acceptedAnswers: ["await"],
+    explanation:
+      "`fetch()` retourne une Promise — sans `await`, `res` est la Promise elle-même (pas la réponse), et `res.json()` retourne à son tour une autre Promise non résolue plutôt que les données.",
+    xpReward: 10,
+    skillKey: "javascript",
+  },
+  {
+    key: "complete-js-array-filter",
+    type: "MCQ",
+    category: "DEVELOPMENT",
+    difficulty: 1,
+    title: "Complète le code : filtrer un tableau",
+    prompt:
+      "Quelle méthode complète correctement ce code pour ne garder que les nombres pairs ?\n\n```js\nconst pairs = nombres._____(n => n % 2 === 0);\n```",
+    choices: ["map", "filter", "reduce", "forEach"],
+    correctIndex: 1,
+    explanation: "`filter()` retourne un nouveau tableau contenant uniquement les éléments pour lesquels le callback retourne `true`.",
+    xpReward: 10,
+    skillKey: "javascript",
+  },
+  {
+    key: "debug-ts-type-mismatch",
+    type: "MCQ",
+    category: "DEVELOPMENT",
+    difficulty: 2,
+    title: "Trouve le bug : erreur de type TypeScript",
+    prompt:
+      "Ce code TypeScript ne compile pas :\n\n```ts\nfunction addition(a: number, b: number): number {\n  return a + b;\n}\naddition(\"2\", 3);\n```\n\nPourquoi le compilateur rejette-t-il cet appel ?",
+    choices: [
+      "`addition` n'existe pas",
+      "Le premier argument est une string `\"2\"` alors que la fonction attend un `number`",
+      "TypeScript n'autorise pas les fonctions à deux paramètres",
+      "Il manque un point-virgule",
+    ],
+    correctIndex: 1,
+    explanation:
+      "Le typage statique de TypeScript détecte cette incohérence avant l'exécution : `\"2\"` est une string, pas un number — c'est exactement ce que le typage statique est censé attraper.",
+    xpReward: 10,
+    skillKey: "typescript",
+  },
+  {
+    key: "debug-python-mutable-default",
+    type: "MCQ",
+    category: "DEVELOPMENT",
+    difficulty: 3,
+    title: "Trouve le bug : liste par défaut partagée",
+    prompt:
+      "Cette fonction accumule des éléments entre des appels différents, ce qui n'est pas voulu :\n\n```python\ndef ajouter_item(item, liste=[]):\n    liste.append(item)\n    return liste\n```\n\nQuelle est la cause du bug ?",
+    choices: [
+      "Python interdit les listes en paramètre",
+      "La valeur par défaut `[]` est évaluée une seule fois à la définition de la fonction et partagée entre tous les appels qui ne fournissent pas cet argument",
+      "`append` ne fonctionne pas sur des paramètres",
+      "Il manque un `return` supplémentaire",
+    ],
+    correctIndex: 1,
+    explanation:
+      "Un piège classique Python : la valeur par défaut mutable est créée une seule fois, pas à chaque appel — la correction standard est `liste=None` puis `if liste is None: liste = []` à l'intérieur de la fonction.",
+    xpReward: 10,
+    skillKey: "python",
+  },
+  {
+    key: "complete-sql-inner-join",
+    type: "TEXT",
+    category: "DEVELOPMENT",
+    difficulty: 2,
+    title: "Complète le code : jointure SQL",
+    prompt:
+      "Complète cette requête pour ne récupérer que les utilisateurs ayant au moins une commande (jointure classique, pas de préservation des lignes sans correspondance) :\n\n```sql\nSELECT users.nom FROM users\n_____ JOIN orders ON orders.user_id = users.id;\n```\n\nQuel mot-clé complète le `_____` (un seul mot) ?",
+    acceptedAnswers: ["inner"],
+    explanation: "`INNER JOIN` ne garde que les lignes qui matchent des deux côtés — exactement le comportement voulu ici (utilisateurs avec au moins une commande).",
+    xpReward: 10,
+    skillKey: "sql",
+  },
+  {
+    key: "debug-security-sql-concat",
+    type: "MCQ",
+    category: "CYBERSECURITY",
+    difficulty: 3,
+    title: "Analyse sécurité : requête vulnérable",
+    prompt:
+      "Ce code présente une faille de sécurité classique :\n\n```js\nconst query = `SELECT * FROM users WHERE email = '${email}'`;\ndb.query(query);\n```\n\nQuelle est la faille ?",
+    choices: [
+      "Aucune faille, ce code est sûr",
+      "Injection SQL — `email` est concaténé directement dans la requête, un attaquant peut y injecter du SQL arbitraire",
+      "Le code est trop lent",
+      "Il manque une gestion d'erreur",
+    ],
+    correctIndex: 1,
+    explanation:
+      "Concaténer une entrée utilisateur directement dans du SQL permet à un attaquant de modifier la structure de la requête (ex: `' OR '1'='1`) — la correction est une requête paramétrée : `db.query('... WHERE email = ?', [email])`.",
+    xpReward: 15,
+    skillKey: "secure-coding",
+  },
+  {
+    key: "debug-security-xss-innerhtml",
+    type: "MCQ",
+    category: "CYBERSECURITY",
+    difficulty: 3,
+    title: "Analyse sécurité : innerHTML dangereux",
+    prompt:
+      "Ce code affiche un commentaire utilisateur dans la page :\n\n```js\nelement.innerHTML = commentaireUtilisateur;\n```\n\nPourquoi est-ce risqué ?",
+    choices: [
+      "innerHTML est plus lent que textContent, rien d'autre",
+      "Si `commentaireUtilisateur` contient du HTML/JS (ex: `<script>...</script>`), il sera interprété et exécuté par le navigateur — une faille XSS",
+      "innerHTML ne fonctionne pas sur tous les navigateurs",
+      "Ce n'est pas risqué, innerHTML est toujours sûr",
+    ],
+    correctIndex: 1,
+    explanation:
+      "`innerHTML` interprète son contenu comme du HTML — du texte utilisateur non filtré peut donc injecter du JavaScript exécutable. `textContent` (qui traite tout comme du texte brut) est la version sûre pour du texte simple.",
+    xpReward: 15,
+    skillKey: "secure-coding",
+  },
+  {
+    key: "complete-js-async-error-handling",
+    type: "MCQ",
+    category: "DEVELOPMENT",
+    difficulty: 2,
+    title: "Complète le code : gestion d'erreur async",
+    prompt:
+      "Quel bloc complète correctement cette fonction pour capturer une erreur potentielle de `fetch` ?\n\n```js\nasync function getUser() {\n  _____ {\n    const res = await fetch('/api/user');\n    return res.json();\n  } _____ (err) {\n    console.error(err);\n  }\n}\n```",
+    choices: ["if / else", "try / catch", "for / while", "switch / case"],
+    correctIndex: 1,
+    explanation: "`try/catch` est la structure standard pour capturer une exception levée par du code `await` — sans elle, une erreur rejetterait silencieusement la Promise retournée par la fonction async.",
+    xpReward: 10,
+    skillKey: "javascript",
+  },
+  {
+    key: "debug-git-detached-head",
+    type: "TEXT",
+    category: "DEVELOPMENT",
+    difficulty: 3,
+    title: "Trouve le bug : commits perdus après checkout",
+    prompt:
+      "Un développeur fait `git checkout a1b2c3d` (un hash de commit, pas un nom de branche), commit du nouveau travail, puis `git checkout main` — et ses nouveaux commits semblent avoir disparu. Quel état Git a-t-il involontairement créé en checkoutant un commit précis au lieu d'une branche (2 mots en anglais) ?",
+    acceptedAnswers: ["detached head"],
+    explanation:
+      "Checkout un commit précis (au lieu d'une branche) place Git en mode « detached HEAD » — les commits faits dans cet état n'appartiennent à aucune branche et deviennent orphelins (récupérables via `git reflog`, mais pas visibles normalement) dès qu'on checkout autre chose sans avoir créé de branche dessus.",
+    xpReward: 15,
+    skillKey: "git",
+  },
+  {
+    key: "complete-python-list-comprehension",
+    type: "TEXT",
+    category: "DEVELOPMENT",
+    difficulty: 2,
+    title: "Complète le code : list comprehension",
+    prompt:
+      "Réécris cette boucle en une seule ligne avec une list comprehension Python :\n\n```python\ncarres = []\nfor n in range(5):\n    carres.append(n ** 2)\n```\n\nRéponds juste par l'expression de la list comprehension équivalente (sans le nom de variable), ex: `[expr for x in range(5)]`.",
+    acceptedAnswers: ["[n ** 2 for n in range(5)]", "[n**2 for n in range(5)]"],
+    explanation: "Une list comprehension `[expression for élément in itérable]` condense la boucle et l'append en une seule expression lisible.",
+    xpReward: 10,
+    skillKey: "python",
+  },
+  {
+    key: "debug-network-cors-error",
+    type: "MCQ",
+    category: "NETWORKING",
+    difficulty: 2,
+    title: "Trouve le bug : erreur CORS",
+    prompt:
+      "Une requête `fetch()` depuis `https://app.example.com` vers `https://api.example.com` échoue avec une erreur CORS dans la console. Quelle est la cause la plus probable ?",
+    choices: [
+      "Le serveur `api.example.com` est hors service",
+      "Le serveur `api.example.com` n'a pas inclus l'en-tête `Access-Control-Allow-Origin` autorisant explicitement `app.example.com`",
+      "Le nom de domaine est mal orthographié",
+      "HTTPS est incompatible avec fetch()",
+    ],
+    correctIndex: 1,
+    explanation:
+      "CORS est une protection du navigateur : une requête cross-origin n'est autorisée que si le serveur cible répond avec un en-tête `Access-Control-Allow-Origin` qui inclut explicitement l'origine appelante — sans ça, le navigateur bloque la réponse même si le serveur a bien répondu.",
+    xpReward: 10,
+    skillKey: "apis",
+  },
+  {
+    key: "debug-docker-port-not-exposed",
+    type: "TEXT",
+    category: "CLOUD",
+    difficulty: 2,
+    title: "Trouve le bug : conteneur inaccessible",
+    prompt:
+      "Un conteneur Docker démarre correctement (visible via `docker ps`), mais `curl localhost:3000` depuis la machine hôte échoue. Le `Dockerfile` expose bien `EXPOSE 3000`. Quel élément manque le plus probablement dans la commande `docker run` (un mot-clé, en anglais) ?",
+    acceptedAnswers: ["-p", "publish", "port"],
+    explanation:
+      "`EXPOSE` dans le Dockerfile est documentaire — il faut explicitement publier le port avec `-p 3000:3000` (ou `--publish`) au `docker run` pour le rendre accessible depuis l'hôte, sinon le port reste isolé au réseau interne du conteneur.",
+    xpReward: 10,
+    skillKey: "docker",
+  },
+  {
+    key: "complete-ts-optional-chaining",
+    type: "MCQ",
+    category: "DEVELOPMENT",
+    difficulty: 2,
+    title: "Complète le code : accès sûr à une propriété",
+    prompt:
+      "Quel opérateur complète correctement cette ligne pour éviter une erreur si `user` ou `user.address` est `undefined` ?\n\n```ts\nconst ville = user_____address_____ville;\n```",
+    choices: ["?. et ?.", ". et .", "!. et !.", "-> et ->"],
+    correctIndex: 0,
+    explanation:
+      "L'optional chaining (`?.`) court-circuite et retourne `undefined` dès qu'un maillon de la chaîne est `null`/`undefined`, au lieu de lever une exception `Cannot read property of undefined`.",
+    xpReward: 10,
+    skillKey: "typescript",
+  },
+  {
+    key: "debug-linux-permission-denied",
+    type: "TEXT",
+    category: "SYSTEMS",
+    difficulty: 1,
+    title: "Trouve le bug : permission refusée",
+    prompt:
+      "`./deploy.sh: Permission denied` s'affiche en essayant de lancer un script tout juste téléchargé. Quelle commande (avec son option) faut-il lancer avant pour le rendre exécutable ?",
+    acceptedAnswers: ["chmod +x deploy.sh", "chmod +x", "chmod +x ./deploy.sh"],
+    explanation: "Un fichier fraîchement créé/téléchargé n'a généralement pas le bit d'exécution activé — `chmod +x` l'ajoute, rendant `./deploy.sh` exécutable directement.",
+    xpReward: 5,
+    skillKey: "linux",
+  },
+  {
+    key: "debug-ai-prompt-vague",
+    type: "MCQ",
+    category: "AI",
+    difficulty: 1,
+    title: "Analyse : prompt mal formulé",
+    prompt:
+      "Un utilisateur se plaint que l'IA lui donne des réponses trop longues et hors sujet avec ce prompt : « parle-moi de Docker ». Quelle amélioration règle le plus directement ce problème ?",
+    choices: [
+      "Changer de modèle IA",
+      "Préciser explicitement le niveau attendu, la longueur voulue et l'angle exact (ex: « explique Docker en 3 phrases à un débutant qui connaît déjà les VM »)",
+      "Poser la question en anglais plutôt qu'en français",
+      "Répéter la question plusieurs fois",
+    ],
+    correctIndex: 1,
+    explanation:
+      "Un prompt vague laisse le modèle deviner le format/niveau/longueur attendus — préciser ces éléments explicitement réduit fortement les réponses hors sujet ou mal calibrées, sans changer de modèle.",
+    xpReward: 5,
+    skillKey: "prompt-engineering",
+  },
+];
+
 async function main() {
   for (const skill of SKILLS) {
     await prisma.skill.upsert({
@@ -7351,6 +7643,24 @@ async function main() {
     });
   }
   console.log(`✅ ${CTF_CHALLENGES.length} défi(s) CTF synchronisé(s)`);
+
+  for (const exercise of EXERCISES) {
+    const { choices, acceptedAnswers, ...data } = exercise;
+    await prisma.exercise.upsert({
+      where: { key: exercise.key },
+      create: {
+        ...data,
+        choices: choices ? JSON.stringify(choices) : null,
+        acceptedAnswers: acceptedAnswers ? JSON.stringify(acceptedAnswers) : null,
+      },
+      update: {
+        ...data,
+        choices: choices ? JSON.stringify(choices) : null,
+        acceptedAnswers: acceptedAnswers ? JSON.stringify(acceptedAnswers) : null,
+      },
+    });
+  }
+  console.log(`✅ ${EXERCISES.length} exercice(s) synchronisé(s)`);
 }
 
 main()

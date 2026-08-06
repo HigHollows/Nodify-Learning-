@@ -1,6 +1,7 @@
 import type { AutocompleteInteraction } from "discord.js";
 import { listCourses } from "../database/repositories/academyRepository.js";
 import { listCtfChallenges } from "../database/repositories/ctfRepository.js";
+import { listExercises } from "../database/repositories/exerciseRepository.js";
 import { listAiCosts } from "../credits/creditCosts.js";
 
 const MAX_CHOICES = 25; // limite Discord
@@ -30,6 +31,18 @@ async function autocompleteCtfChallenge(interaction: AutocompleteInteraction): P
     .filter((c) => matches(focused, c.key, c.title))
     .slice(0, MAX_CHOICES)
     .map((c) => ({ name: `${c.title} (${c.points} pts) — ${c.key}`, value: c.key }));
+
+  await interaction.respond(choices);
+}
+
+async function autocompleteExercise(interaction: AutocompleteInteraction): Promise<void> {
+  const focused = interaction.options.getFocused().toString();
+  const exercises = await listExercises();
+
+  const choices = exercises
+    .filter((e) => matches(focused, e.key, e.title))
+    .slice(0, MAX_CHOICES)
+    .map((e) => ({ name: `${e.title} (${e.type}) — ${e.key}`, value: e.key }));
 
   await interaction.respond(choices);
 }
@@ -69,6 +82,11 @@ export async function handleAutocomplete(interaction: AutocompleteInteraction): 
 
   if (interaction.commandName === "ai" && focusedOption.name === "feature") {
     await autocompleteAiFeature(interaction);
+    return;
+  }
+
+  if (interaction.commandName === "exercise" && focusedOption.name === "cle") {
+    await autocompleteExercise(interaction);
     return;
   }
 
