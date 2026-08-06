@@ -4,6 +4,7 @@ import type {
   CtfChallengeSummary,
 } from "./ctfService.js";
 import type { CtfLeaderboardRow } from "../database/repositories/ctfRepository.js";
+import type { UnlockedAchievementInfo } from "../services/achievementService.js";
 import { labelForLevelOrder } from "../utils/leveling.js";
 import { baseContainer, containerPayload, fieldText, textDisplay, thinSeparator, type ContainerPayload } from "../ui/container.js";
 
@@ -100,7 +101,7 @@ export function buildCtfSubmitResultReply(
   correct: boolean,
   alreadySolved: boolean,
   points: number,
-  achievementUnlocked: boolean,
+  unlockedAchievements: UnlockedAchievementInfo[],
 ) {
   if (alreadySolved) {
     return {
@@ -113,7 +114,7 @@ export function buildCtfSubmitResultReply(
   }
 
   const lines = [`✅ **Flag validé !** +${points} points.`];
-  if (achievementUnlocked) lines.push("🏆 Succès débloqué : **Premier flag capturé**");
+  for (const a of unlockedAchievements) lines.push(`🏆 Succès débloqué : **${a.icon} ${a.name}**`);
 
   return { content: lines.join("\n") };
 }

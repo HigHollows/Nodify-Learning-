@@ -63,6 +63,15 @@ export async function completeCourseProgress(userId: string, courseId: string): 
   });
 }
 
+/** Cours terminés par l'utilisateur (clé + skillKey) — utilisé pour évaluer les badges de progression (voir achievementService). */
+export async function listCompletedCourses(userId: string): Promise<{ key: string; skillKey: string }[]> {
+  const rows = await prisma.userCourseProgress.findMany({
+    where: { userId, status: "COMPLETED" },
+    include: { course: { select: { key: true, skillKey: true } } },
+  });
+  return rows.map((r) => ({ key: r.course.key, skillKey: r.course.skillKey }));
+}
+
 export async function upsertLessonCompletion(
   userId: string,
   lessonId: string,

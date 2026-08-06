@@ -81,6 +81,63 @@ const ACHIEVEMENTS = [
     description: "Tu as correctement identifié un indicateur de compromission dans une simulation d'incident.",
     icon: "🔵",
   },
+  // --- Badges "développeur" (jalons Academy, catégorie DEVELOPMENT) ---
+  {
+    key: "js-adept",
+    name: "Adepte JavaScript",
+    description: "Tu as terminé 3 cours JavaScript sur Nodify Academy.",
+    icon: "💛",
+  },
+  {
+    key: "polyglot-developer",
+    name: "Développeur polyglotte",
+    description: "Tu as terminé au moins un cours en JavaScript, TypeScript et Python.",
+    icon: "🌍",
+  },
+  {
+    key: "backend-architect",
+    name: "Architecte Backend",
+    description: "Tu as terminé les cours REST/Auth et SQL/ORM sur Nodify Academy.",
+    icon: "🏗️",
+  },
+  // --- Badges "cybersécurité" (jalons Cyber Academy + CTF) ---
+  {
+    key: "web-security-aware",
+    name: "Vigilance Web",
+    description: "Tu as terminé le cours Vulnérabilités Web (OWASP) sur Nodify Academy.",
+    icon: "🕸️",
+  },
+  {
+    key: "osint-investigator",
+    name: "Enquêteur OSINT",
+    description: "Tu as terminé le cours OSINT et ingénierie sociale sur Nodify Academy.",
+    icon: "🔎",
+  },
+  {
+    key: "ctf-solver",
+    name: "Chasseur de flags",
+    description: "Tu as résolu 5 défis CTF sur Nodify.",
+    icon: "🚩",
+  },
+  {
+    key: "ctf-master",
+    name: "Maître du CTF",
+    description: "Tu as résolu 15 défis CTF sur Nodify.",
+    icon: "👑",
+  },
+  // --- Badges "IA" (jalons Academy IA) ---
+  {
+    key: "ai-explorer",
+    name: "Explorateur IA",
+    description: "Tu as terminé le cours AI Fundamentals sur Nodify Academy.",
+    icon: "🤖",
+  },
+  {
+    key: "prompt-master",
+    name: "Maître du Prompt",
+    description: "Tu as terminé le cours Prompt Engineering sur Nodify Academy.",
+    icon: "✨",
+  },
 ];
 
 /**

@@ -37,3 +37,34 @@ export async function unlockAchievement(userId: string, key: string): Promise<bo
   }
   return unlocked;
 }
+
+export interface UnlockedAchievementInfo {
+  name: string;
+  icon: string;
+}
+
+/**
+ * Comme `unlockAchievement`, mais retourne le nom/icône du succès pour un
+ * affichage dynamique (ex: liste de badges débloqués après un cours/CTF)
+ * plutôt qu'un texte codé en dur par succès dans chaque vue appelante.
+ * `null` si le succès est inconnu OU déjà débloqué (rien de nouveau à afficher).
+ */
+export async function unlockAchievementWithInfo(
+  userId: string,
+  key: string,
+): Promise<UnlockedAchievementInfo | null> {
+  const achievement = await getAchievementByKey(key);
+  if (!achievement) {
+    log.warn({ key }, "Tentative de déblocage d'un succès inconnu");
+    return null;
+  }
+
+  const unlocked = await unlockAchievementRepo(userId, achievement.id);
+  if (!unlocked) return null;
+
+  log.info({ userId, key }, "Succès débloqué");
+  if (!NO_REWARD_ACHIEVEMENTS.has(key)) {
+    await awardAchievementUnlocked(userId);
+  }
+  return { name: achievement.name, icon: achievement.icon };
+}

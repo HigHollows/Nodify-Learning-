@@ -30,7 +30,7 @@ export async function handleCtfSubmitModal(
       result.correct,
       result.alreadySolved,
       result.points,
-      result.achievementUnlocked,
+      result.unlockedAchievements,
     ),
   );
 }

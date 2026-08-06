@@ -9,15 +9,64 @@ import {
   findLessonById,
   getCourseProgress,
   getOrCreateCourseProgress,
+  listCompletedCourses,
   listCourses,
   upsertLessonCompletion,
 } from "../database/repositories/academyRepository.js";
 import { awardCourseCompleted, awardLessonPassed } from "../credits/rewardService.js";
-import { unlockAchievement } from "../services/achievementService.js";
+import { unlockAchievementWithInfo, type UnlockedAchievementInfo } from "../services/achievementService.js";
 import { childLogger } from "../utils/logger.js";
 import { shuffleChoices } from "../utils/quizShuffle.js";
 
 const log = childLogger("academyService");
+
+/**
+ * Badges "développeur"/"cyber"/"IA" (voir prisma/seed.ts ACHIEVEMENTS) —
+ * débloqués sur des jalons de cours terminés, évalués à chaque complétion
+ * de cours plutôt que suivis dans un champ séparé (la vérité reste
+ * `UserCourseProgress`, pas un compteur qui pourrait se désynchroniser).
+ */
+const SINGLE_COURSE_BADGES: Record<string, string> = {
+  "web-vulnerabilities-owasp": "web-security-aware",
+  "osint-social-engineering": "osint-investigator",
+  "ai-fundamentals": "ai-explorer",
+  "prompt-engineering": "prompt-master",
+};
+const JS_ADEPT_THRESHOLD = 3;
+
+/** Évalue les badges de progression débloqués par la complétion d'un cours donné, en plus de "first-course-complete" (géré séparément). */
+async function evaluateCourseBadges(userId: string, completedCourseKey: string): Promise<UnlockedAchievementInfo[]> {
+  const unlocked: UnlockedAchievementInfo[] = [];
+  const completed = await listCompletedCourses(userId);
+  const completedKeys = new Set(completed.map((c) => c.key));
+  const skillKeyCounts = new Map<string, number>();
+  for (const c of completed) {
+    skillKeyCounts.set(c.skillKey, (skillKeyCounts.get(c.skillKey) ?? 0) + 1);
+  }
+
+  const directBadgeKey = SINGLE_COURSE_BADGES[completedCourseKey];
+  if (directBadgeKey) {
+    const info = await unlockAchievementWithInfo(userId, directBadgeKey);
+    if (info) unlocked.push(info);
+  }
+
+  if ((skillKeyCounts.get("javascript") ?? 0) >= JS_ADEPT_THRESHOLD) {
+    const info = await unlockAchievementWithInfo(userId, "js-adept");
+    if (info) unlocked.push(info);
+  }
+
+  if (skillKeyCounts.has("javascript") && skillKeyCounts.has("typescript") && skillKeyCounts.has("python")) {
+    const info = await unlockAchievementWithInfo(userId, "polyglot-developer");
+    if (info) unlocked.push(info);
+  }
+
+  if (completedKeys.has("backend-rest-auth") && completedKeys.has("databases-sql-orm")) {
+    const info = await unlockAchievementWithInfo(userId, "backend-architect");
+    if (info) unlocked.push(info);
+  }
+
+  return unlocked;
+}
 
 /** Score minimal (proportion de bonnes réponses) pour valider une leçon et avancer. */
 const PASS_THRESHOLD = 0.5;
@@ -237,7 +286,7 @@ export interface LessonFinishResult {
   totalQuestions: number;
   xpAwarded: number;
   courseCompleted: boolean;
-  achievementUnlocked: boolean;
+  unlockedAchievements: UnlockedAchievementInfo[];
 }
 
 /**
@@ -258,7 +307,7 @@ export async function finishLesson(
   await upsertLessonCompletion(userId, lessonId, { score, totalQuestions, passed });
 
   if (!passed) {
-    return { passed, score, totalQuestions, xpAwarded: 0, courseCompleted: false, achievementUnlocked: false };
+    return { passed, score, totalQuestions, xpAwarded: 0, courseCompleted: false, unlockedAchievements: [] };
   }
 
   const progress = await getOrCreateCourseProgress(userId, lesson.course.id);
@@ -266,7 +315,7 @@ export async function finishLesson(
 
   if (!isCurrentLesson) {
     // Leçon déjà validée précédemment, rejouée : score enregistré, pas d'XP en double.
-    return { passed, score, totalQuestions, xpAwarded: 0, courseCompleted: false, achievementUnlocked: false };
+    return { passed, score, totalQuestions, xpAwarded: 0, courseCompleted: false, unlockedAchievements: [] };
   }
 
   await addSkillXp(userId, lesson.course.skillKey, lesson.xpReward);
@@ -274,11 +323,13 @@ export async function finishLesson(
 
   const totalLessons = await countLessonsForCourse(lesson.course.id);
   let courseCompleted = false;
-  let achievementUnlocked = false;
+  const unlockedAchievements: UnlockedAchievementInfo[] = [];
 
   if (lesson.order >= totalLessons) {
     await completeCourseProgress(userId, lesson.course.id);
-    achievementUnlocked = await unlockAchievement(userId, "first-course-complete");
+    const firstCourseInfo = await unlockAchievementWithInfo(userId, "first-course-complete");
+    if (firstCourseInfo) unlockedAchievements.push(firstCourseInfo);
+    unlockedAchievements.push(...(await evaluateCourseBadges(userId, lesson.course.key)));
     await awardCourseCompleted(userId); // Learning Reward — cours terminé (+10 crédits)
     courseCompleted = true;
   } else {
@@ -296,7 +347,7 @@ export async function finishLesson(
     totalQuestions,
     xpAwarded: lesson.xpReward,
     courseCompleted,
-    achievementUnlocked,
+    unlockedAchievements,
   };
 }
 

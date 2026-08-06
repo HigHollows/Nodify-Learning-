@@ -152,7 +152,7 @@ export function buildLessonFinishReply(courseKey: string, lessonId: string, resu
   ).addTextDisplayComponents(
     textDisplay(
       `Score : **${result.score}/${result.totalQuestions}** — +${result.xpAwarded} XP` +
-        (result.achievementUnlocked ? "\n🏆 Succès débloqué : **Premier cours terminé**" : ""),
+        result.unlockedAchievements.map((a) => `\n🏆 Succès débloqué : **${a.icon} ${a.name}**`).join(""),
     ),
   );
 
