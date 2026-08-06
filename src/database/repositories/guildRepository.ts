@@ -39,8 +39,23 @@ export async function upsertGuild(guildId: string, name: string) {
   });
 }
 
-/** Récupère la config d'une guild, en la créant si elle n'existe pas encore. */
+/**
+ * Récupère la config d'une guild, en la créant si elle n'existe pas encore.
+ *
+ * `GuildConfig.guildId` a une contrainte de clé étrangère vers `Guild.id` —
+ * sur un serveur où `/setup` n'a jamais été lancé, la ligne `Guild`
+ * correspondante n'existe pas encore, et créer directement `GuildConfig`
+ * plantait avec une violation de FK (P2003). On s'assure donc d'abord que
+ * `Guild` existe (avec un nom placeholder, remplacé par le vrai nom au
+ * premier `/setup` via `upsertGuild` — jamais écrasé ici si déjà présent).
+ */
 export async function getOrCreateGuildConfig(guildId: string) {
+  await prisma.guild.upsert({
+    where: { id: guildId },
+    create: { id: guildId, name: guildId },
+    update: {},
+  });
+
   return prisma.guildConfig.upsert({
     where: { guildId },
     create: { guildId },
