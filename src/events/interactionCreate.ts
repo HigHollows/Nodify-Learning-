@@ -105,7 +105,7 @@ import {
   handleHistoryPage,
   handleRewardsButton,
 } from "../interactions/creditInteractions.js";
-import { CREDIT_ADMIN_SET_ZERO_PREFIX } from "../commands/credits/creditAdmin.js";
+import { CREDIT_ADMIN_SET_ZERO_PREFIX } from "../prefixCommands/creditAdminPrefix.js";
 import {
   handleAdminCloseAi,
   handleAdminControlCenterRefresh,

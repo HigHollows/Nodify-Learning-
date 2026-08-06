@@ -12,7 +12,7 @@ const COLOR_BLUE = 0x3498db;
 const CATEGORIES: { title: string; commands: string[] }[] = [
   {
     title: "👤 Profil & Progression",
-    commands: ["/profile", "/leaderboard", "/objectives", "/weakspots", "/setup"],
+    commands: ["/profile", "/leaderboard", "/objectives", "/weakspots"],
   },
   {
     title: "📖 Knowledge Engine",
@@ -61,15 +61,6 @@ const CATEGORIES: { title: string; commands: string[] }[] = [
     ],
   },
   {
-    title: "⚙️ Admin",
-    commands: [
-      "/stats",
-      "/settings",
-      "/credit-admin give|remove|set|bonus|subscriber",
-      "/ai status|open|close|maintenance|limited|stats|usage|panel|budget|audit-log",
-    ],
-  },
-  {
     title: "🔧 Divers",
     commands: ["/ping", "/help"],
   },
@@ -86,6 +77,7 @@ const command: Command = {
       textDisplay(
         CATEGORIES.map((cat) => fieldText(cat.title, cat.commands.map((c) => `\`${c}\``).join(" · "))).join("\n\n"),
       ),
+      textDisplay("-# Commandes d'administration du serveur (Gérer le serveur requis) : `+help`"),
     );
 
     await interaction.reply(containerPayload(container));

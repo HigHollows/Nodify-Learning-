@@ -1,12 +1,7 @@
-import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
-import type { Command } from "../../types/command.js";
-import { AppError } from "../../utils/errors.js";
-import {
-  runSetup,
-  type ResourceStatus,
-  type SetupResourceResult,
-} from "../../setup/setupService.js";
-import { baseContainer, containerPayload, fieldText, textDisplay } from "../../ui/container.js";
+import { runSetup, type ResourceStatus, type SetupResourceResult } from "../setup/setupService.js";
+import { baseContainer, containerPayload, fieldText, textDisplay } from "../ui/container.js";
+import type { PrefixCommand } from "../types/prefixCommand.js";
+import { AppError } from "../utils/errors.js";
 
 const COLOR_BLUE = 0x3498db;
 
@@ -21,23 +16,17 @@ function formatResults(results: SetupResourceResult[]): string {
   return results.map((r) => `${STATUS_ICON[r.status]} ${r.label}`).join("\n");
 }
 
-const command: Command = {
-  data: new SlashCommandBuilder()
-    .setName("setup")
-    .setDescription(
-      "Configure (ou répare) les rôles et salons Nodify sur ce serveur.",
-    )
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
-    .setDMPermission(false),
+const command: PrefixCommand = {
+  name: "setup",
+  description: "Configure (ou répare) les rôles et salons Nodify sur ce serveur.",
+  usage: "+setup",
 
-  async execute(interaction) {
-    if (!interaction.inCachedGuild()) {
+  async execute(message) {
+    if (!message.inGuild() || !message.guild) {
       throw new AppError("Cette commande ne fonctionne que sur un serveur.");
     }
 
-    await interaction.deferReply();
-
-    const report = await runSetup(interaction.guild);
+    const report = await runSetup(message.guild);
 
     const container = baseContainer("⚙️ Configuration Nodify", COLOR_BLUE).addTextDisplayComponents(
       textDisplay(
@@ -49,7 +38,7 @@ const command: Command = {
       textDisplay("-# 🆕 créé · ♻️ réparé ou retrouvé (déjà présent mais pas suivi) · ✅ déjà en place"),
     );
 
-    await interaction.editReply(containerPayload(container));
+    await message.reply(containerPayload(container));
   },
 };
 

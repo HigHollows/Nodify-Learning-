@@ -1,18 +1,15 @@
-import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
-import { getNodifyStats } from "../../services/statsService.js";
-import { baseContainer, ephemeralContainerPayload, fieldText, textDisplay } from "../../ui/container.js";
-import type { Command } from "../../types/command.js";
+import { getNodifyStats } from "../services/statsService.js";
+import { baseContainer, containerPayload, fieldText, textDisplay } from "../ui/container.js";
+import type { PrefixCommand } from "../types/prefixCommand.js";
 
 const COLOR_BLUE = 0x3498db;
 
-const command: Command = {
-  data: new SlashCommandBuilder()
-    .setName("stats")
-    .setDescription("Statistiques globales Nodify (admin).")
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
-    .setDMPermission(false),
+const command: PrefixCommand = {
+  name: "stats",
+  description: "Statistiques globales Nodify.",
+  usage: "+stats",
 
-  async execute(interaction) {
+  async execute(message) {
     const stats = await getNodifyStats();
 
     const container = baseContainer("📊 Statistiques Nodify", COLOR_BLUE).addTextDisplayComponents(
@@ -33,7 +30,8 @@ const command: Command = {
       ),
     );
 
-    await interaction.reply(ephemeralContainerPayload(container));
+    // Pas d'équivalent "éphémère" pour un message classique — reste visible dans le salon.
+    await message.reply(containerPayload(container));
   },
 };
 

@@ -6,17 +6,20 @@ import type { Command } from "./types/command.js";
  * Permet au handler `interactionCreate` de retrouver la bonne commande
  * sans dépendre d'un import global.
  *
- * Intents minimaux pour l'instant : Nodify n'a pas besoin de lire le
- * contenu des messages ni de tracker la présence des membres en Phase 1.
- * On élargira uniquement quand une fonctionnalité concrète le justifiera
- * (ex: MessageContent si on ajoute un jour de la détection en message).
+ * GuildMessages + MessageContent (Phase 11) : nécessaires pour les
+ * commandes admin en préfixe `+` (voir src/prefixCommands/) — Discord ne
+ * transmet le contenu d'un message que si MessageContent est explicitement
+ * demandé. MessageContent est un intent privilégié : il doit AUSSI être
+ * activé manuellement dans le Discord Developer Portal (Bot → Privileged
+ * Gateway Intents → Message Content Intent), sinon le bot se connecte mais
+ * reçoit un contenu vide pour tous les messages.
  */
 export class NodifyClient extends Client {
   public commands = new Collection<string, Command>();
 
   constructor() {
     super({
-      intents: [GatewayIntentBits.Guilds],
+      intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
     });
   }
 }
