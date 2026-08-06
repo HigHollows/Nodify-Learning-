@@ -29,13 +29,6 @@ un bot de modération : il est entièrement dédié à l'apprentissage.
 | 💳 **Crédits IA** | Système de crédits non-monétaire pour l'usage IA, récompenses daily/weekly/monthly et d'apprentissage, remboursement automatique sur échec |
 | ⚙️ **Admin** | `/setup` auto-configuration, `/settings` modulaire, `/stats`, AI Control Center (`/ai`) |
 
-## 🖼️ Aperçu visuel
-
-> Screenshots à venir — le bot est fonctionnel mais pas encore capturé en
-> situation réelle. Si tu ajoutes des images, dépose-les dans `docs/screenshots/`
-> et référence-les ici, par exemple :
-> `![Profil](docs/screenshots/profile.png)`
-
 ## 🏗️ Architecture
 
 ```mermaid
