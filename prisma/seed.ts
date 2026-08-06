@@ -6888,6 +6888,126 @@ const DAILY_QUESTIONS: DailyQuestionSeed[] = [
     correctIndex: 1,
     explanation: "Charger tout le JavaScript de l'application dès le départ ralentit le temps avant que la page devienne interactive — le code splitting (via `import()` dynamique par exemple) ne charge une partie du code qu'au moment où elle devient réellement nécessaire.",
   },
+  {
+    key: "js-promise-all-vs-allsettled",
+    category: "DEVELOPMENT",
+    prompt: "Quelle est la différence entre `Promise.all()` et `Promise.allSettled()` ?",
+    choices: ["Aucune différence réelle", "`Promise.all()` échoue dès qu'une seule Promise échoue ; `Promise.allSettled()` attend toutes les Promises et rapporte le résultat de chacune, succès ou échec", "`allSettled` est plus rapide", "`Promise.all()` ne fonctionne qu'avec 2 Promises maximum"],
+    correctIndex: 1,
+    explanation: "`Promise.all()` rejette globalement dès la première Promise rejetée (fail-fast) ; `Promise.allSettled()` attend toujours toutes les Promises et retourne un statut individuel (fulfilled/rejected) pour chacune, sans jamais rejeter globalement.",
+  },
+  {
+    key: "python-context-manager-with",
+    category: "DEVELOPMENT",
+    prompt: "Pourquoi `with open('fichier') as f:` est-il préféré à `f = open('fichier')` seul en Python ?",
+    choices: ["Ce n'est pas préféré, c'est identique", "`with` garantit la fermeture du fichier même si une exception survient dans le bloc, via le protocole context manager", "`with` est requis pour lire des fichiers binaires uniquement", "`with` rend la lecture plus rapide"],
+    correctIndex: 1,
+    explanation: "Le context manager (`__enter__`/`__exit__`) garantit que `f.close()` est appelé automatiquement à la sortie du bloc `with`, même en cas d'exception — plus sûr qu'un `open()`/`close()` manuel qui pourrait sauter le close en cas d'erreur.",
+  },
+  {
+    key: "sql-transaction-purpose",
+    category: "DEVELOPMENT",
+    prompt: "À quoi sert une transaction SQL (`BEGIN`/`COMMIT`/`ROLLBACK`) ?",
+    choices: ["À accélérer les requêtes", "À garantir qu'un groupe d'opérations s'exécute entièrement ou pas du tout, évitant un état incohérent en cas d'échec partiel", "À chiffrer les données modifiées", "À créer automatiquement des sauvegardes"],
+    correctIndex: 1,
+    explanation: "Une transaction regroupe plusieurs opérations en une unité atomique — si l'une échoue, `ROLLBACK` annule tout le groupe, évitant qu'un virement bancaire par exemple ne débite un compte sans créditer l'autre.",
+  },
+  {
+    key: "docker-dockerfile-purpose",
+    category: "CLOUD",
+    prompt: "À quoi sert un `Dockerfile` ?",
+    choices: ["C'est un fichier de log généré automatiquement", "Un fichier texte qui décrit, étape par étape, comment construire une image Docker (base, dépendances, commande de lancement...)", "Un fichier qui liste uniquement les ports exposés", "Un synonyme de docker-compose.yml"],
+    correctIndex: 1,
+    explanation: "Le Dockerfile contient les instructions séquentielles (`FROM`, `RUN`, `COPY`, `CMD`...) que Docker exécute pour construire une image reproductible — `docker build` lit ce fichier pour produire l'image.",
+  },
+  {
+    key: "cyber-honeypot-purpose",
+    category: "CYBERSECURITY",
+    prompt: "À quoi sert un honeypot (pot de miel) en cybersécurité ?",
+    choices: ["À stocker des mots de passe de façon sécurisée", "À attirer volontairement un attaquant vers un système leurre, pour étudier ses techniques ou détecter une intrusion", "À chiffrer le trafic réseau", "À bloquer automatiquement toutes les connexions suspectes"],
+    correctIndex: 1,
+    explanation: "Un honeypot est un système délibérément vulnérable ou attractif, isolé du reste de l'infrastructure, qui permet d'observer les techniques d'un attaquant en conditions réelles sans risquer les vraies ressources.",
+  },
+  {
+    key: "cyber-zero-day-def",
+    category: "CYBERSECURITY",
+    prompt: "Qu'est-ce qu'une vulnérabilité 'zero-day' ?",
+    choices: ["Une faille corrigée le jour même de sa découverte", "Une faille exploitée ou connue avant qu'un correctif officiel n'existe — l'éditeur a eu 'zéro jour' pour la corriger", "Une faille qui n'affecte que les systèmes très anciens", "Un synonyme de faux positif"],
+    correctIndex: 1,
+    explanation: "Le terme désigne le temps dont a disposé l'éditeur pour corriger avant exploitation active : zéro — la faille est exploitée avant même qu'un patch existe, la rendant particulièrement dangereuse.",
+  },
+  {
+    key: "network-vpn-purpose",
+    category: "NETWORKING",
+    prompt: "Que fait principalement un VPN ?",
+    choices: ["Il accélère toujours la connexion internet", "Il crée un tunnel chiffré entre l'appareil et un serveur, masquant le trafic et l'adresse IP réelle vis-à-vis du réseau local traversé", "Il bloque uniquement les publicités", "Il remplace le besoin d'un pare-feu"],
+    correctIndex: 1,
+    explanation: "Un VPN encapsule et chiffre le trafic dans un tunnel vers un serveur intermédiaire — utile pour protéger des données sur un réseau non fiable (Wi-Fi public) ou masquer son IP réelle vis-à-vis des sites visités.",
+  },
+  {
+    key: "ai-context-window-def",
+    category: "AI",
+    prompt: "Que désigne la 'fenêtre de contexte' (context window) d'un LLM ?",
+    choices: ["Le nombre de langues qu'il comprend", "La quantité maximale de texte (en tokens) que le modèle peut prendre en compte simultanément pour générer une réponse", "Le temps de réponse maximal autorisé", "Le nombre d'utilisateurs simultanés supportés"],
+    correctIndex: 1,
+    explanation: "Au-delà de cette limite de tokens, le modèle ne peut plus 'voir' le début de la conversation/du texte fourni — un contexte plus long permet de traiter des documents plus volumineux mais coûte plus cher en calcul.",
+  },
+  {
+    key: "systems-file-permissions-rwx",
+    category: "SYSTEMS",
+    prompt: "Sur Linux, que signifient les lettres 'r', 'w', 'x' dans les permissions d'un fichier ?",
+    choices: ["Rouge, Blanc, X-ray (couleurs)", "Read (lecture), Write (écriture), eXecute (exécution)", "Root, World, eXternal", "Ce sont des identifiants sans signification"],
+    correctIndex: 1,
+    explanation: "Chaque groupe de 3 lettres (propriétaire/groupe/autres) indique les permissions de lecture, écriture et exécution accordées — visible via `ls -l`.",
+  },
+  {
+    key: "cloud-serverless-cold-start",
+    category: "CLOUD",
+    prompt: "Qu'est-ce qu'un 'cold start' en informatique serverless ?",
+    choices: ["Un redémarrage volontaire du serveur", "Le délai supplémentaire lors du premier appel à une fonction serverless inactive, le temps que l'infrastructure provisionne une instance pour l'exécuter", "Une panne du fournisseur cloud", "Un type de cache"],
+    correctIndex: 1,
+    explanation: "Une fonction serverless n'ayant pas tourné récemment doit être 'réveillée' (nouvelle instance provisionnée) avant de répondre — ce délai (cold start) n'existe pas sur un appel suivant tant que l'instance reste chaude.",
+  },
+  {
+    key: "js-strict-mode-purpose",
+    category: "DEVELOPMENT",
+    prompt: "À quoi sert `'use strict'` en JavaScript ?",
+    choices: ["À accélérer l'exécution du code", "À activer un mode plus strict qui transforme certaines erreurs silencieuses en vraies exceptions et interdit certaines pratiques risquées", "À forcer l'utilisation de TypeScript", "À compresser le code automatiquement"],
+    correctIndex: 1,
+    explanation: "Le mode strict attrape des erreurs qui passeraient silencieusement en mode normal (ex: assigner à une variable non déclarée) et désactive certaines fonctionnalités JS jugées problématiques — activé par défaut dans les modules ES.",
+  },
+  {
+    key: "git-merge-conflict-cause",
+    category: "DEVELOPMENT",
+    prompt: "Qu'est-ce qui cause typiquement un conflit de fusion Git ?",
+    choices: ["Un dépôt trop volumineux", "Deux branches ont modifié les mêmes lignes d'un même fichier de façon différente, Git ne peut pas décider laquelle garder automatiquement", "Une connexion internet instable", "L'absence de fichier .gitignore"],
+    correctIndex: 1,
+    explanation: "Git fusionne automatiquement des changements sur des zones différentes d'un fichier — un conflit survient uniquement quand deux branches ont modifié exactement les mêmes lignes de façons incompatibles.",
+  },
+  {
+    key: "cyber-least-common-mechanism",
+    category: "CYBERSECURITY",
+    prompt: "Que recommande le principe de 'défense en profondeur' en cybersécurité ?",
+    choices: ["Investir tout le budget sécurité dans un seul pare-feu très puissant", "Superposer plusieurs couches de sécurité indépendantes, pour qu'une seule défaillance ne compromette pas tout le système", "Ne jamais changer de mot de passe", "Désactiver tous les logs pour ne pas ralentir le système"],
+    correctIndex: 1,
+    explanation: "Aucune mesure de sécurité seule n'est infaillible — combiner plusieurs couches indépendantes (réseau, application, données, humain) fait qu'une brèche à un niveau ne suffit pas à tout compromettre.",
+  },
+  {
+    key: "js-json-stringify-purpose",
+    category: "DEVELOPMENT",
+    prompt: "À quoi sert `JSON.stringify()` en JavaScript ?",
+    choices: ["À valider qu'une chaîne est du JSON valide", "À convertir un objet/valeur JavaScript en chaîne de caractères au format JSON", "À parser une chaîne JSON en objet JavaScript", "À chiffrer un objet"],
+    correctIndex: 1,
+    explanation: "`JSON.stringify()` sérialise un objet JS en texte JSON (utile pour l'envoyer via une API ou le stocker) ; `JSON.parse()` fait l'inverse — transforme du texte JSON en objet JavaScript.",
+  },
+  {
+    key: "cloud-cdn-cache-invalidation",
+    category: "CLOUD",
+    prompt: "Pourquoi faut-il parfois 'invalider' explicitement le cache d'un CDN après avoir mis à jour un fichier statique ?",
+    choices: ["Ce n'est jamais nécessaire, le CDN se met à jour instantanément", "Le CDN sert la version mise en cache tant que son délai d'expiration (TTL) n'est pas atteint — sans invalidation explicite, les visiteurs peuvent voir l'ancienne version pendant ce délai", "Les CDN ne supportent pas les mises à jour", "L'invalidation ne concerne que les images"],
+    correctIndex: 1,
+    explanation: "Un CDN garde une copie du contenu jusqu'à expiration du TTL configuré — pour forcer une mise à jour immédiate visible par tous les visiteurs, il faut invalider explicitement le cache existant plutôt que d'attendre l'expiration naturelle.",
+  },
 ];
 
 /**
@@ -7253,6 +7373,53 @@ const CTF_CHALLENGES: CtfChallengeSeed[] = [
     points: 75,
     acceptedAnswers: ["fichier copie", "fichier déplacé", "copie de fichier", "fichier deplace"],
   },
+  {
+    key: "crypto-caesar-unknown-shift",
+    category: "CRYPTO",
+    difficulty: 2,
+    title: "Décalage inconnu",
+    description:
+      "Un message a été chiffré par César avec un décalage inconnu (entre 1 et 25) : `khoor zruog`.\n\n" +
+      "Déchiffre-le (2 mots, en minuscules, en anglais).",
+    hint: "Essaie chaque décalage de 1 à 25, ou repère que la lettre la plus fréquente en anglais est 'e' — compare avec la lettre la plus fréquente du texte chiffré.",
+    points: 75,
+    acceptedAnswers: ["hello world"],
+  },
+  {
+    key: "web-insecure-http-login",
+    category: "WEB",
+    difficulty: 2,
+    title: "Formulaire de connexion en clair",
+    description:
+      "Un formulaire de connexion soumet les identifiants vers `http://exemple.com/login` (pas `https://`). Quel est le risque principal, sachant que le trafic HTTP n'est pas chiffré (un mot en anglais) ?",
+    hint: "Pense à ce qu'un attaquant positionné sur le même réseau (Wi-Fi public par exemple) pourrait faire du trafic non chiffré.",
+    points: 75,
+    acceptedAnswers: ["eavesdropping", "sniffing", "interception"],
+  },
+  {
+    key: "osint-shodan-exposed-service",
+    category: "OSINT",
+    difficulty: 3,
+    title: "Service exposé publiquement",
+    description:
+      "Un moteur de recherche spécialisé (type Shodan) indexe les appareils connectés à internet et leurs services exposés. Un chercheur y trouve une base de données MongoDB accessible sans authentification sur le port 27017 d'une IP appartenant à une entreprise.\n\n" +
+      "Quel est le risque principal de cette découverte (2 mots en français) ?",
+    hint: "Une base de données sans authentification accessible publiquement expose directement... quoi ?",
+    points: 100,
+    acceptedAnswers: ["fuite de donnees", "fuite de données", "exposition de donnees", "exposition de données"],
+  },
+  {
+    key: "linux-history-command-analysis",
+    category: "LINUX",
+    difficulty: 2,
+    title: "L'historique qui parle trop",
+    description:
+      "La commande `history` sur un serveur compromis révèle : `mysqldump -u root -pSuperSecret123 production > /tmp/backup.sql`.\n\n" +
+      "Au-delà du mot de passe exposé en clair, quel est le nom de la mauvaise pratique consistant à passer un mot de passe directement en argument de commande, visible dans l'historique shell et la liste des processus (2 mots en anglais) ?",
+    hint: "Pense à ce que `ps aux` peut révéler des arguments de n'importe quelle commande en cours d'exécution, visible par tout autre utilisateur du système.",
+    points: 100,
+    acceptedAnswers: ["command injection", "plaintext password", "hardcoded credentials", "exposed credentials"],
+  },
 ];
 
 /**
@@ -7541,7 +7708,33 @@ const EXERCISES: ExerciseSeed[] = [
   },
 ];
 
+/**
+ * Garde-fou anti-doublon : un upsert sur une clé dupliquée dans un même
+ * tableau écrase silencieusement la première entrée par la seconde, sans
+ * erreur — repéré deux fois pendant cette session (un concept "graphql",
+ * une question du jour "docker-image-vs-container") uniquement grâce à un
+ * script de vérification externe. Ce check fait échouer le seed
+ * immédiatement et bruyamment plutôt que de perdre du contenu en silence.
+ */
+function assertNoDuplicateKeys(label: string, items: { key: string }[]): void {
+  const seen = new Set<string>();
+  for (const item of items) {
+    if (seen.has(item.key)) {
+      throw new Error(`Clé dupliquée dans ${label} : "${item.key}" — corrige le contenu avant de re-seeder.`);
+    }
+    seen.add(item.key);
+  }
+}
+
 async function main() {
+  assertNoDuplicateKeys("SKILLS", SKILLS);
+  assertNoDuplicateKeys("ACHIEVEMENTS", ACHIEVEMENTS);
+  assertNoDuplicateKeys("CONCEPTS", CONCEPTS);
+  assertNoDuplicateKeys("COURSES", COURSES);
+  assertNoDuplicateKeys("DAILY_QUESTIONS", DAILY_QUESTIONS);
+  assertNoDuplicateKeys("CTF_CHALLENGES", CTF_CHALLENGES);
+  assertNoDuplicateKeys("EXERCISES", EXERCISES);
+
   for (const skill of SKILLS) {
     await prisma.skill.upsert({
       where: { key: skill.key },
