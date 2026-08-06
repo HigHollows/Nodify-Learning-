@@ -102,6 +102,21 @@ export async function listUsersForWeeklyRecap(weekKey: string) {
   });
 }
 
+/** Enregistre l'issue d'un duel terminé — voir social/duelService.ts (état de la partie elle-même reste en mémoire, non persisté). */
+export async function recordDuelWin(winnerId: string, loserId: string): Promise<void> {
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: winnerId }, data: { duelsWon: { increment: 1 }, duelsPlayed: { increment: 1 } } }),
+    prisma.user.update({ where: { id: loserId }, data: { duelsPlayed: { increment: 1 } } }),
+  ]);
+}
+
+export async function recordDuelDraw(userAId: string, userBId: string): Promise<void> {
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: userAId }, data: { duelsPlayed: { increment: 1 } } }),
+    prisma.user.update({ where: { id: userBId }, data: { duelsPlayed: { increment: 1 } } }),
+  ]);
+}
+
 export async function setNotificationPreferences(
   userId: string,
   updates: { notifStreakReminders?: boolean; notifWeeklyRecap?: boolean },

@@ -80,8 +80,8 @@ export async function activateDuel(id: string): Promise<DuelState | null> {
 }
 
 export type AnswerOutcome =
-  | { result: "win"; winnerId: string; explanation: string }
-  | { result: "draw"; explanation: string }
+  | { result: "win"; winnerId: string; loserId: string; explanation: string }
+  | { result: "draw"; challengerId: string; opponentId: string; explanation: string }
   | { result: "wrong" }
   | { result: "already-failed" }
   | { result: "not-your-duel" }
@@ -96,18 +96,20 @@ export function answerDuel(id: string, userId: string, choiceIndex: number): Ans
 
   if (choiceIndex === duel.question.correctIndex) {
     const explanation = duel.question.explanation;
+    const loserId = userId === duel.challengerId ? duel.opponentId : duel.challengerId;
     duel.status = "finished";
     duels.delete(id);
-    return { result: "win", winnerId: userId, explanation };
+    return { result: "win", winnerId: userId, loserId, explanation };
   }
 
   duel.failedUserIds.add(userId);
   const bothFailed = duel.failedUserIds.has(duel.challengerId) && duel.failedUserIds.has(duel.opponentId);
   if (bothFailed) {
     const explanation = duel.question.explanation;
+    const { challengerId, opponentId } = duel;
     duel.status = "finished";
     duels.delete(id);
-    return { result: "draw", explanation };
+    return { result: "draw", challengerId, opponentId, explanation };
   }
   return { result: "wrong" };
 }

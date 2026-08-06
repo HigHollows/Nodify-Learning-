@@ -7,6 +7,7 @@ import {
   buildDuelQuestionReply,
   buildDuelWinReply,
 } from "../social/duelView.js";
+import { recordDuelDraw, recordDuelWin } from "../database/repositories/userRepository.js";
 import { AppError } from "../utils/errors.js";
 
 export async function handleDuelAcceptButton(interaction: ButtonInteraction, duelId: string): Promise<void> {
@@ -47,10 +48,14 @@ export async function handleDuelAnswerButton(
 
   switch (outcome.result) {
     case "win":
+      // Persisté après la mise à jour du message : un échec de la stat ne
+      // doit jamais empêcher le duel de se conclure visiblement.
       await interaction.update(buildDuelWinReply(outcome.winnerId, outcome.explanation));
+      await recordDuelWin(outcome.winnerId, outcome.loserId).catch(() => undefined);
       return;
     case "draw":
       await interaction.update(buildDuelDrawReply(outcome.explanation));
+      await recordDuelDraw(outcome.challengerId, outcome.opponentId).catch(() => undefined);
       return;
     case "wrong":
       await interaction.reply({

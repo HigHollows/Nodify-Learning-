@@ -61,20 +61,29 @@ factices plausibles) — Discord.js valide la structure à la sérialisation
 (champs requis, longueurs), c'est la vérification la plus proche d'un vrai
 envoi Discord possible sans bot connecté. Toutes passent.
 
-## `/setup`
+## `+setup` (préfixe, pas slash — voir la section "Commandes admin en préfixe")
 
 Crée (ou répare) :
 - Rôles de progression 🌱 Beginner → 🔴 Expert
 - Catégorie **🧠 NODIFY** avec un salon `#nodify`
 
-Idempotente : relancer `/setup` ne duplique rien. Si un rôle/salon créé par
+Idempotente : relancer `+setup` ne duplique rien. Si un rôle/salon créé par
 Nodify est supprimé, le relancer le recrée automatiquement (♻️ dans le
-rapport). Nodify ne touche jamais aux ressources qu'il n'a pas créées
-lui-même — seuls les IDs qu'il a stockés en base sont vérifiés/réparés.
-Nécessite la permission Discord **Gérer le serveur** pour être exécutée, et
-que le bot ait lui-même **Gérer les rôles** + **Gérer les salons**.
+rapport). Repli par NOM en plus de l'id connu en base (`reconcileLevelRoles`/
+`reconcileHub` dans `setupService.ts`) : si l'id suivi est perdu (ligne DB
+réinitialisée...) alors que le rôle/salon existe toujours réellement, il est
+retrouvé par son nom plutôt que dupliqué — un vrai bug corrigé en cours de
+route, pas une précaution théorique. Nodify ne touche jamais aux ressources
+qu'il n'a pas créées lui-même — seuls les IDs qu'il a stockés en base sont
+vérifiés/réparés. Nécessite la permission Discord **Gérer le serveur**
+(vérifiée manuellement, voir plus bas), et que le bot ait lui-même **Gérer
+les rôles** + **Gérer les salons**.
 
-## `/settings`
+Poste aussi, une seule fois à la toute première création réelle du salon hub
+(jamais en cas de récupération par id/nom), le message de guide public
+(`community/guideView.ts`) avec un bouton pour le recevoir en DM.
+
+## `+settings` (préfixe)
 
 Active/désactive par serveur : Academy, Cyber Academy, Hacktualités, Question
 du jour. Réservé aux membres avec **Gérer le serveur**. Ces réglages sont
@@ -247,7 +256,7 @@ sans jamais prétendre attaquer une vraie cible en direct).
   déjà anciens
 - Anti-doublon global par `guid` d'article (contrainte unique DB)
 
-## `/stats`
+## `+stats` (préfixe)
 
 Statistiques globales (admin) : utilisateurs, XP totale distribuée, streak
 moyen, leçons validées, défis CTF résolus, cours le plus démarré.
@@ -451,3 +460,176 @@ la propagation peut prendre jusqu'à ~1h côté Discord — rien côté Nodify n
 peut aller plus vite que l'API elle-même. La sync au démarrage est résiliente
 : un échec est loggé mais n'empêche jamais le bot de démarrer (les commandes
 déjà enregistrées restent utilisables même si la resync automatique échoue).
+
+## `/exercise` — exercices pratiques (`src/practice/`)
+
+Complémentaires aux cours Academy (progression linéaire longue) et au CTF
+(défis thématiques autonomes) : courts, rejouables librement. Modèle
+`Exercise` + `UserExerciseCompletion` (Prisma). Deux formats seulement :
+
+- **MCQ** : QCM classique (`choices` + `correctIndex`), répondu via boutons.
+- **TEXT** : Debug/Trouve le bug/Complète le code — réponse courte comparée
+  à `acceptedAnswers`, même normalisation que le CTF (`ctfService.ts`).
+
+"Explique ce code"/"Analyse sécurité"/"Architecture review" ne sont
+délibérément PAS des exercices à réponse unique ici — ce sont des formats
+libres évalués par IA, déjà servis par `/explainme`, `/securityreview`,
+`/codereview`.
+
+Rejouable à volonté (upsert sur `recordExerciseSolve`, pas de contrainte
+"une fois"), mais XP/crédits/badges uniquement à la toute première réussite
+(`alreadySolvedBefore` dans `exerciseService.submitMcqAnswer`/
+`submitTextAnswer`) — sinon rejouer en boucle un exercice déjà résolu
+permettrait de refarmer indéfiniment.
+
+`/practice` (sans clé) pioche automatiquement un exercice OU un défi CTF non
+résolu, de difficulté proche du niveau réel de l'utilisateur (`± 1`,
+élargi progressivement si rien trouvé) — affiche directement la vue
+interactive existante (mêmes boutons/modal que `/exercise practice` ou
+`/cyber ctf challenge`), pas juste une suggestion textuelle
+(`practice/practiceService.ts`).
+
+## Badges de progression (`prisma/seed.ts` ACHIEVEMENTS + `services/achievementService.ts`)
+
+Badges dev/cyber/IA débloqués sur de vrais jalons (cours terminés, défis CTF
+résolus, exercices résolus), en plus des achievements historiques
+(bienvenue, premier cours, premier flag...). `unlockAchievementWithInfo`
+(à côté de l'ancien `unlockAchievement` booléen, conservé pour les
+appelants qui n'ont pas besoin de l'info d'affichage) retourne
+`{name, icon}` pour permettre un affichage dynamique d'une LISTE de badges
+débloqués d'un coup (`unlockedAchievements` dans `LessonFinishResult`/
+`FlagSubmissionResult`/`ExerciseSubmissionResult`), plutôt qu'un texte codé
+en dur par vue pour un seul achievement à la fois.
+
+`/achievements` affiche la galerie complète (verrouillés + débloqués) — pour
+un badge verrouillé, le nom et la condition (`description`, écrite comme un
+objectif) sont révélés, seule l'icône reste cachée : un mystère total sans
+aucun indice était moins motivant qu'un objectif clair à viser.
+
+## Objectifs quotidiens (`/objectives`, `src/progression/dailyObjectivesService.ts`)
+
+Récapitulatif de l'engagement du jour (leçon Academy, exercice, CTF,
+question du jour), calculé à la volée depuis les tables déjà existantes
+(`UserLessonCompletion`/`CtfSolve`/`UserExerciseCompletion`/
+`DailyQuestionAnswer`) — aucune nouvelle table de suivi. Purement informatif
+: chaque action compte déjà pour sa propre récompense, ceci n'est qu'une vue
+d'ensemble. La question du jour (scopée à une guild) est omise en DM
+(`guildId === null`), plutôt que de renvoyer un faux "non complété".
+
+## Rétention (`src/progression/`)
+
+- **Rappel de streak** (`streakReminderService.ts`) : DM en fin de journée
+  UTC (`>= 20h`) si un streak actif n'a pas été prolongé aujourd'hui.
+- **Récap hebdo** (`weeklyRecapService.ts`) : DM le lundi (`>= 9h UTC`),
+  agrégeant l'activité des 7 derniers jours — rien envoyé si aucune activité
+  (pas de spam d'inactivité).
+- **Révision espacée** (`spacedRepetitionService.ts`, `/review`) : reproposition des
+  concepts du dictionnaire consultés il y a 3+ jours (`UserConceptView`,
+  vue enregistrée par `dictionaryView.replyWithConceptSearch`), remis à
+  "vu maintenant" à chaque affichage pour ne pas reproposer sans cesse les
+  mêmes.
+- **Points faibles** (`weakSpotsService.ts`, `/weakspots`) : combine les
+  réponses à la question du jour (champ `DailyQuestionAnswer.category`,
+  dénormalisé à la réponse) et les scores de quiz Academy (regroupés par
+  catégorie de cours) pour repérer la catégorie la moins solide, avec un
+  seuil d'échantillon minimum pour éviter le bruit statistique.
+- **`/notifications`** : opt-out du rappel de streak et/ou du récap hebdo
+  (`User.notifStreakReminders`/`notifWeeklyRecap`, `true` par défaut) —
+  n'affecte que l'envoi du DM, jamais le calcul du streak/XP lui-même.
+
+Toutes ces vérifications tournent sur le même intervalle périodique que la
+question du jour (15min, `index.ts`) — chaque service gère lui-même son
+horaire/jour ET son idempotence en interne (`lastStreakReminderDate`,
+`lastWeeklyRecapDate`), un simple `setInterval` suffit côté `index.ts`.
+
+## `/roadmap` (`src/progression/roadmapService.ts`)
+
+Vue d'ensemble de tous les cours groupés par catégorie, avec prérequis et
+statut (`not_started`/`in_progress`/`completed`/verrouillé) — pour
+visualiser l'ordre logique plutôt que de le deviner en enchaînant
+`/learn` à l'aveugle.
+
+## `/search` (`src/search/searchService.ts`)
+
+Recherche floue unifiée à travers dictionnaire, cours, CTF et exercices —
+un point d'entrée unique devenu nécessaire une fois le catalogue de
+contenu assez large (100+ concepts, 30+ cours). Score de pertinence en 3
+paliers : substring exact dans le titre > titre proche par similarité de
+Levenshtein (tolère les fautes de frappe) > substring dans le corps
+(description/prompt/définition). Pas de recherche sémantique par
+embeddings — même limite documentée que le dictionnaire (`conceptService.ts`)
+et la doc RAG (`docsService.ts`) : pas d'API d'embeddings publique exposée
+par le provider actuellement utilisé.
+
+## `/duel` (`src/social/`)
+
+Duel de trivia 1v1 live : `/duel @adversaire` poste un message avec boutons
+Accepter/Refuser, l'acceptation pioche une question aléatoire (mélange
+déterministe seedé par l'id du duel, `quizShuffle.ts`) et affiche 4 boutons
+de réponse — premier à cliquer la bonne réponse gagne, une mauvaise réponse
+élimine ce joueur de CETTE question (mais pas du duel si l'autre se trompe
+aussi : match nul).
+
+État de la partie **volontairement non persisté** (`Map` en mémoire,
+`social/duelService.ts`) — un duel est une partie live de quelques dizaines
+de secondes, pas une donnée qui doit survivre à un redémarrage ; si le bot
+redémarre pendant un duel en cours, il est simplement perdu. Seule
+l'ISSUE finale est persistée : `User.duelsWon`/`duelsPlayed`, incrémentés
+via `recordDuelWin`/`recordDuelDraw` après la mise à jour du message
+(un échec de l'écriture DB ne doit jamais empêcher le duel de se conclure
+visiblement), affichés dans `/profile` et `/compare`.
+
+## `/feedback` (`src/services/feedbackService.ts`)
+
+Persiste TOUJOURS en base (`FeedbackReport`, jamais perdu) — le DM au
+propriétaire du bot (`OWNER_DISCORD_ID`, optionnel) est un bonus
+best-effort par-dessus, pas la seule trace. Consultable via `+feedback`
+(préfixe admin).
+
+## Alerte budget IA (`src/credits/aiBudgetAlertService.ts`)
+
+DM automatique au **propriétaire du serveur** (`guild.ownerId` — seul
+contact admin toujours bien défini, contrairement à "qui a la permission
+ManageGuild" qui peut être plusieurs personnes) quand la dépense IA agrégée
+de TOUS les utilisateurs d'un serveur atteint 80% du plafond configuré pour
+ce serveur (override ou défaut global `.env`). C'est un signal d'ensemble,
+**pas** le plafond réellement appliqué (qui reste par-utilisateur, inchangé
+dans `creditService.reserveForFeature`) — le mismatch entre "budget serveur"
+perçu et l'enforcement per-user existant est assumé et documenté ici plutôt
+que fabriqué comme une vraie limite agrégée qui n'existe pas.
+
+## Commandes admin en préfixe `+` (`src/prefixCommands/`)
+
+`/setup`, `/settings`, `/stats`, `/credit-admin`, `/ai` ont été retirées du
+menu `/` (slash commands, visibles dans le picker Discord même si
+permission-gated) et remplacées par des commandes texte en préfixe `+` —
+objectif : désencombrer le menu `/` pour les membres normaux. `+feedback`
+(liste les retours `/feedback`) et `+help` (liste ces 6 commandes) les
+rejoignent.
+
+- **`parseArgs.ts`** : tokenizer maison (gère `cle:"valeur avec espaces"`
+  comme un seul token, guillemets retirés) + getters typés
+  (string/int avec bornes/boolean/choix/mention utilisateur ou salon), avec
+  des `ValidationError` explicites plutôt que de planter sur une entrée mal
+  formée. Testé unitairement (`parseArgs.test.ts`).
+- **`registry.ts`** : table statique des 6 commandes (pas de scan de dossier
+  dynamique comme `commandLoader.ts` — seulement 6 commandes, pas besoin de
+  cette complexité).
+- **`events/messageCreate.ts`** : route les messages `+...`, vérifie
+  **manuellement** la permission Discord `ManageGuild` à chaque message
+  (aucune protection native contrairement aux slash commands — c'est le
+  seul vrai verrou de sécurité de tout le système), ignore silencieusement
+  tout message qui ne matche aucune commande `+` connue.
+
+Nécessite le privileged intent **Message Content** activé dans le Discord
+Developer Portal (`src/client.ts`) — sans lui, le bot démarre mais reçoit un
+contenu de message vide pour tous les messages, donc aucune commande `+` ne
+se déclenche jamais.
+
+## Auto-DM du guide aux nouveaux membres (`src/events/guildMemberAdd.ts`)
+
+Réutilise le même contenu que `/guide` (`community/guideView.ts`) —
+best-effort, silencieux si DM fermés (le post public du salon hub et
+`/guide` restent disponibles en secours). Nécessite le privileged intent
+**Server Members** (`GuildMembers`) en plus de Message Content — sans lui,
+l'event `guildMemberAdd` n'est jamais reçu.

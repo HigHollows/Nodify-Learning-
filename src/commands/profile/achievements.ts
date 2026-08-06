@@ -15,7 +15,10 @@ const command: Command = {
 
     const lines = all.map((a) => {
       const unlocked = earned.has(a.key);
-      return unlocked ? `${a.icon} **${a.name}** — ${a.description}` : `🔒 *???* — débloque-le pour voir de quoi il s'agit`;
+      // Verrouillé : nom + condition révélés (donne un vrai objectif à
+      // viser), seule l'icône reste cachée — un mystère total ("???") sans
+      // aucun indice est moins motivant qu'un objectif clair à atteindre.
+      return unlocked ? `${a.icon} **${a.name}** — ${a.description}` : `🔒 **${a.name}** — _${a.description}_`;
     });
 
     const container = baseContainer(`🏆 Badges Nodify (${earned.size}/${all.length})`, COLOR_GOLD).addTextDisplayComponents(

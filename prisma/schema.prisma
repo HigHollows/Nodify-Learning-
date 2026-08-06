@@ -108,6 +108,14 @@ model User {
   notifStreakReminders Boolean @default(true)
   notifWeeklyRecap     Boolean @default(true)
 
+  // Statistiques /duel (Phase 13) — état de la partie elle-même reste en
+  // mémoire (voir social/duelService.ts), volontairement éphémère ; ces
+  // deux compteurs sont la seule trace persistée, mise à jour au moment où
+  // un duel se termine (victoire, défaite, ou nul compte comme "joué" sans
+  // incrémenter de victoire pour personne).
+  duelsWon    Int @default(0)
+  duelsPlayed Int @default(0)
+
   // Statut "supporter" non-monétaire (attribué par un admin, pas acheté —
   // les crédits ne sont pas une monnaie réelle) : donne un bonus sur la
   // récompense MONTHLY. Prépare une future vraie souscription sans

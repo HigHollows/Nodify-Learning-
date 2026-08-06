@@ -45,6 +45,13 @@ const command: Command = {
       ),
     );
 
+    if (view.duelsPlayed > 0) {
+      container.addSeparatorComponents(thinSeparator());
+      container.addTextDisplayComponents(
+        textDisplay(fieldText("⚔️ Duels", `${view.duelsWon} victoire(s) sur ${view.duelsPlayed} duel(s)`)),
+      );
+    }
+
     container.addSeparatorComponents(thinSeparator());
     container.addTextDisplayComponents(
       textDisplay(

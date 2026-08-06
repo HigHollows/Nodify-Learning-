@@ -26,6 +26,8 @@ export interface ProfileView {
   achievements: ProfileAchievementView[];
   achievementsUnlockedCount: number;
   achievementsTotalCount: number;
+  duelsWon: number;
+  duelsPlayed: number;
 }
 
 /**
@@ -59,6 +61,8 @@ export async function buildProfileView(discordId: string): Promise<ProfileView |
     })),
     achievementsUnlockedCount: profile.achievements.length,
     achievementsTotalCount,
+    duelsWon: profile.duelsWon,
+    duelsPlayed: profile.duelsPlayed,
   };
 }
 

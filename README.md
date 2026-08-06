@@ -268,11 +268,13 @@ trigger.
 
 | Catalog | Volume |
 |---|---|
-| Dictionary concepts | 92 |
-| Daily questions | 227 |
-| Academy courses (all domains covered) | 30 |
-| CTF challenges (crypto/OSINT/forensics/web/reverse/linux/network) | 32 |
-| Practice exercises (MCQ + debug/fix-the-code) | 16 |
+| Dictionary concepts | 103 |
+| Daily questions | 256 |
+| Academy courses (all domains covered) | 36 |
+| Academy quiz questions | 204 |
+| CTF challenges (crypto/OSINT/forensics/web/reverse/linux/network) | 39 |
+| Practice exercises (MCQ + debug/fix-the-code) | 24 |
+| Achievement badges | 15 |
 | Hacktualités sources (real RSS) | 10 |
 | Documentation excerpts (RAG) | 10 |
 

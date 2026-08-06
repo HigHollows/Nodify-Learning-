@@ -19,6 +19,7 @@ export function buildCompareReply(a: ProfileView, b: ProfileView): ContainerPayl
         compareLine("🏆 Streak record", a.longestStreak, b.longestStreak, (n) => `${n}j`),
         compareLine("🎖️ Succès débloqués", a.achievementsUnlockedCount, b.achievementsUnlockedCount),
         compareLine("💡 Compétences actives", a.skills.length, b.skills.length),
+        ...(a.duelsPlayed > 0 || b.duelsPlayed > 0 ? [compareLine("⚔️ Duels gagnés", a.duelsWon, b.duelsWon)] : []),
       ].join("\n"),
     ),
   );

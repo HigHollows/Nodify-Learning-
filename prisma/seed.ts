@@ -871,7 +871,7 @@ const CONCEPTS: ConceptSeed[] = [
     explanationAdvanced:
       "Un shell peut aussi exécuter des scripts (suites de commandes automatisées), gérer des variables d'environnement, et enchaîner des commandes via des pipes (`|`, qui envoie la sortie d'une commande en entrée de la suivante). Bash reste le shell le plus répandu sous Linux/macOS ; PowerShell (orienté objets plutôt que texte brut) est le standard moderne sous Windows.",
     docUrl: "https://www.gnu.org/software/bash/manual/bash.html",
-    relatedKeys: ["linux"],
+    relatedKeys: ["environment-variable"],
     prerequisiteKeys: [],
     aliases: ["terminal", "ligne de commande"],
   },
@@ -983,7 +983,7 @@ const CONCEPTS: ConceptSeed[] = [
     explanationAdvanced:
       "Terraform maintient un fichier d'état (state) représentant l'infrastructure réellement provisionnée, et calcule un plan (diff entre l'état désiré dans le code et l'état réel) avant d'appliquer quoi que ce soit — permettant une revue avant modification, contrairement à un clic direct dans une console. Reproductible entre environnements (dev/staging/prod) et multi-fournisseurs via des providers (AWS, Azure, GCP, Cloudflare...).",
     docUrl: "https://developer.hashicorp.com/terraform/intro",
-    relatedKeys: ["docker", "kubernetes", "cloud-fundamentals"],
+    relatedKeys: ["docker", "kubernetes", "infrastructure-as-code"],
     prerequisiteKeys: [],
     aliases: ["iac", "infrastructure as code"],
   },
@@ -1079,7 +1079,7 @@ const CONCEPTS: ConceptSeed[] = [
     explanationAdvanced:
       "Une CVE décrit *quelle* vulnérabilité existe, mais pas *à quel point* elle est grave — c'est le rôle du score CVSS associé. La base MITRE CVE est la référence historique ; NVD (National Vulnerability Database) l'enrichit avec le scoring CVSS et des métadonnées. Un scan de vulnérabilités compare les versions de logiciels installés à la base CVE pour repérer les composants exposés à une faille connue.",
     docUrl: "https://cve.mitre.org/",
-    relatedKeys: ["cvss", "vulnerability-vs-exploit"],
+    relatedKeys: ["cvss", "supply-chain-attack"],
     prerequisiteKeys: [],
     aliases: ["common vulnerabilities and exposures"],
   },
@@ -1223,7 +1223,7 @@ const CONCEPTS: ConceptSeed[] = [
     explanationAdvanced:
       "Le masque de sous-réseau (ex: `/24` = 255.255.255.0) détermine combien de bits de l'adresse IP identifient le réseau vs l'hôte — plus le préfixe est grand (`/28` par exemple), plus le sous-réseau est petit en nombre d'adresses disponibles. Le CIDR (Classless Inter-Domain Routing) a remplacé l'ancien système de classes fixes (A/B/C) pour permettre un découpage bien plus flexible et économe en adresses.",
     docUrl: "https://www.cloudflare.com/learning/network-layer/what-is-a-subnet/",
-    relatedKeys: ["ip-private-range", "nat"],
+    relatedKeys: ["nat", "osi-model"],
     prerequisiteKeys: [],
     aliases: ["sous-reseau", "cidr"],
   },
@@ -1239,7 +1239,7 @@ const CONCEPTS: ConceptSeed[] = [
     explanationAdvanced:
       "Le NAT à état (stateful) garde une table de correspondance entre les connexions sortantes (IP privée + port) et l'IP/port publics utilisés, pour router correctement les réponses entrantes vers la bonne machine interne. C'est aussi, incidemment, une forme légère de sécurité par obscurité : les machines internes ne sont pas directement adressables depuis l'extérieur sans configuration explicite (port forwarding).",
     docUrl: "https://www.cloudflare.com/learning/network-layer/what-is-nat/",
-    relatedKeys: ["ip-private-range", "subnetting"],
+    relatedKeys: ["subnetting", "firewall"],
     prerequisiteKeys: [],
     aliases: ["network address translation", "traduction d'adresse reseau"],
   },
@@ -1271,7 +1271,7 @@ const CONCEPTS: ConceptSeed[] = [
     explanationAdvanced:
       "On distingue l'apprentissage supervisé (données étiquetées avec la bonne réponse attendue), non supervisé (le modèle trouve seul des structures/clusters sans étiquette) et par renforcement (le modèle apprend par essai-erreur via un système de récompense). Le deep learning est un sous-domaine du ML basé sur des réseaux de neurones à plusieurs couches, à l'origine des progrès récents en vision par ordinateur et en traitement du langage (dont les LLM).",
     docUrl: "https://www.ibm.com/topics/machine-learning",
-    relatedKeys: ["llm", "supervised-learning-def"],
+    relatedKeys: ["llm", "transformer-architecture"],
     prerequisiteKeys: [],
     aliases: ["apprentissage automatique", "ml"],
   },
@@ -1287,7 +1287,7 @@ const CONCEPTS: ConceptSeed[] = [
     explanationAdvanced:
       "La recherche par similarité (souvent cosine similarity ou distance euclidienne) sur de très grands volumes de vecteurs utilise des index approximatifs (ANN — Approximate Nearest Neighbor, ex: HNSW) plutôt qu'une comparaison exhaustive, pour rester performante à grande échelle. Nodify utilise volontairement une recherche par mots-clés plus simple pour son système documentaire (voir docsService.ts), faute d'API d'embeddings publique exposée par le provider utilisé.",
     docUrl: "https://www.pinecone.io/learn/vector-database/",
-    relatedKeys: ["rag", "embedding-def"],
+    relatedKeys: ["rag", "transformer-architecture"],
     prerequisiteKeys: ["machine-learning"],
     aliases: ["vector db", "base vectorielle"],
   },
@@ -1367,7 +1367,7 @@ const CONCEPTS: ConceptSeed[] = [
     explanationAdvanced:
       "Le principe de localité (temporelle : une donnée récemment utilisée le sera probablement encore bientôt ; spatiale : une donnée proche en mémoire d'une donnée utilisée le sera probablement aussi) guide les stratégies de préchargement du cache. Un « cache miss » (donnée absente du cache, nécessitant un accès RAM plus lent) impacte directement les performances — c'est une des raisons pour lesquelles l'ordre d'accès aux structures de données en mémoire (parcourir un tableau séquentiellement vs de façon éparpillée) peut avoir un impact mesurable sur la vitesse d'exécution.",
     docUrl: "https://en.wikipedia.org/wiki/CPU_cache",
-    relatedKeys: ["ram-vs-disk-storage"],
+    relatedKeys: ["virtual-memory"],
     prerequisiteKeys: [],
     aliases: ["cache processeur"],
   },
@@ -1383,7 +1383,7 @@ const CONCEPTS: ConceptSeed[] = [
     explanationAdvanced:
       "Quand la RAM physique disponible est insuffisante, le système peut déplacer temporairement des pages mémoire peu utilisées vers le disque (le swap) pour libérer de la RAM — beaucoup plus lent qu'un accès RAM direct, d'où le ralentissement perceptible d'une machine qui swappe intensément. La pagination (division en pages de taille fixe) est le mécanisme technique standard qui rend cette traduction virtuel→physique gérable, avec la MMU (Memory Management Unit) matérielle qui accélère cette traduction.",
     docUrl: "https://en.wikipedia.org/wiki/Virtual_memory",
-    relatedKeys: ["swap-memory-purpose", "ram-vs-disk-storage"],
+    relatedKeys: ["cpu-cache"],
     prerequisiteKeys: [],
     aliases: ["memoire virtuelle"],
   },
@@ -1399,7 +1399,7 @@ const CONCEPTS: ConceptSeed[] = [
     explanationAdvanced:
       "UEFI a largement remplacé le BIOS historique sur le matériel récent, avec des avantages notables : support de disques plus grands (GPT plutôt que MBR), démarrage plus rapide, et Secure Boot — une vérification cryptographique de la signature du bootloader et du noyau avant de les exécuter, pour empêcher le chargement d'un composant de démarrage malveillant compromis.",
     docUrl: "https://en.wikipedia.org/wiki/Booting",
-    relatedKeys: ["bios-uefi-role", "os-kernel-def"],
+    relatedKeys: ["virtual-memory"],
     prerequisiteKeys: [],
     aliases: ["demarrage", "boot"],
   },
@@ -1495,7 +1495,7 @@ const CONCEPTS: ConceptSeed[] = [
     explanationAdvanced:
       "Ce découplage améliore la résilience : si le service consommateur tombe temporairement en panne, les messages restent en file d'attente et sont traités dès son retour, plutôt que d'être perdus. Des outils comme RabbitMQ ou Kafka implémentent ce pattern à grande échelle — Kafka en particulier est optimisé pour un débit très élevé de flux d'événements continus (event streaming), pas seulement une simple file de tâches ponctuelles.",
     docUrl: "https://aws.amazon.com/message-queue/",
-    relatedKeys: ["microservices", "event-driven-architecture"],
+    relatedKeys: ["microservices", "circuit-breaker"],
     prerequisiteKeys: [],
     aliases: ["file de messages", "queue"],
   },
