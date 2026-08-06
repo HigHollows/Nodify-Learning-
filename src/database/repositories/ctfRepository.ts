@@ -9,6 +9,12 @@ export async function findCtfChallengeByKey(key: string) {
   return prisma.ctfChallenge.findUnique({ where: { key } });
 }
 
+/** Utilisé par l'objectif quotidien "résoudre un défi CTF aujourd'hui" (voir progression/dailyObjectivesService.ts). */
+export async function hasSolvedChallengeSince(userId: string, since: Date): Promise<boolean> {
+  const count = await prisma.ctfSolve.count({ where: { userId, solvedAt: { gte: since } } });
+  return count > 0;
+}
+
 export async function listSolvedChallengeIds(userId: string): Promise<Set<string>> {
   const solves = await prisma.ctfSolve.findMany({
     where: { userId },

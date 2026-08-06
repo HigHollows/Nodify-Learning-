@@ -8,3 +8,10 @@ export function yesterdayUtc(): string {
   d.setUTCDate(d.getUTCDate() - 1);
   return d.toISOString().slice(0, 10);
 }
+
+/** Minuit UTC du jour courant — borne basse pour les requêtes "fait aujourd'hui" (objectifs quotidiens). */
+export function startOfTodayUtc(): Date {
+  const d = new Date();
+  d.setUTCHours(0, 0, 0, 0);
+  return d;
+}

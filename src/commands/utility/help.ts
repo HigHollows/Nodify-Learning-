@@ -12,7 +12,7 @@ const COLOR_BLUE = 0x3498db;
 const CATEGORIES: { title: string; commands: string[] }[] = [
   {
     title: "👤 Profil & Progression",
-    commands: ["/profile", "/leaderboard", "/setup"],
+    commands: ["/profile", "/leaderboard", "/objectives", "/setup"],
   },
   {
     title: "📖 Knowledge Engine",

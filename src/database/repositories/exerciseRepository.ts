@@ -34,3 +34,9 @@ export async function recordExerciseSolve(userId: string, exerciseId: string): P
 export async function countSolvedExercises(userId: string): Promise<number> {
   return prisma.userExerciseCompletion.count({ where: { userId } });
 }
+
+/** Utilisé par l'objectif quotidien "résoudre un exercice aujourd'hui" (voir progression/dailyObjectivesService.ts). */
+export async function hasSolvedExerciseSince(userId: string, since: Date): Promise<boolean> {
+  const count = await prisma.userExerciseCompletion.count({ where: { userId, solvedAt: { gte: since } } });
+  return count > 0;
+}

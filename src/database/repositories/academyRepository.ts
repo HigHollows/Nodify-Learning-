@@ -63,6 +63,14 @@ export async function completeCourseProgress(userId: string, courseId: string): 
   });
 }
 
+/** Utilisé par l'objectif quotidien "terminer une leçon aujourd'hui" (voir progression/dailyObjectivesService.ts). */
+export async function hasCompletedLessonSince(userId: string, since: Date): Promise<boolean> {
+  const count = await prisma.userLessonCompletion.count({
+    where: { userId, passed: true, completedAt: { gte: since } },
+  });
+  return count > 0;
+}
+
 /** Cours terminés par l'utilisateur (clé + skillKey) — utilisé pour évaluer les badges de progression (voir achievementService). */
 export async function listCompletedCourses(userId: string): Promise<{ key: string; skillKey: string }[]> {
   const rows = await prisma.userCourseProgress.findMany({
