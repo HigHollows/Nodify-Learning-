@@ -74,6 +74,7 @@ export async function listUsersAtRiskOfLosingStreak(yesterday: string, today: st
     where: {
       currentStreak: { gt: 0 },
       lastActiveDate: yesterday,
+      notifStreakReminders: true,
       // `NOT: { lastStreakReminderDate: today }` exclurait à tort les
       // utilisateurs jamais relancés (colonne NULL) : en SQL, `NULL <> x`
       // vaut NULL (pas vrai), donc ces lignes seraient silencieusement
@@ -93,11 +94,27 @@ export async function listUsersForWeeklyRecap(weekKey: string) {
   return prisma.user.findMany({
     where: {
       totalXp: { gt: 0 }, // pas la peine de spammer un compte jamais actif pédagogiquement
+      notifWeeklyRecap: true,
       // Même piège NULL que listUsersAtRiskOfLosingStreak ci-dessus.
       OR: [{ lastWeeklyRecapDate: null }, { lastWeeklyRecapDate: { not: weekKey } }],
     },
     select: { id: true },
   });
+}
+
+export async function setNotificationPreferences(
+  userId: string,
+  updates: { notifStreakReminders?: boolean; notifWeeklyRecap?: boolean },
+): Promise<void> {
+  await prisma.user.update({ where: { id: userId }, data: updates });
+}
+
+export async function getNotificationPreferences(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { notifStreakReminders: true, notifWeeklyRecap: true },
+  });
+  return user ?? { notifStreakReminders: true, notifWeeklyRecap: true };
 }
 
 export async function markWeeklyRecapSent(userId: string, weekKey: string): Promise<void> {

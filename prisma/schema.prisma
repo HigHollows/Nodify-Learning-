@@ -61,6 +61,17 @@ model GuildConfig {
   maxDailyAiSpend   Int?
   maxMonthlyAiSpend Int?
 
+  // Anti-doublon de l'alerte budget IA (Phase 12) : "YYYY-MM-DD"/"YYYY-MM"
+  // du dernier envoi, jamais deux fois le même jour/mois — voir
+  // credits/aiBudgetAlertService.ts. Alerte le propriétaire du serveur
+  // (guild.ownerId, seul contact admin toujours bien défini) quand la
+  // dépense IA agrégée de TOUS les utilisateurs du serveur approche le
+  // plafond configuré pour ce serveur — pas une limite par-utilisateur
+  // (celle réellement appliquée par reserveForFeature), juste un signal
+  // d'alerte au même seuil que celui affiché par `+ai budget`.
+  lastAiBudgetAlertDate  String?
+  lastAiBudgetAlertMonth String?
+
   updatedAt DateTime @updatedAt
 
   @@map("guild_configs")
@@ -89,6 +100,14 @@ model User {
   lastStreakReminderDate String?
   lastWeeklyRecapDate    String? // "YYYY-MM-DD" du lundi où le récap a été envoyé
 
+  // Préférences de notification (Phase 12, /notifications) — activées par
+  // défaut (le rappel de streak et le récap hebdo existaient déjà sans
+  // opt-out) ; ce champ permet de s'en retirer sans désactiver le reste du
+  // profil. N'affecte QUE l'envoi du DM, jamais le calcul du streak/XP
+  // lui-même.
+  notifStreakReminders Boolean @default(true)
+  notifWeeklyRecap     Boolean @default(true)
+
   // Statut "supporter" non-monétaire (attribué par un admin, pas acheté —
   // les crédits ne sont pas une monnaie réelle) : donne un bonus sur la
   // récompense MONTHLY. Prépare une future vraie souscription sans
@@ -106,6 +125,7 @@ model User {
   ctfSolves         CtfSolve[]
   exerciseCompletions UserExerciseCompletion[]
   conceptViews        UserConceptView[]
+  feedbackReports     FeedbackReport[]
 
   creditAccount      UserCreditAccount?
   creditTransactions CreditTransaction[]
@@ -518,6 +538,23 @@ model PostedNewsArticle {
   postedAt DateTime @default(now())
 
   @@map("posted_news_articles")
+}
+
+/// Signalement/suggestion envoyé via /feedback (Phase 12) — persisté même si
+/// l'envoi en DM au propriétaire du bot (OWNER_DISCORD_ID, .env) échoue ou
+/// n'est pas configuré, pour ne jamais perdre un retour utilisateur. Consulté
+/// via `+feedback` (voir prefixCommands/).
+model FeedbackReport {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  guildId String? // contexte utile pour reproduire un bug signalé — null si envoyé en DM
+  message String
+
+  createdAt DateTime @default(now())
+
+  @@map("feedback_reports")
 }
 
 // ============================================================================

@@ -106,6 +106,12 @@ const envSchema = z.object({
   // Reward Engine — bonus supporter non-monétaire (statut attribué par un
   // admin, pas acheté) sur la récompense MONTHLY.
   SUPPORTER_MONTHLY_BONUS_AMOUNT: envInt(200),
+
+  // Optionnel : id Discord du propriétaire du bot — /feedback lui envoie un
+  // DM en plus de toujours persister le signalement en base (voir
+  // services/feedbackService.ts). Sans cette variable, seule la
+  // persistance a lieu (consultable via +feedback).
+  OWNER_DISCORD_ID: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

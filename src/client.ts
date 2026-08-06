@@ -9,17 +9,28 @@ import type { Command } from "./types/command.js";
  * GuildMessages + MessageContent (Phase 11) : nécessaires pour les
  * commandes admin en préfixe `+` (voir src/prefixCommands/) — Discord ne
  * transmet le contenu d'un message que si MessageContent est explicitement
- * demandé. MessageContent est un intent privilégié : il doit AUSSI être
- * activé manuellement dans le Discord Developer Portal (Bot → Privileged
- * Gateway Intents → Message Content Intent), sinon le bot se connecte mais
- * reçoit un contenu vide pour tous les messages.
+ * demandé.
+ *
+ * GuildMembers (Phase 12) : nécessaire pour recevoir `guildMemberAdd`
+ * (guide de bienvenue auto-DM, voir events/guildMemberAdd.ts).
+ *
+ * MessageContent ET GuildMembers sont des intents privilégiés : ils
+ * doivent AUSSI être activés manuellement dans le Discord Developer Portal
+ * (Bot → Privileged Gateway Intents → Message Content Intent + Server
+ * Members Intent), sinon le bot se connecte mais reçoit un contenu de
+ * message vide / aucun event guildMemberAdd.
  */
 export class NodifyClient extends Client {
   public commands = new Collection<string, Command>();
 
   constructor() {
     super({
-      intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
+      intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMembers,
+      ],
     });
   }
 }

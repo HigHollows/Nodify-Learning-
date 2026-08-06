@@ -9,6 +9,20 @@ export async function countAchievements() {
   return prisma.achievement.count();
 }
 
+/** Catalogue complet — utilisé par /achievements pour afficher aussi les badges pas encore débloqués. */
+export async function listAllAchievements() {
+  return prisma.achievement.findMany({ orderBy: { key: "asc" } });
+}
+
+/** Clés des succès déjà débloqués par un utilisateur — pour croiser avec listAllAchievements(). */
+export async function listEarnedAchievementKeys(userId: string): Promise<Set<string>> {
+  const rows = await prisma.userAchievement.findMany({
+    where: { userId },
+    select: { achievement: { select: { key: true } } },
+  });
+  return new Set(rows.map((r) => r.achievement.key));
+}
+
 /**
  * Débloque un succès pour un utilisateur. Idempotent : si déjà débloqué,
  * ne fait rien et retourne `false` — repose sur la contrainte unique

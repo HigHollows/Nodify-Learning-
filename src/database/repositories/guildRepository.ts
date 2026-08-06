@@ -119,3 +119,15 @@ export async function setAiBudgetOverrides(
   await getOrCreateGuildConfig(guildId);
   await prisma.guildConfig.update({ where: { guildId }, data: updates });
 }
+
+/** Toutes les guilds ayant déjà une config (`/setup` déjà lancé) — voir credits/aiBudgetAlertService.ts. */
+export async function listAllGuildConfigs() {
+  return prisma.guildConfig.findMany({ select: { guildId: true, maxDailyAiSpend: true, maxMonthlyAiSpend: true, lastAiBudgetAlertDate: true, lastAiBudgetAlertMonth: true } });
+}
+
+export async function markAiBudgetAlertSent(
+  guildId: string,
+  updates: { lastAiBudgetAlertDate?: string; lastAiBudgetAlertMonth?: string },
+): Promise<void> {
+  await prisma.guildConfig.update({ where: { guildId }, data: updates });
+}

@@ -4,6 +4,7 @@ import creditAdminPrefix from "./creditAdminPrefix.js";
 import setupPrefix from "./setupPrefix.js";
 import settingsPrefix from "./settingsPrefix.js";
 import statsPrefix from "./statsPrefix.js";
+import feedbackPrefix from "./feedbackPrefix.js";
 import helpPrefix from "./helpPrefix.js";
 
 /**
@@ -17,5 +18,8 @@ import helpPrefix from "./helpPrefix.js";
 export const PREFIX = "+";
 
 export const PREFIX_COMMANDS = new Map<string, PrefixCommand>(
-  [aiAdminPrefix, creditAdminPrefix, setupPrefix, settingsPrefix, statsPrefix, helpPrefix].map((cmd) => [cmd.name, cmd]),
+  [aiAdminPrefix, creditAdminPrefix, setupPrefix, settingsPrefix, statsPrefix, feedbackPrefix, helpPrefix].map((cmd) => [
+    cmd.name,
+    cmd,
+  ]),
 );

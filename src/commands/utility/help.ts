@@ -12,7 +12,7 @@ const COLOR_BLUE = 0x3498db;
 const CATEGORIES: { title: string; commands: string[] }[] = [
   {
     title: "👤 Profil & Progression",
-    commands: ["/profile", "/leaderboard", "/objectives", "/weakspots"],
+    commands: ["/profile", "/compare", "/achievements", "/leaderboard", "/objectives", "/weakspots", "/notifications"],
   },
   {
     title: "📖 Knowledge Engine",
@@ -24,7 +24,7 @@ const CATEGORIES: { title: string; commands: string[] }[] = [
   },
   {
     title: "🏋️ Exercices pratiques",
-    commands: ["/exercise list", "/exercise practice"],
+    commands: ["/exercise list", "/exercise practice", "/practice"],
   },
   {
     title: "🤖 IA",
@@ -45,7 +45,7 @@ const CATEGORIES: { title: string; commands: string[] }[] = [
   },
   {
     title: "🌐 Communauté",
-    commands: ["/trivia", "/news", "/guide", "/duel"],
+    commands: ["/trivia", "/news", "/guide", "/duel", "/feedback"],
   },
   {
     title: "💳 Crédits & Récompenses",

@@ -188,6 +188,27 @@ export async function getStatsSince(userId: string, since: Date): Promise<Period
   return { earned, spent, refunded };
 }
 
+/**
+ * Dépense IA agrégée de TOUS les utilisateurs sur une guild donnée, depuis
+ * une date — voir credits/aiBudgetAlertService.ts. Même filtrage que
+ * getStatsSince (exclut FAILED et les réservations REFUNDED), mais groupé
+ * par guildId au lieu de userId : c'est un signal d'ensemble pour
+ * l'admin, PAS le plafond réellement appliqué (qui reste par-utilisateur,
+ * voir creditService.reserveForFeature).
+ */
+export async function getGuildAiSpendSince(guildId: string, since: Date): Promise<number> {
+  const transactions = await prisma.creditTransaction.findMany({
+    where: { guildId, createdAt: { gte: since }, status: { not: "FAILED" }, type: "SPEND" },
+    select: { amount: true, status: true },
+  });
+
+  let spent = 0;
+  for (const t of transactions) {
+    if (t.status !== "REFUNDED") spent += Math.abs(t.amount);
+  }
+  return spent;
+}
+
 export async function countAiRequestsSince(userId: string, since: Date): Promise<number> {
   return prisma.aICall.count({ where: { userId, createdAt: { gte: since } } });
 }

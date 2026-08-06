@@ -83,11 +83,16 @@ query inside a command.
    - an optional AI key (`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, or `GROQ_API_KEY`) — without a key, the bot runs in demo mode
    - the credit system is enabled by default (`CREDITS_ENABLED=true`); see `.env.example` for all settings (rewards, anti-abuse, default AI mode)
 
-   ⚠️ **Required Discord Developer Portal setting**: under your application →
-   **Bot** → **Privileged Gateway Intents**, enable **Message Content
-   Intent**. Without it, the `+` admin commands (see below) silently receive
-   empty message content and never trigger — everything else works fine
-   without it, but that one feature needs it.
+   ⚠️ **Required Discord Developer Portal settings**: under your application →
+   **Bot** → **Privileged Gateway Intents**, enable both:
+   - **Message Content Intent** — without it, the `+` admin commands (see
+     below) silently receive empty message content and never trigger.
+   - **Server Members Intent** — without it, the bot never receives the
+     `guildMemberAdd` event, so the auto-DM welcome guide sent to new
+     members never fires.
+
+   Everything else works fine without either — these two only gate those
+   specific features.
 
 2. Install dependencies:
    ```bash
@@ -156,9 +161,12 @@ lists every available command grouped by domain.
 <summary>👤 Profile & Progression</summary>
 
 - `/profile` — global profile (XP, level, streak, skills, achievements)
+- `/compare` — put your profile side-by-side with another member's
+- `/achievements` — full badge gallery, locked and unlocked
 - `/leaderboard` — XP leaderboard
 - `/objectives` — today's engagement checklist (lesson, exercise, CTF, daily question)
 - `/weakspots` — identifies your weakest category (daily question + Academy quiz history combined) and suggests what to review
+- `/notifications` — opt in/out of the automatic streak reminder and weekly recap DMs
 </details>
 
 <details>
@@ -181,6 +189,7 @@ lists every available command grouped by domain.
 <summary>🏋️ Practice Exercises</summary>
 
 - `/exercise list` / `/exercise practice` — short, replayable MCQ and debug/fix-the-code/complete-the-code exercises
+- `/practice` — picks a random exercise or CTF challenge matched to your level, ready to solve immediately
 </details>
 
 <details>
@@ -213,8 +222,9 @@ lists every available command grouped by domain.
 
 - `/trivia` — question of the day (also posted automatically)
 - `/news` — latest Hacktualités (real RSS feeds)
-- `/guide` — sends the full "how Nodify works" guide by DM
+- `/guide` — sends the full "how Nodify works" guide by DM (also sent automatically to new members on join)
 - `/duel` — live 1v1 trivia duel (buttons, first correct answer wins)
+- `/feedback` — report a bug or suggest something, straight to the bot owner
 </details>
 
 <details>
@@ -242,6 +252,12 @@ syntax: `+help`.
 - `+stats` — global statistics
 - `+credit-admin give|remove|set|bonus|subscriber` — manage a user's credits (audited): grant/remove/set, one-off event bonus, non-monetary supporter status
 - `+ai status|open|close|maintenance|limited|stats|usage|panel|budget|audit-log` — AI Control Center: toggle AI service mode (without affecting the rest of Nodify), paginated usage stats/history, persistent status panel, per-server AI budget, audit log
+- `+feedback` — lists the latest reports sent via `/feedback`
+
+The server owner also automatically gets a DM if a server's aggregate AI
+spend crosses 80% of its configured daily/monthly budget — a heads-up, not
+an enforcement mechanism (the real per-user cap in `reserveForFeature`
+keeps working regardless).
 
 Requires the **Message Content** privileged intent enabled in the Discord
 Developer Portal (see Setup section above) — without it, `+` commands never

@@ -10,6 +10,7 @@ import { loadEvents } from "./loaders/eventLoader.js";
 import { logger } from "./utils/logger.js";
 import { checkAndSendStreakReminders } from "./progression/streakReminderService.js";
 import { checkAndSendWeeklyRecaps } from "./progression/weeklyRecapService.js";
+import { checkAndSendAiBudgetAlerts } from "./credits/aiBudgetAlertService.js";
 
 /** Vérifie toutes les 15 minutes s'il faut poster la question du jour quelque part. */
 const DAILY_QUESTION_CHECK_INTERVAL_MS = 15 * 60 * 1000;
@@ -93,6 +94,9 @@ async function main() {
     });
     checkAndSendWeeklyRecaps(client).catch((error: unknown) => {
       logger.error({ err: error }, "Échec du check de récap hebdo");
+    });
+    checkAndSendAiBudgetAlerts(client).catch((error: unknown) => {
+      logger.error({ err: error }, "Échec du check d'alerte budget IA");
     });
   }, PROGRESSION_DM_CHECK_INTERVAL_MS);
 
