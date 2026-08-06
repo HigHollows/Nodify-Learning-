@@ -46,7 +46,7 @@ const envSchema = z.object({
   // Optionnel : sans clé, l'AIService (src/ai/aiService.ts) bascule
   // automatiquement sur un provider "stub" (réponses de démonstration,
   // aucun appel réseau) — voir src/ai/providers/. Priorité si plusieurs
-  // clés sont présentes : Anthropic > Groq > stub (voir aiService.ts).
+  // clés sont présentes : Groq > Gemini > Anthropic > stub (voir aiService.ts).
   ANTHROPIC_API_KEY: z.string().optional(),
   ANTHROPIC_MODEL: z.string().default("claude-sonnet-5"),
 

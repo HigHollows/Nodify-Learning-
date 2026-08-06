@@ -254,12 +254,13 @@ moyen, leçons validées, défis CTF résolus, cours le plus démarré.
 
 ## AIService (`src/ai/`)
 
-- **ModelRouter** minimal : un seul provider actif, choisi au démarrage
-  selon la config. Priorité : `GeminiProvider` (si `GEMINI_API_KEY`, provider
-  principal de Nodify) > `AnthropicProvider` (si `ANTHROPIC_API_KEY`) >
-  `GroqProvider` (si `GROQ_API_KEY`, modèles ouverts type Llama, inférence
-  très rapide) > `StubProvider` (par défaut, aucun appel réseau, réponses
-  clairement labellées "mode démonstration")
+- **ModelRouter** : instancie tous les providers configurés, priorité par
+  défaut `GroqProvider` (si `GROQ_API_KEY`, provider principal de Nodify —
+  modèles ouverts type Llama, inférence très rapide) > `GeminiProvider` (si
+  `GEMINI_API_KEY`) > `AnthropicProvider` (si `ANTHROPIC_API_KEY`) >
+  `StubProvider` (par défaut, aucun appel réseau, réponses clairement
+  labellées "mode démonstration") — une feature peut forcer un autre
+  provider via `AI_FEATURE_PROVIDER_OVERRIDES`
 - **Contrat unique** : `AIProvider.complete({system, user})` — chaque
   feature construit son propre prompt dans `aiService.ts` ; ajouter une
   feature n'oblige jamais à retoucher les providers

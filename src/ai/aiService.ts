@@ -35,7 +35,7 @@ if (env.GROQ_API_KEY) providerRegistry.set("groq", new GroqProvider(env.GROQ_API
 providerRegistry.set("stub", new StubProvider());
 
 /** Ordre de priorité par défaut quand une feature n'a pas d'override explicite. */
-const DEFAULT_PROVIDER_PRIORITY = ["gemini", "anthropic", "groq", "stub"];
+const DEFAULT_PROVIDER_PRIORITY = ["groq", "gemini", "anthropic", "stub"];
 
 function defaultProvider(): AIProvider {
   for (const name of DEFAULT_PROVIDER_PRIORITY) {
