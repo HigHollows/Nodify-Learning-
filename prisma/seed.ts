@@ -4573,6 +4573,249 @@ const COURSES: CourseSeed[] = [
       },
     ],
   },
+  {
+    key: "cloud-computing-fundamentals",
+    title: "Cloud Computing : les fondamentaux",
+    description: "IaaS, PaaS, SaaS, scaling et stockage — comprendre comment fonctionne réellement l'infrastructure « dans le cloud ».",
+    category: "CLOUD",
+    skillKey: "cloud-fundamentals",
+    level: 2,
+    lessons: [
+      {
+        order: 1,
+        title: "IaaS, PaaS, SaaS : trois niveaux d'abstraction",
+        content:
+          "Le cloud propose différents niveaux de responsabilité partagée entre le fournisseur et le client :\n\n" +
+          "- **IaaS** (Infrastructure as a Service) : le fournisseur gère le matériel physique, le client gère tout le reste (OS, runtime, application) — ex: une machine virtuelle louée.\n" +
+          "- **PaaS** (Platform as a Service) : le fournisseur gère aussi l'OS et le runtime, le client ne s'occupe que de son code applicatif — ex: déployer une app sans configurer de serveur.\n" +
+          "- **SaaS** (Software as a Service) : le fournisseur gère absolument tout, le client utilise juste un logiciel fini — ex: Gmail, Discord lui-même.\n\n" +
+          "Plus on monte dans l'abstraction (IaaS → PaaS → SaaS), moins on a de contrôle fin, mais moins on a aussi de responsabilité opérationnelle à gérer — un vrai compromis, pas un simple « mieux » ou « moins bien » absolu.",
+        xpReward: 20,
+        questions: [
+          {
+            order: 1,
+            prompt: "Dans le modèle PaaS, de quoi le client doit-il encore s'occuper lui-même ?",
+            choices: [
+              "De tout, y compris le matériel physique", "Uniquement de son code applicatif — le fournisseur gère l'OS et le runtime", "De rien du tout, comme en SaaS", "Uniquement de la sécurité réseau",
+            ],
+            correctIndex: 1,
+            explanation:
+              "PaaS abstrait l'infrastructure et le runtime — le client se concentre sur son code applicatif, sans avoir à configurer/maintenir un serveur ou un système d'exploitation sous-jacent.",
+          },
+          {
+            order: 2,
+            prompt: "Quel est le compromis en montant du IaaS vers le SaaS ?",
+            choices: [
+              "Aucun compromis, le SaaS est toujours strictement meilleur",
+              "Moins de contrôle fin sur l'infrastructure, mais moins de responsabilité opérationnelle à gérer soi-même",
+              "Le SaaS coûte toujours moins cher que le IaaS",
+              "Le SaaS ne fonctionne que pour des sites statiques",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Plus le fournisseur gère de couches (PaaS, puis SaaS), moins le client a de contrôle précis sur la configuration sous-jacente — en échange d'une charge opérationnelle bien réduite.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Scaling horizontal vs vertical",
+        content:
+          "Face à une augmentation de charge, deux stratégies existent : le **scaling vertical** (augmenter la puissance d'une seule machine — plus de CPU/RAM) et le **scaling horizontal** (ajouter davantage de machines qui se partagent la charge, via un load balancer).\n\n" +
+          "Le scaling vertical a une limite physique dure (il existe toujours une machine la plus puissante disponible) et un point de panne unique (si cette machine tombe, tout tombe). Le scaling horizontal n'a pas de limite matérielle fixe et offre une meilleure tolérance aux pannes (la perte d'une machine parmi plusieurs n'arrête pas tout le service) — mais nécessite une application conçue pour être **stateless** (sans état stocké localement sur une instance précise), sinon répartir le trafic entre plusieurs machines casse la cohérence des données.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quelle est la principale limite du scaling vertical (augmenter la puissance d'une seule machine) ?",
+            choices: [
+              "Il n'a aucune limite",
+              "Il a une limite matérielle physique dure, et représente un point de panne unique",
+              "Il coûte toujours plus cher que le scaling horizontal",
+              "Il ne fonctionne que pour les bases de données",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Il existe toujours une machine la plus puissante disponible sur le marché — au-delà, impossible de scaler davantage verticalement. Et si cette unique machine tombe, tout le service tombe avec elle.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi une application doit-elle être « stateless » pour bien profiter du scaling horizontal ?",
+            choices: [
+              "Ce n'est pas nécessaire, le scaling horizontal fonctionne peu importe l'état",
+              "Si l'état est stocké localement sur une seule instance, répartir le trafic entre plusieurs instances casse la cohérence des données selon quelle instance traite chaque requête",
+              "Le stateless ne concerne que la sécurité, pas le scaling",
+              "Une application stateless ne peut pas être scalée du tout",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Si une instance garde un état local (ex: une session utilisateur en mémoire), une requête suivante routée vers une AUTRE instance ne verrait pas cet état — le stateless (état externalisé dans une base/cache partagé) est nécessaire pour que n'importe quelle instance traite n'importe quelle requête indifféremment.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Stockage cloud : bien choisir le bon type",
+        content:
+          "Trois grandes familles de stockage cloud, à ne pas confondre :\n\n" +
+          "- **Object storage** (ex: S3) : fichiers indépendants accessibles par clé, hautement durable et scalable, idéal pour du contenu statique (images, backups) — mais pas conçu pour des écritures fréquentes et concurrentes sur le même fichier.\n" +
+          "- **Block storage** : un disque virtuel attaché à une machine, comme un disque dur classique — nécessaire pour une base de données qui a besoin d'écritures rapides et d'un système de fichiers traditionnel.\n" +
+          "- **Base de données managée** : le fournisseur gère l'installation, les sauvegardes, les mises à jour et souvent la réplication automatique — évite de réinventer l'administration système d'une base de données soi-même.\n\n" +
+          "Choisir le mauvais type de stockage pour le mauvais usage (ex: object storage pour une base de données qui a besoin d'écritures transactionnelles rapides) crée des problèmes de performance qu'aucune optimisation applicative ne peut compenser après coup.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi l'object storage n'est-il pas adapté à une base de données avec des écritures transactionnelles fréquentes ?",
+            choices: [
+              "L'object storage n'existe pas réellement",
+              "Il est conçu pour des fichiers indépendants accessibles par clé, pas pour des écritures concurrentes et fréquentes sur une même structure comme une base de données",
+              "L'object storage coûte toujours plus cher qu'une base de données",
+              "Il n'y a aucune différence réelle entre les deux",
+            ],
+            correctIndex: 1,
+            explanation:
+              "L'object storage excelle pour du contenu relativement statique accédé par clé unique — une base de données a besoin d'un accès bien plus fin et transactionnel, typiquement fourni par du block storage ou un service de base de données managée dédié.",
+          },
+          {
+            order: 2,
+            prompt: "Quel est l'avantage principal d'une base de données managée par rapport à l'installer et l'administrer soi-même sur une VM ?",
+            choices: [
+              "Elle est toujours gratuite",
+              "Le fournisseur gère l'installation, les sauvegardes, les mises à jour et souvent la réplication, évitant cette charge opérationnelle au client",
+              "Elle ne nécessite aucune configuration du tout",
+              "Elle est toujours plus rapide qu'une base auto-hébergée",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Administrer soi-même une base de données (patchs de sécurité, sauvegardes fiables, réplication, monitoring) est un travail conséquent — une base managée délègue cette charge opérationnelle au fournisseur cloud.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "backend-graphql-caching-queues",
+    title: "Backend avancé : GraphQL, Caching et Queues",
+    description: "Aller au-delà du REST classique : GraphQL pour des requêtes flexibles, le caching pour la performance, les queues pour le découplage.",
+    category: "DEVELOPMENT",
+    skillKey: "apis",
+    level: 4,
+    prerequisiteCourseKeys: ["backend-rest-auth"],
+    lessons: [
+      {
+        order: 1,
+        title: "GraphQL : requêtes sur mesure",
+        content:
+          "GraphQL est un langage de requête pour API où le **client** définit précisément quelles données il veut récupérer, en une seule requête — contrairement à REST où le serveur impose la structure de chaque endpoint.\n\n" +
+          "```graphql\nquery {\n  user(id: \"1\") {\n    nom\n    commandes(limit: 5) {\n      montant\n      date\n    }\n  }\n}\n```\n\n" +
+          "Cette requête récupère le nom de l'utilisateur ET ses 5 dernières commandes en un seul aller-retour réseau — en REST classique, ça nécessiterait souvent deux appels séparés (`/users/1` puis `/users/1/orders`), ou un endpoint sur mesure créé spécifiquement pour ce cas d'usage précis. Le prix à payer : un unique endpoint GraphQL est plus difficile à mettre en cache HTTP simplement (contrairement à une URL REST stable), et une requête mal contrôlée côté client peut demander des données arbitrairement coûteuses à calculer côté serveur.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quel avantage GraphQL offre-t-il par rapport à REST pour récupérer des données liées (utilisateur + ses commandes) ?",
+            choices: [
+              "Aucun avantage réel",
+              "Le client peut spécifier précisément les champs voulus des deux ressources liées en un seul aller-retour réseau",
+              "GraphQL ne fonctionne qu'avec des bases de données NoSQL",
+              "GraphQL élimine complètement le besoin d'un serveur",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Là où REST nécessiterait souvent plusieurs appels (ou un endpoint sur-mesure) pour assembler des données liées, GraphQL laisse le client composer sa requête exacte, avec les champs précis voulus, en un seul appel.",
+          },
+          {
+            order: 2,
+            prompt: "Quel est un inconvénient réel de GraphQL par rapport à REST ?",
+            choices: [
+              "GraphQL n'a aucun inconvénient",
+              "Le cache HTTP simple (basé sur l'URL) est moins direct à exploiter, et une requête client mal contrôlée peut demander un calcul serveur arbitrairement coûteux",
+              "GraphQL ne peut jamais gérer d'authentification",
+              "GraphQL est incompatible avec JSON",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un seul endpoint GraphQL (souvent `/graphql`) rend le cache HTTP par URL peu pertinent, et la flexibilité des requêtes côté client nécessite des protections spécifiques (limite de profondeur, coût de requête) contre des requêtes abusives.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Caching : accélérer sans recalculer",
+        content:
+          "Le **caching** stocke temporairement le résultat d'une opération coûteuse (requête base de données lente, appel API externe, calcul complexe) pour éviter de la refaire à chaque demande identique.\n\n" +
+          "Redis (base de données en mémoire clé-valeur) est très utilisé comme cache applicatif : `GET /produit/42` peut vérifier d'abord si le résultat existe déjà dans Redis avant de requêter la base de données — si présent (**cache hit**), réponse quasi-instantanée ; sinon (**cache miss**), on calcule puis on stocke le résultat en cache pour la prochaine fois.\n\n" +
+          "Le vrai défi du cache n'est pas de le mettre en place, mais de **l'invalider correctement** : si la donnée sous-jacente change (le produit 42 change de prix) sans invalider le cache correspondant, les utilisateurs voient une donnée périmée (**stale**) — d'où la citation célèbre « il n'y a que deux choses difficiles en informatique : l'invalidation de cache et nommer les choses ».",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que se passe-t-il lors d'un « cache hit » ?",
+            choices: [
+              "Le cache est vide et il faut recalculer la donnée",
+              "La donnée demandée est déjà présente dans le cache — réponse rapide sans recalcul",
+              "Une erreur survient",
+              "Le cache est automatiquement vidé",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un cache hit signifie que la donnée demandée est déjà disponible dans le cache — pas besoin de refaire le calcul/la requête coûteuse originale, d'où le gain de performance.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi l'invalidation de cache est-elle considérée comme un problème difficile ?",
+            choices: [
+              "Ce n'est pas vraiment difficile, juste ajouter un cache suffit",
+              "Si la donnée sous-jacente change sans que le cache correspondant soit mis à jour/supprimé, les utilisateurs reçoivent une donnée périmée sans le savoir",
+              "L'invalidation de cache ralentit toujours le système",
+              "Ça ne concerne que les caches Redis spécifiquement",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un cache mal invalidé sert une donnée obsolète (stale) de façon silencieuse — le défi est de savoir précisément quand et quoi invalider à chaque changement de donnée, sans sur-invalider (perdant le bénéfice du cache) ni sous-invalider (données périmées).",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Message queues : découpler pour scaler",
+        content:
+          "Une **message queue** (déjà vue conceptuellement dans le dictionnaire Nodify) permet à un service de déléguer une tâche à traiter plus tard, sans bloquer la réponse immédiate à l'utilisateur.\n\n" +
+          "```\nUtilisateur clique « Exporter en PDF »\n  → API répond immédiatement « Export en cours, tu recevras un lien »\n  → La vraie génération PDF (lente) est placée dans une queue\n  → Un worker séparé la traite en arrière-plan\n  → Notification envoyée une fois terminé\n```\n\n" +
+          "Ce découplage permet de scaler les workers indépendamment de l'API (ajouter plus de workers si la queue s'accumule, sans toucher à l'API elle-même), et améliore la résilience : si un worker crashe pendant le traitement, le message peut être remis en queue et retraité, plutôt que la tâche soit simplement perdue. Un défi à connaître : concevoir les traitements en **idempotents** (rejouer deux fois le même message ne doit pas causer d'effet de bord dupliqué, ex: facturer deux fois) — un message peut être livré plus d'une fois selon les garanties du système de queue utilisé.",
+        xpReward: 30,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quel est l'avantage principal de déléguer une tâche lente (génération PDF) à une message queue plutôt que de la traiter directement dans la requête HTTP ?",
+            choices: [
+              "Aucun avantage réel",
+              "L'utilisateur reçoit une réponse immédiate sans attendre la tâche lente, qui est traitée en arrière-plan par un worker séparé",
+              "Ça élimine complètement le besoin de traiter la tâche",
+              "Ça rend la tâche instantanée",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Sans queue, l'utilisateur attendrait que toute la génération PDF se termine avant de recevoir une réponse — la queue permet de répondre immédiatement et de traiter la tâche lente de façon découplée en arrière-plan.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi un traitement déclenché par une message queue doit-il être conçu pour être « idempotent » ?",
+            choices: [
+              "Ce n'est jamais nécessaire",
+              "Un message peut être livré plus d'une fois selon les garanties du système de queue — rejouer le même traitement deux fois ne doit pas causer d'effet de bord dupliqué (ex: facturer deux fois)",
+              "L'idempotence ne concerne que les requêtes GET",
+              "Ça rend le traitement plus lent intentionnellement",
+            ],
+            correctIndex: 1,
+            explanation:
+              "De nombreux systèmes de queue garantissent une livraison « au moins une fois » (pas « exactement une fois ») — un traitement non idempotent rejoué accidentellement deux fois peut causer un effet de bord dupliqué non désiré, d'où l'importance de concevoir pour supporter un rejeu sans danger.",
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 /**
@@ -6322,6 +6565,54 @@ const DAILY_QUESTIONS: DailyQuestionSeed[] = [
     correctIndex: 1,
     explanation: "Un monorepo facilite le partage de code et les changements coordonnés entre projets liés, au prix d'une taille de dépôt plus importante ; le polyrepo isole complètement chaque projet, au prix d'une coordination plus difficile entre projets dépendants.",
   },
+  {
+    key: "cloud-iaas-paas-saas",
+    category: "CLOUD",
+    prompt: "Dans quel modèle cloud le fournisseur gère-t-il uniquement le matériel physique, laissant le client gérer l'OS, le runtime et l'application ?",
+    choices: ["SaaS", "PaaS", "IaaS", "FaaS"],
+    correctIndex: 2,
+    explanation: "IaaS (Infrastructure as a Service) délègue au client la gestion de tout ce qui tourne au-dessus du matériel physique — le niveau d'abstraction le plus bas parmi les trois modèles classiques.",
+  },
+  {
+    key: "cache-invalidation-difficulty",
+    category: "DEVELOPMENT",
+    prompt: "Selon une citation célèbre en informatique, quelles sont les deux choses les plus difficiles avec le cache ?",
+    choices: ["Le stocker et le supprimer", "L'invalider correctement et nommer les choses", "L'installer et le configurer", "Le chiffrer et le compresser"],
+    correctIndex: 1,
+    explanation: "« Il n'y a que deux choses difficiles en informatique : l'invalidation de cache et nommer les choses » (souvent attribuée à Phil Karlton) — savoir QUAND une donnée en cache est devenue obsolète reste un vrai défi de conception.",
+  },
+  {
+    key: "queue-idempotency-need",
+    category: "DEVELOPMENT",
+    prompt: "Pourquoi un traitement déclenché par une message queue doit-il généralement être idempotent ?",
+    choices: ["Ce n'est jamais nécessaire", "Car un message peut être livré plus d'une fois selon les garanties du système de queue, et rejouer le traitement ne doit pas causer d'effet de bord dupliqué", "Pour rendre le traitement plus lent", "Car les queues ne supportent qu'un seul message à la fois"],
+    correctIndex: 1,
+    explanation: "La plupart des systèmes de queue garantissent une livraison 'au moins une fois', pas 'exactement une fois' — un traitement non idempotent rejoué accidentellement peut dupliquer un effet de bord (ex: facturer deux fois).",
+  },
+  {
+    key: "arp-protocol-purpose",
+    category: "NETWORKING",
+    prompt: "À quoi sert le protocole ARP (Address Resolution Protocol) ?",
+    choices: ["Chiffrer le trafic réseau", "Associer une adresse IP à l'adresse MAC physique correspondante sur un réseau local", "Traduire un nom de domaine en adresse IP", "Router le trafic entre réseaux différents"],
+    correctIndex: 1,
+    explanation: "ARP fait le lien entre la couche réseau (IP) et la couche liaison (MAC) sur un réseau local — c'est ce mécanisme que l'attaque ARP spoofing détourne en envoyant de fausses réponses ARP.",
+  },
+  {
+    key: "graphql-single-endpoint",
+    category: "DEVELOPMENT",
+    prompt: "Combien d'endpoints une API GraphQL expose-t-elle typiquement, contrairement à une API REST qui en a un par ressource ?",
+    choices: ["Un seul endpoint unique (souvent `/graphql`)", "Autant que de tables en base de données", "Un endpoint par utilisateur", "GraphQL n'utilise pas d'endpoints HTTP"],
+    correctIndex: 0,
+    explanation: "Contrairement à REST où chaque ressource a généralement son URL propre, GraphQL expose typiquement un seul endpoint — c'est le corps de la requête qui détermine précisément quelles données sont demandées.",
+  },
+  {
+    key: "vertical-vs-horizontal-scaling",
+    category: "CLOUD",
+    prompt: "Quelle est la principale limite du scaling vertical par rapport au scaling horizontal ?",
+    choices: ["Il coûte toujours plus cher", "Il a une limite matérielle physique dure et représente un point de panne unique", "Il ne fonctionne pas dans le cloud", "Il est incompatible avec les bases de données"],
+    correctIndex: 1,
+    explanation: "Le scaling vertical (augmenter la puissance d'une seule machine) est plafonné par la machine la plus puissante disponible et concentre tout le risque sur une seule instance — le scaling horizontal évite ces deux limites.",
+  },
 ];
 
 /**
@@ -6650,9 +6941,42 @@ const CTF_CHALLENGES: CtfChallengeSeed[] = [
     description:
       "Un binaire contient la chaîne suivante codée en dur : `Ym05a2FXWjU=`.\n\n" +
       "Cette chaîne est encodée en Base64 — mais une fois décodée une première fois, le résultat obtenu ressemble encore à du Base64. Décode-la deux fois de suite pour obtenir le flag final (un seul mot).",
-    hint: "Décode `VG05a2FXWjU=` une première fois en Base64, puis décode le résultat obtenu une seconde fois de la même façon.",
+    hint: "Décode `Ym05a2FXWjU=` une première fois en Base64, puis décode le résultat obtenu une seconde fois de la même façon.",
     points: 100,
     acceptedAnswers: ["nodify"],
+  },
+  {
+    key: "linux-find-suid-binaries",
+    category: "LINUX",
+    difficulty: 3,
+    title: "Chasse aux binaires SUID",
+    description:
+      "Sur un système compromis, la commande `find / -perm -4000 -type f 2>/dev/null` liste tous les binaires ayant un bit spécial actif — lequel exactement (2 mots en anglais, ou son sigle) ?",
+    hint: "`4000` en octal correspond précisément au bit spécial vu dans le cours Linux avancé de l'Academy, celui qui fait exécuter un binaire avec les privilèges de son propriétaire.",
+    points: 100,
+    acceptedAnswers: ["setuid", "suid", "set user id"],
+  },
+  {
+    key: "network-arp-spoofing",
+    category: "NETWORK",
+    difficulty: 3,
+    title: "Table ARP corrompue",
+    description:
+      "Sur un réseau local, un attaquant envoie de fausses réponses ARP pour associer sa propre adresse MAC à l'adresse IP de la passerelle par défaut, interceptant ainsi tout le trafic destiné à internet avant de le relayer. Comment s'appelle cette technique (2 mots, en anglais) ?",
+    hint: "Le nom de l'attaque combine directement le protocole ciblé (ARP) et l'action de falsifier une association adresse-IP.",
+    points: 100,
+    acceptedAnswers: ["arp spoofing", "arp poisoning"],
+  },
+  {
+    key: "forensics-timestamp-analysis",
+    category: "FORENSICS",
+    difficulty: 2,
+    title: "L'horodatage qui trahit",
+    description:
+      "Un fichier `rapport_final.docx` a une date de « dernière modification » antérieure à sa date de « création » selon les métadonnées du système de fichiers. Que cela suggère-t-il le plus probablement (2 mots en français) ?",
+    hint: "Pense à ce qui se passe quand un fichier est copié d'un endroit à un autre — certains systèmes de fichiers gèrent différemment la date de création lors d'une copie.",
+    points: 75,
+    acceptedAnswers: ["fichier copie", "fichier déplacé", "copie de fichier", "fichier deplace"],
   },
 ];
 
