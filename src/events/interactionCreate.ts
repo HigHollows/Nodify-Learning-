@@ -78,6 +78,8 @@ import {
   parseExerciseAnswerButtonId,
   parseExerciseSubmitButtonId,
 } from "../practice/exerciseView.js";
+import { handleGuideDmButton } from "../interactions/guideInteractions.js";
+import { GUIDE_DM_BUTTON_ID } from "../community/guideView.js";
 import { recordActivity } from "../services/userService.js";
 import type { Event } from "../types/event.js";
 import { AIUnavailableError, AppError, InsufficientCreditsError } from "../utils/errors.js";
@@ -292,6 +294,11 @@ const event: Event<"interactionCreate"> = {
         await runWithGuards(interaction, interaction.customId, () =>
           handleExerciseSubmitButton(interaction, exerciseSubmitKey),
         );
+        return;
+      }
+
+      if (interaction.customId === GUIDE_DM_BUTTON_ID) {
+        await runWithGuards(interaction, interaction.customId, () => handleGuideDmButton(interaction));
         return;
       }
 

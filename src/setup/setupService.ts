@@ -8,6 +8,7 @@ import {
 } from "../database/repositories/guildRepository.js";
 import { AppError } from "../utils/errors.js";
 import { childLogger } from "../utils/logger.js";
+import { buildGuidePublicPost } from "../community/guideView.js";
 import {
   HUB_CATEGORY,
   LEVEL_ROLES,
@@ -120,6 +121,16 @@ async function reconcileHub(
     updated[chanDef.key] = channel.id;
     results.push({ label: `#${chanDef.name}`, status: knownId ? "recovered" : "created" });
     log.info({ guildId: guild.id, channel: chanDef.name }, "Salon hub créé/réparé");
+
+    if (chanDef.key === HUB_CATEGORY.channels[0]!.key) {
+      // Salon fraîchement créé (ou récupéré après suppression) : jamais de
+      // message de guide dedans encore — on le poste une fois, ici. Ne
+      // s'exécute PAS aux relances normales de /setup (idempotentes) où le
+      // salon existe déjà (`existing` ci-dessus, on aurait déjà `continue`).
+      await channel.send(buildGuidePublicPost()).catch((err: unknown) => {
+        log.warn({ err, guildId: guild.id }, "Échec de l'envoi du message de guide dans le salon hub");
+      });
+    }
   }
 
   return { results, updated };

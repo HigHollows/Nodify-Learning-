@@ -45,7 +45,7 @@ const CATEGORIES: { title: string; commands: string[] }[] = [
   },
   {
     title: "🌐 Communauté",
-    commands: ["/trivia", "/news"],
+    commands: ["/trivia", "/news", "/guide"],
   },
   {
     title: "💳 Crédits & Récompenses",
