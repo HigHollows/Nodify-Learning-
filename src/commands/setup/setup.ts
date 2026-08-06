@@ -46,7 +46,7 @@ const command: Command = {
           fieldText("Salons", formatResults(report.channels)),
         ].join("\n\n"),
       ),
-      textDisplay("-# 🆕 créé · ♻️ réparé (avait été supprimé) · ✅ déjà en place"),
+      textDisplay("-# 🆕 créé · ♻️ réparé ou retrouvé (déjà présent mais pas suivi) · ✅ déjà en place"),
     );
 
     await interaction.editReply(containerPayload(container));

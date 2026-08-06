@@ -48,6 +48,12 @@ function assertBotHasPermissions(guild: Guild): void {
 /**
  * Fait converger les rôles de niveau vers leur définition attendue.
  * Idempotent : un rôle déjà présent (id connu ET toujours existant) n'est pas retouché.
+ *
+ * Avant de créer quoi que ce soit, on cherche aussi par NOM parmi les rôles
+ * déjà présents sur le serveur — pas seulement par l'id connu en base. Sans
+ * ce repli, un id perdu (ligne DB réinitialisée, ancienne installation...)
+ * faisait créer un doublon du rôle alors qu'un rôle au même nom existait
+ * déjà sur le serveur, jamais reconnu comme tel.
  */
 async function reconcileLevelRoles(
   guild: Guild,
@@ -62,6 +68,14 @@ async function reconcileLevelRoles(
 
     if (existing) {
       results.push({ label: def.name, status: "already_ok" });
+      continue;
+    }
+
+    const foundByName = guild.roles.cache.find((r) => r.name === def.name);
+    if (foundByName) {
+      updated[def.key] = foundByName.id;
+      results.push({ label: def.name, status: "recovered" });
+      log.info({ guildId: guild.id, role: def.name }, "Rôle de niveau retrouvé par nom (id non suivi/perdu) — pas de doublon créé");
       continue;
     }
 
@@ -80,7 +94,15 @@ async function reconcileLevelRoles(
   return { results, updated };
 }
 
-/** Fait converger la catégorie + les salons du hub Nodify. */
+/**
+ * Fait converger la catégorie + les salons du hub Nodify.
+ *
+ * Même repli par nom que `reconcileLevelRoles` (voir son commentaire) :
+ * avant de créer, on cherche aussi une catégorie/un salon déjà présent avec
+ * le nom attendu, pas seulement l'id connu en base — évite de dupliquer la
+ * catégorie/le salon quand l'id suivi a été perdu alors que la ressource
+ * existe toujours sur le serveur.
+ */
 async function reconcileHub(
   guild: Guild,
   knownChannelIds: ManagedResourceMap,
@@ -92,12 +114,25 @@ async function reconcileHub(
   let category = knownCategoryId ? guild.channels.cache.get(knownCategoryId) : undefined;
 
   if (!category) {
+    category = guild.channels.cache.find(
+      (c) => c.type === ChannelType.GuildCategory && c.name === HUB_CATEGORY.name,
+    );
+
+    if (category) {
+      updated[HUB_CATEGORY.key] = category.id;
+      log.info({ guildId: guild.id }, "Catégorie hub retrouvée par nom (id non suivi/perdu) — pas de doublon créé");
+    }
+  }
+
+  let categoryJustCreated = false;
+  if (!category) {
     category = await guild.channels.create({
       name: HUB_CATEGORY.name,
       type: ChannelType.GuildCategory,
       reason: "Nodify /setup — catégorie hub",
     });
     updated[HUB_CATEGORY.key] = category.id;
+    categoryJustCreated = true;
     log.info({ guildId: guild.id }, "Catégorie hub créée/réparée");
   }
 
@@ -107,6 +142,21 @@ async function reconcileHub(
 
     if (existing) {
       results.push({ label: `#${chanDef.name}`, status: "already_ok" });
+      continue;
+    }
+
+    // Cherche uniquement dans la catégorie hub (pas n'importe où sur le
+    // serveur) — un salon au même nom ailleurs n'est pas "le" salon Nodify.
+    const foundByName = categoryJustCreated
+      ? undefined
+      : guild.channels.cache.find(
+          (c) => c.type === ChannelType.GuildText && c.parentId === category!.id && c.name === chanDef.name,
+        );
+
+    if (foundByName) {
+      updated[chanDef.key] = foundByName.id;
+      results.push({ label: `#${chanDef.name}`, status: "recovered" });
+      log.info({ guildId: guild.id, channel: chanDef.name }, "Salon hub retrouvé par nom (id non suivi/perdu) — pas de doublon créé");
       continue;
     }
 
@@ -123,10 +173,11 @@ async function reconcileHub(
     log.info({ guildId: guild.id, channel: chanDef.name }, "Salon hub créé/réparé");
 
     if (chanDef.key === HUB_CATEGORY.channels[0]!.key) {
-      // Salon fraîchement créé (ou récupéré après suppression) : jamais de
-      // message de guide dedans encore — on le poste une fois, ici. Ne
-      // s'exécute PAS aux relances normales de /setup (idempotentes) où le
-      // salon existe déjà (`existing` ci-dessus, on aurait déjà `continue`).
+      // Salon vraiment neuf (jamais existé, ni par id ni par nom) : jamais
+      // de message de guide dedans encore — on le poste une fois, ici. Ne
+      // s'exécute ni aux relances normales de /setup (`existing` plus haut),
+      // ni en cas de récupération par id/nom (channel déjà là, contenu
+      // potentiellement déjà présent — on ne le re-spamme pas).
       await channel.send(buildGuidePublicPost()).catch((err: unknown) => {
         log.warn({ err, guildId: guild.id }, "Échec de l'envoi du message de guide dans le salon hub");
       });
