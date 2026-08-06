@@ -1048,7 +1048,7 @@ const CONCEPTS: ConceptSeed[] = [
     explanationAdvanced:
       "On distingue l'élévation verticale (obtenir un niveau de privilège supérieur, ex: user → root) de l'élévation horizontale (accéder aux ressources d'un autre utilisateur de même niveau). Les vecteurs classiques incluent des permissions de fichiers mal configurées, des services tournant avec des privilèges excessifs, ou des vulnérabilités logicielles non corrigées — le principe du moindre privilège est la contre-mesure structurelle principale.",
     docUrl: "https://owasp.org/www-community/attacks/Privilege_escalation",
-    relatedKeys: ["least-privilege-principle", "attack-surface"],
+    relatedKeys: ["least-privilege", "attack-surface"],
     prerequisiteKeys: [],
     aliases: ["elevation de privileges"],
   },
@@ -1096,7 +1096,7 @@ const CONCEPTS: ConceptSeed[] = [
     explanationAdvanced:
       "RBAC s'oppose à l'ABAC (Attribute-Based Access Control), plus flexible car basé sur des attributs contextuels (heure, localisation, département) plutôt que sur des rôles fixes, mais plus complexe à raisonner et auditer. RBAC reste le modèle par défaut recommandé pour la majorité des cas grâce à sa simplicité — il s'aligne naturellement avec le principe du moindre privilège quand les rôles sont bien découpés.",
     docUrl: "https://en.wikipedia.org/wiki/Role-based_access_control",
-    relatedKeys: ["least-privilege-principle"],
+    relatedKeys: ["least-privilege"],
     prerequisiteKeys: [],
     aliases: ["role based access control", "controle d'acces base sur les roles"],
   },
@@ -1112,7 +1112,7 @@ const CONCEPTS: ConceptSeed[] = [
     explanationAdvanced:
       "Le hashing diffère du chiffrement (réversible avec la bonne clé) : un hash n'est jamais censé être « dé-hashé ». Pour les mots de passe spécifiquement, des algorithmes lents et adaptatifs (bcrypt, Argon2, scrypt) sont préférés à des hash rapides génériques (SHA-256, MD5) précisément parce que leur lenteur intentionnelle ralentit une attaque par force brute — un hash rapide facilite au contraire les attaques massives. Le salage (salting) empêche l'utilisation de tables précalculées (rainbow tables).",
     docUrl: "https://owasp.org/www-community/Password_Storage_Cheat_Sheet",
-    relatedKeys: ["salting-purpose", "brute-force-attack"],
+    relatedKeys: ["salting"],
     prerequisiteKeys: [],
     aliases: ["hachage"],
   },
@@ -1416,7 +1416,7 @@ const CONCEPTS: ConceptSeed[] = [
     explanationAdvanced:
       "Plusieurs algorithmes existent : token bucket (un « seau » de jetons se remplit à débit constant, chaque requête consomme un jeton, autorisant des pics courts tant que le seau n'est pas vide), sliding window (compte les requêtes sur une fenêtre glissante plus précise qu'une fenêtre fixe qui peut être contournée à la frontière de deux fenêtres). Le rate limiting est aussi une défense de base contre le brute force (limiter les tentatives de connexion) et certaines formes de DDoS applicatif.",
     docUrl: "https://cloud.google.com/architecture/rate-limiting-strategies-techniques",
-    relatedKeys: ["ddos", "brute-force-attack"],
+    relatedKeys: ["ddos"],
     prerequisiteKeys: [],
     aliases: ["limitation de debit"],
   },
@@ -1451,6 +1451,86 @@ const CONCEPTS: ConceptSeed[] = [
     relatedKeys: ["message-queue", "load-balancer"],
     prerequisiteKeys: [],
     aliases: [],
+  },
+  {
+    key: "prototype-pollution",
+    name: "Prototype Pollution",
+    category: "CYBERSECURITY",
+    level: 4,
+    definition:
+      "Une vulnérabilité spécifique à JavaScript où un attaquant modifie `Object.prototype` (souvent via une fusion d'objets mal sécurisée), affectant potentiellement tous les objets du programme.",
+    explanationBeginner:
+      "Tous les objets JavaScript héritent implicitement de `Object.prototype` — si une fonction de fusion d'objets accepte sans filtrage une clé spéciale comme `__proto__` venant d'une entrée utilisateur, elle peut modifier ce prototype partagé, changeant le comportement de TOUS les objets du programme, pas seulement celui manipulé.",
+    explanationAdvanced:
+      "L'exploitation typique passe par des bibliothèques de fusion/clone d'objets récursives (`merge`, `extend`, `_.merge` de versions anciennes de lodash) qui ne filtrent pas les clés dangereuses (`__proto__`, `constructor.prototype`) lors d'une fusion récursive d'un objet contrôlé par l'attaquant. Défense : valider/filtrer explicitement ces clés, utiliser `Object.create(null)` pour des objets sans prototype quand c'est pertinent, ou `Object.freeze(Object.prototype)` en dernier recours.",
+    docUrl: "https://portswigger.net/web-security/prototype-pollution",
+    relatedKeys: ["xss"],
+    prerequisiteKeys: [],
+    aliases: ["pollution de prototype"],
+  },
+  {
+    key: "supply-chain-attack",
+    name: "Supply Chain Attack",
+    category: "CYBERSECURITY",
+    level: 4,
+    definition:
+      "Une attaque qui compromet un composant tiers de confiance (dépendance logicielle, mise à jour, outil de build) plutôt que la cible finale directement, pour toucher tous ceux qui utilisent ce composant.",
+    explanationBeginner:
+      "Plutôt que d'attaquer directement une entreprise bien sécurisée, un attaquant compromet une dépendance qu'elle utilise (un paquet npm/pip populaire, ou l'outil de build lui-même) — l'attaque se propage ensuite automatiquement à tous les projets qui installent cette dépendance compromise, souvent sans qu'ils s'en rendent compte immédiatement.",
+    explanationAdvanced:
+      "Les vecteurs incluent : un mainteneur de paquet dont le compte est compromis (publication d'une version malveillante sous une identité légitime), le typosquatting (publier un paquet au nom très proche d'un paquet populaire, en espérant une faute de frappe à l'installation), ou un script `postinstall` malveillant exécuté automatiquement lors de `npm install`. Des outils comme `npm audit`, la vérification des hashs de paquets (lockfile), et la limitation des permissions d'exécution de scripts d'installation réduisent ce risque sans l'éliminer complètement.",
+    docUrl: "https://owasp.org/www-community/Supply_Chain_Attack",
+    relatedKeys: ["attack-surface"],
+    prerequisiteKeys: [],
+    aliases: ["attaque de la chaine d'approvisionnement"],
+  },
+  {
+    key: "least-privilege",
+    name: "Principe du moindre privilège",
+    category: "CYBERSECURITY",
+    level: 2,
+    definition:
+      "Un principe de sécurité fondamental : chaque compte, service ou processus ne doit disposer que des accès strictement nécessaires à sa fonction, jamais plus.",
+    explanationBeginner:
+      "Un compte de service qui n'a besoin que de lire une base de données ne devrait jamais avoir un accès en écriture ou en suppression — si ce compte est compromis, les dégâts possibles restent limités à ce qu'il pouvait déjà faire, pas à tout ce que le système permet techniquement.",
+    explanationAdvanced:
+      "Ce principe s'applique à tous les niveaux : permissions de fichiers (un processus web ne devrait jamais tourner en tant que root), accès base de données (un compte applicatif n'a généralement pas besoin de `DROP TABLE`), et permissions cloud/IAM (un rôle de service ne devrait avoir accès qu'aux ressources précises qu'il manipule réellement). Le moindre privilège réduit directement l'ampleur des dégâts possibles en cas de compromission — c'est un principe de conception, pas juste une bonne pratique optionnelle.",
+    docUrl: "https://en.wikipedia.org/wiki/Principle_of_least_privilege",
+    relatedKeys: ["rbac", "privilege-escalation"],
+    prerequisiteKeys: [],
+    aliases: ["moindre privilege", "least privilege"],
+  },
+  {
+    key: "salting",
+    name: "Salage (Salting)",
+    category: "CYBERSECURITY",
+    level: 3,
+    definition:
+      "L'ajout d'une valeur aléatoire unique (le sel) à chaque mot de passe avant son hashage, pour empêcher l'utilisation de tables précalculées et garantir que deux mots de passe identiques produisent des hashs différents.",
+    explanationBeginner:
+      "Sans sel, deux utilisateurs avec le même mot de passe auraient exactement le même hash stocké — visible à quiconque a accès à la base de données. Le sel (différent pour chaque utilisateur, stocké à côté du hash) garantit que même des mots de passe identiques produisent des hashs différents.",
+    explanationAdvanced:
+      "Le sel protège principalement contre les rainbow tables (tables précalculées de hash pour des mots de passe courants) : sans sel, un attaquant peut précalculer une fois pour toutes les hashs de millions de mots de passe communs et les comparer instantanément à une base volée. Avec un sel unique par utilisateur, cette précalculation devient inutile — il faudrait recalculer une table entière pour chaque sel différent, rendant l'attaque impraticable à grande échelle.",
+    docUrl: "https://owasp.org/www-community/Password_Storage_Cheat_Sheet",
+    relatedKeys: ["hashing"],
+    prerequisiteKeys: ["hashing"],
+    aliases: ["salting", "sel cryptographique"],
+  },
+  {
+    key: "social-engineering",
+    name: "Ingénierie sociale",
+    category: "CYBERSECURITY",
+    level: 1,
+    definition:
+      "L'ensemble des techniques qui exploitent la psychologie humaine (confiance, autorité, urgence, curiosité) plutôt qu'une faille technique, pour manipuler une personne à révéler une information ou effectuer une action non désirée.",
+    explanationBeginner:
+      "Même le système technique le plus sécurisé reste vulnérable si un attaquant peut convaincre une personne de lui ouvrir la porte directement — l'ingénierie sociale cible le maillon humain plutôt qu'une faille de code.",
+    explanationAdvanced:
+      "Le phishing est la forme la plus répandue d'ingénierie sociale, mais elle prend aussi d'autres formes : le prétexting (inventer un scénario crédible pour obtenir une information), le tailgating (suivre quelqu'un à travers un accès physique sécurisé sans badge), ou le baiting (laisser un appareil piégé à trouver). Aucune formation ne rend une organisation totalement immunisée — des contrôles techniques complémentaires (MFA, vérification par canal indépendant) restent nécessaires en défense en profondeur.",
+    docUrl: "https://www.cisa.gov/topics/cyber-threats-and-advisories/phishing",
+    relatedKeys: ["phishing"],
+    prerequisiteKeys: [],
+    aliases: ["social engineering", "ingenierie sociale"],
   },
 ];
 
@@ -4243,6 +4323,251 @@ const COURSES: CourseSeed[] = [
             correctIndex: 1,
             explanation:
               "Une alerte qui ne mène à aucune action concrète possible n'est que du bruit — elle finit ignorée, exactement comme des règles de détection trop sensibles dans un SIEM, créant une fatigue d'alerte dangereuse.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "python-data-automation",
+    title: "Python : Data Processing et Automatisation",
+    description: "Manipuler des données réelles (CSV, JSON), automatiser des tâches répétitives et consommer des APIs externes avec Python.",
+    category: "DEVELOPMENT",
+    skillKey: "python",
+    level: 2,
+    prerequisiteCourseKeys: ["python-oop-modules"],
+    lessons: [
+      {
+        order: 1,
+        title: "Lire et transformer des données (CSV, JSON)",
+        content:
+          "Python inclut nativement des modules pour manipuler les formats de données les plus courants, sans dépendance externe.\n\n" +
+          "```python\nimport csv\nimport json\n\nwith open('users.csv') as f:\n    reader = csv.DictReader(f)\n    utilisateurs = [row for row in reader]  # liste de dict, une par ligne\n\nwith open('config.json') as f:\n    config = json.load(f)  # dict Python à partir du JSON\n```\n\n" +
+          "Le mot-clé `with` (context manager) garantit que le fichier est fermé automatiquement à la fin du bloc, même en cas d'exception — équivalent à un `try/finally` implicite. `csv.DictReader` transforme chaque ligne en dictionnaire indexé par les en-têtes de colonne, bien plus lisible que d'accéder aux colonnes par index numérique.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi utiliser `with open(...) as f:` plutôt que `f = open(...)` seul ?",
+            choices: [
+              "Ça n'a aucune différence pratique",
+              "`with` garantit que le fichier est fermé automatiquement à la fin du bloc, même si une exception survient pendant sa lecture",
+              "`with` est requis pour lire des fichiers JSON uniquement",
+              "`with` rend la lecture du fichier plus rapide",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Sans `with`, oublier d'appeler `f.close()` (ou une exception qui saute cet appel) laisse le fichier ouvert — le context manager `with` garantit la fermeture automatique dans tous les cas, y compris en cas d'erreur.",
+          },
+          {
+            order: 2,
+            prompt: "Que retourne `csv.DictReader` pour chaque ligne du CSV ?",
+            choices: [
+              "Une simple liste de valeurs sans nom de colonne",
+              "Un dictionnaire où chaque clé est le nom de la colonne (tiré de l'en-tête) et la valeur celle de la ligne",
+              "Une chaîne de caractères brute",
+              "Un objet JSON",
+            ],
+            correctIndex: 1,
+            explanation:
+              "`DictReader` utilise la première ligne du CSV comme en-têtes de colonnes, et transforme chaque ligne suivante en dictionnaire `{colonne: valeur}` — bien plus lisible que `csv.reader` qui retourne de simples listes indexées.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Automatiser une tâche répétitive",
+        content:
+          "Un bon candidat à l'automatisation Python : une tâche manuelle, répétitive, avec des règles claires (renommer des fichiers selon un pattern, envoyer un rapport hebdomadaire, nettoyer un dossier de téléchargements).\n\n" +
+          "```python\nimport os\nfrom pathlib import Path\n\ndossier = Path('./downloads')\nfor fichier in dossier.glob('*.tmp'):\n    fichier.unlink()  # supprime le fichier\nprint(f\"{len(list(dossier.glob('*.tmp')))} fichiers .tmp restants\")\n```\n\n" +
+          "`pathlib.Path` est l'API moderne recommandée pour manipuler des chemins de fichiers (préférée à l'ancien module `os.path`) — orientée objet et plus lisible : `Path('./downloads') / 'sous-dossier' / 'fichier.txt'` construit un chemin correctement peu importe le système d'exploitation (Windows utilise `\\`, Linux/macOS `/`), sans jamais concaténer de chaînes manuellement.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi `pathlib.Path` est-il préféré à la concaténation manuelle de chaînes pour construire un chemin de fichier ?",
+            choices: [
+              "Il n'y a aucun avantage réel",
+              "Il gère automatiquement les différences de séparateur de chemin entre systèmes d'exploitation (`/` vs `\\`), évitant des bugs de portabilité",
+              "Il ne fonctionne que sur Linux",
+              "Il est plus lent mais plus sûr",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Concaténer des chaînes manuellement (`dossier + '/' + fichier`) casse sur Windows où le séparateur est `\\` — `Path` gère cette différence automatiquement et de façon portable.",
+          },
+          {
+            order: 2,
+            prompt: "Quel type de tâche est un bon candidat à l'automatisation par script ?",
+            choices: [
+              "Une tâche créative nécessitant un jugement humain à chaque fois",
+              "Une tâche manuelle, répétitive, avec des règles claires et prévisibles",
+              "Une tâche qui ne se produit qu'une seule fois dans toute l'histoire du projet",
+              "Uniquement des tâches liées à la sécurité",
+            ],
+            correctIndex: 1,
+            explanation:
+              "L'automatisation a le plus de valeur sur des tâches répétitives aux règles claires — le temps investi à écrire le script se rentabilise à chaque exécution future, contrairement à une tâche ponctuelle ou nécessitant un vrai jugement humain variable.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Consommer une API externe",
+        content:
+          "La bibliothèque `requests` (la plus utilisée en Python pour faire des appels HTTP, bien que non incluse par défaut — `pip install requests`) simplifie grandement la consommation d'une API REST.\n\n" +
+          "```python\nimport requests\n\nreponse = requests.get('https://api.example.com/users/1')\nif reponse.status_code == 200:\n    utilisateur = reponse.json()\n    print(utilisateur['nom'])\nelse:\n    print(f\"Erreur : {reponse.status_code}\")\n```\n\n" +
+          "Toujours vérifier `status_code` (ou utiliser `reponse.raise_for_status()` qui lève une exception automatiquement sur un code d'erreur) avant de traiter la réponse comme un succès — une API peut échouer (timeout, 404, 500) et il ne faut jamais supposer que `.json()` contient des données valides sans avoir vérifié le statut au préalable. Pour l'authentification, la clé API se passe généralement dans les en-têtes (`headers={'Authorization': 'Bearer ...'}`), jamais codée en dur dans le script — utiliser une variable d'environnement à la place.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi vérifier `status_code` avant de traiter `reponse.json()` comme fiable ?",
+            choices: [
+              "Ce n'est jamais nécessaire, `requests` gère toujours les erreurs automatiquement",
+              "Une requête peut échouer (404, 500, timeout) — traiter la réponse comme un succès sans vérifier risque de traiter une erreur comme si c'était des données valides",
+              "`status_code` n'a aucun rapport avec la fiabilité de la réponse",
+              "`.json()` échoue toujours silencieusement en cas d'erreur",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un code d'erreur (404, 500...) peut quand même avoir un corps de réponse parsable en JSON (un message d'erreur structuré) — sans vérifier le statut, le code pourrait traiter ce message d'erreur comme des données utilisateur valides.",
+          },
+          {
+            order: 2,
+            prompt: "Où doit-on stocker une clé API utilisée dans un script Python, plutôt que de l'écrire en dur dans le code ?",
+            choices: [
+              "Directement dans le code source, c'est plus simple",
+              "Dans une variable d'environnement, jamais committée dans le code source versionné",
+              "Dans un commentaire visible pour rappel",
+              "Dans le nom du fichier",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Une clé codée en dur finit inévitablement committée dans l'historique Git, potentiellement exposée publiquement — une variable d'environnement garde le secret hors du code source, jamais versionné.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "js-testing-security",
+    title: "JavaScript : Testing et Sécurité",
+    description: "Écrire des tests unitaires solides et connaître les pièges de sécurité les plus fréquents spécifiques à l'écosystème JavaScript.",
+    category: "DEVELOPMENT",
+    skillKey: "javascript",
+    level: 3,
+    prerequisiteCourseKeys: ["js-oop-prototypes"],
+    lessons: [
+      {
+        order: 1,
+        title: "Écrire un bon test unitaire",
+        content:
+          "Un test unitaire vérifie le comportement d'une unité de code isolée (souvent une fonction), indépendamment du reste du système. La structure **Arrange-Act-Assert** aide à garder des tests lisibles :\n\n" +
+          "```js\ntest('addition de deux nombres positifs', () => {\n  // Arrange : préparer les données\n  const a = 2, b = 3;\n  // Act : exécuter le code testé\n  const resultat = addition(a, b);\n  // Assert : vérifier le résultat attendu\n  expect(resultat).toBe(5);\n});\n```\n\n" +
+          "Un bon test est **déterministe** (même résultat à chaque exécution — pas de dépendance à l'heure actuelle, à un ordre aléatoire, ou à une vraie requête réseau) et **isolé** (ne dépend pas de l'ordre d'exécution des autres tests, ni d'un état partagé qui persiste entre eux). Un test qui échoue parfois sans raison claire (« flaky test ») est pire qu'aucun test : il fait perdre confiance dans toute la suite de tests.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que signifie qu'un test doit être « déterministe » ?",
+            choices: [
+              "Il doit s'exécuter le plus vite possible",
+              "Il doit produire le même résultat à chaque exécution, sans dépendre de facteurs variables comme l'heure actuelle ou un vrai appel réseau",
+              "Il doit toujours réussir, peu importe le code testé",
+              "Il doit tester plusieurs fonctions à la fois",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un test non déterministe (dépendant de `Date.now()`, d'un ordre aléatoire, d'une vraie requête réseau) peut échouer de façon imprévisible — un « flaky test » — sapant la confiance dans toute la suite de tests.",
+          },
+          {
+            order: 2,
+            prompt: "Que représentent les 3 lettres du pattern « Arrange-Act-Assert » ?",
+            choices: [
+              "Trois bibliothèques de test différentes",
+              "Préparer les données, exécuter le code testé, vérifier le résultat attendu",
+              "Trois types d'erreurs possibles",
+              "Trois niveaux de sévérité des bugs",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Ce pattern structure un test en trois étapes claires : Arrange (préparation), Act (exécution du code testé), Assert (vérification) — rend l'intention du test immédiatement lisible, même pour quelqu'un qui le découvre.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Mocks et stubs : isoler les dépendances",
+        content:
+          "Tester une fonction qui dépend d'une API externe, d'une base de données ou de l'heure actuelle pose un problème : le test devient lent, non déterministe, ou nécessite une vraie infrastructure. Les **mocks** remplacent ces dépendances par de fausses versions contrôlées.\n\n" +
+          "```js\ntest('envoie un email de bienvenue', async () => {\n  const envoyerEmailMock = vi.fn().mockResolvedValue(true);\n  await inscrireUtilisateur({ email: 'a@b.com' }, envoyerEmailMock);\n  expect(envoyerEmailMock).toHaveBeenCalledWith('a@b.com');\n});\n```\n\n" +
+          "Un mock simule un comportement (« quand cette fonction est appelée, retourne ceci ») et permet de vérifier qu'elle a bien été appelée avec les bons arguments — sans jamais envoyer de vrai email pendant les tests. Trop de mocking peut cependant masquer de vrais bugs d'intégration entre composants : les mocks vérifient que le code appelle correctement une dépendance simulée, pas que l'intégration réelle avec le vrai service fonctionne — les tests d'intégration restent nécessaires en complément.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi mocker un appel réseau (envoi d'email) dans un test unitaire ?",
+            choices: [
+              "Pour rendre le test plus lent intentionnellement",
+              "Pour éviter d'envoyer un vrai email à chaque exécution du test, et garder le test rapide/déterministe",
+              "Les tests unitaires ne peuvent jamais appeler de fonctions asynchrones",
+              "C'est purement optionnel, sans réel bénéfice",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Sans mock, chaque exécution du test enverrait un vrai email — lent, coûteux, et dépendant d'un service externe qui pourrait être temporairement indisponible, rendant le test non fiable.",
+          },
+          {
+            order: 2,
+            prompt: "Quelle est la limite d'un test qui mock excessivement ses dépendances ?",
+            choices: [
+              "Aucune limite, plus de mocks est toujours préférable",
+              "Il vérifie que le code appelle correctement une version simulée, mais pas que l'intégration réelle avec le vrai service fonctionne effectivement",
+              "Les mocks ralentissent toujours les tests",
+              "Un test avec mock ne peut jamais passer",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un mock ne garantit que la correction de l'appel simulé — il ne détecte pas un vrai problème d'intégration (format de réponse différent, changement d'API réel) — d'où le besoin complémentaire de tests d'intégration sur de vraies dépendances, au moins ponctuellement.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Pièges de sécurité spécifiques à JavaScript",
+        content:
+          "Quelques pièges de sécurité récurrents propres à l'écosystème JavaScript/Node.js :\n\n" +
+          "- **`eval()` et équivalents** (`new Function()`, `setTimeout(string)`) exécutent une chaîne comme du code — si cette chaîne contient la moindre donnée utilisateur non filtrée, c'est une exécution de code arbitraire immédiate. À éviter presque systématiquement.\n" +
+          "- **Prototype pollution** : modifier `Object.prototype` (souvent via une fusion d'objets mal sécurisée, ex: un merge JSON récursif naïf qui accepte une clé `__proto__`) peut affecter TOUS les objets du programme, un vecteur d'attaque spécifique à JS/Node.js.\n" +
+          "- **Dépendances npm compromises** : un `npm install` exécute potentiellement des scripts d'installation (`postinstall`) de paquets tiers — une dépendance (ou une sous-dépendance transitive) compromise peut exécuter du code arbitraire dès l'installation, avant même que l'application ne tourne. `npm audit` et la vérification régulière des dépendances limitent ce risque, sans l'éliminer totalement.",
+        xpReward: 30,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi `eval()` sur une chaîne contenant des données utilisateur est-il dangereux ?",
+            choices: [
+              "Ça ralentit toujours l'exécution du programme",
+              "Ça exécute la chaîne comme du code JavaScript — une donnée utilisateur non filtrée devient alors du code arbitraire exécuté",
+              "`eval()` est simplement obsolète, sans risque de sécurité réel",
+              "Ça ne fonctionne que côté serveur",
+            ],
+            correctIndex: 1,
+            explanation:
+              "`eval()` interprète littéralement la chaîne comme du code — si un attaquant contrôle une partie de cette chaîne, il peut y injecter n'importe quelle instruction JavaScript qui s'exécutera avec les mêmes privilèges que le reste du programme.",
+          },
+          {
+            order: 2,
+            prompt: "Qu'est-ce que la « prototype pollution » en JavaScript ?",
+            choices: [
+              "Une technique de compression du code",
+              "La modification malveillante de `Object.prototype` (souvent via une fusion d'objets mal sécurisée), qui peut affecter tous les objets du programme",
+              "Un synonyme d'injection SQL",
+              "Une fonctionnalité normale et sans danger de JavaScript",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Comme tous les objets héritent implicitement de `Object.prototype`, une pollution de ce prototype (via une clé spéciale comme `__proto__` acceptée sans filtrage dans une fusion d'objets récursive) peut affecter le comportement de tout objet du programme, un vecteur d'attaque propre à JS.",
           },
         ],
       },
