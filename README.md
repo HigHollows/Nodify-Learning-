@@ -103,15 +103,18 @@ query inside a command.
 ## 📦 Deployment (Pterodactyl/Bot-Hosting-style hosts)
 
 These panels typically run `npm install && node index.js`, with no
-configurable build/migration step. Two mechanisms handle this automatically:
+configurable build/migration step. Three mechanisms handle this automatically:
 
 - **`postinstall`** (package.json) generates the Prisma client and compiles
   TypeScript on every `npm install`
-- **`index.js`** (root) applies Prisma migrations, then starts the
-  compiled code
+- **`index.js`** (root) applies Prisma migrations, re-runs the content seed
+  (idempotent — safe on every restart, never duplicates anything), then
+  starts the compiled code
+- the bot also resyncs its slash commands automatically on every startup
+  (see the Scripts section below)
 
-Just fill in the panel's environment variables — no build command to
-configure.
+Just fill in the panel's environment variables — no build or seed command
+to configure manually.
 
 ## ✅ Verifying it works
 
