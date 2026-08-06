@@ -1,8 +1,8 @@
 # 🧠 Nodify
 
-**Plateforme éducative technique intelligente pour Discord** — développement,
-cybersécurité, IA et documentation, dans un seul bot. Nodify n'est **pas**
-un bot de modération : il est entièrement dédié à l'apprentissage.
+**Smart technical education platform for Discord** — development,
+cybersecurity, AI, and documentation, all in one bot. Nodify is **not**
+a moderation bot: it's entirely dedicated to learning.
 
 <p align="left">
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-20%2B-339933?logo=node.js&logoColor=white">
@@ -11,239 +11,239 @@ un bot de modération : il est entièrement dédié à l'apprentissage.
   <img alt="Prisma" src="https://img.shields.io/badge/Prisma-SQLite-2D3748?logo=prisma&logoColor=white">
   <a href="https://github.com/HigHollows/Nodify-Learning-/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/HigHollows/Nodify-Learning-/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Tests" src="https://img.shields.io/badge/tests-77%20passing-brightgreen">
-  <img alt="Status" src="https://img.shields.io/badge/status-en%20développement-yellow">
+  <img alt="Status" src="https://img.shields.io/badge/status-in%20development-yellow">
 </p>
 
 ---
 
-## ✨ Aperçu
+## ✨ Overview
 
-| Domaine | Ce que ça fait |
+| Domain | What it does |
 |---|---|
-| 🎓 **Academy** | Cours interactifs (JS, Python, TypeScript, Docker...) avec quiz, XP réelle et progression adaptative |
-| 🛡️ **Cyber Academy** | Cybersecurity Fundamentals, Red Team, Blue Team, CTF (crypto/OSINT/forensics/web statique), Trust Nothing Simulation |
-| 📖 **Knowledge Engine** | Dictionnaire technique avec recherche floue (tolère les fautes de frappe) |
-| 🤖 **IA** | ExplainMe, review de code, threat modeling, RAG documentation, learning planner |
-| 🏆 **Gamification** | XP, niveaux, rôles Discord dynamiques, streaks, achievements, leaderboards |
-| 🌐 **Communauté** | Question du jour automatique, Hacktualités (vrais flux RSS) |
-| 💳 **Crédits IA** | Système de crédits non-monétaire pour l'usage IA, récompenses daily/weekly/monthly et d'apprentissage, remboursement automatique sur échec |
-| ⚙️ **Admin** | `/setup` auto-configuration, `/settings` modulaire, `/stats`, AI Control Center (`/ai`) |
+| 🎓 **Academy** | Interactive courses (JS, Python, TypeScript, Docker...) with quizzes, real XP, and adaptive progression |
+| 🛡️ **Cyber Academy** | Cybersecurity Fundamentals, Red Team, Blue Team, CTF (crypto/OSINT/forensics/static web), Trust Nothing Simulation |
+| 📖 **Knowledge Engine** | Technical dictionary with fuzzy search (typo-tolerant) |
+| 🤖 **AI** | ExplainMe, code review, threat modeling, RAG documentation, learning planner |
+| 🏆 **Gamification** | XP, levels, dynamic Discord roles, streaks, achievements, leaderboards |
+| 🌐 **Community** | Automatic daily question, Hacktualités (real RSS feeds) |
+| 💳 **AI Credits** | Non-monetary credit system for AI usage, daily/weekly/monthly and learning rewards, automatic refund on failure |
+| ⚙️ **Admin** | `/setup` auto-configuration, modular `/settings`, `/stats`, AI Control Center (`/ai`) |
 
 ## 🏗️ Architecture
 
 ```mermaid
 graph TD
-    U[Utilisateur Discord] -->|Slash command| C[Command]
+    U[Discord User] -->|Slash command| C[Command]
     C --> S[Service]
     S --> R[Repository]
     R --> DB[(SQLite / Prisma)]
     S --> AI[AIService — ModelRouter]
-    AI --> Credit[Credit Service — réservation/remboursement]
+    AI --> Credit[Credit Service — reserve/refund]
     AI --> Control[AI Control Center — open/limited/maintenance/closed]
     Credit --> DB
     AI --> Gemini[Gemini]
     AI --> Anthropic[Claude]
     AI --> Groq[Groq / Llama]
-    AI -.fallback.-> Stub[Stub — mode démo]
+    AI -.fallback.-> Stub[Stub — demo mode]
 ```
 
 ```
 src/
 ├── commands/         Slash commands (Command → Service → Repository → DB)
-├── events/           Handlers Discord.js (ready, interactionCreate...)
-├── interactions/      Boutons, Modals, Autocomplete
-├── loaders/           Chargement dynamique commandes/events
-├── database/           Client Prisma + repositories
-├── config/             Validation des variables d'environnement (zod)
-├── utils/               Logger, erreurs typées, rate limiter, leveling
-├── ai/                 AIService centralisé (Gemini / Anthropic / Groq / Stub)
+├── events/           Discord.js handlers (ready, interactionCreate...)
+├── interactions/      Buttons, Modals, Autocomplete
+├── loaders/           Dynamic loading of commands/events
+├── database/           Prisma client + repositories
+├── config/             Environment variable validation (zod)
+├── utils/               Logger, typed errors, rate limiter, leveling
+├── ai/                 Centralized AIService (Gemini / Anthropic / Groq / Stub)
 ├── credits/             Credit Engine, Reward Engine, AI Control Center
-├── knowledge/           Knowledge Engine (concepts, dictionnaire)
-├── education/            Academy (cours, quiz, progression)
+├── knowledge/           Knowledge Engine (concepts, dictionary)
+├── education/            Academy (courses, quizzes, progression)
 ├── cybersecurity/          Cyber Academy, CTF, Blue/Red Team, Trust Sim
-├── documentation/           RAG sur docs techniques
-├── community/                Question du jour, Hacktualités
-└── setup/                     /setup, /settings, sync des rôles
+├── documentation/           RAG over technical docs
+├── community/                Daily question, Hacktualités
+└── setup/                     /setup, /settings, role sync
 ```
 
-Chaque commande reste fine : toute la logique métier vit dans un **service**,
-qui parle à la DB via un **repository** — jamais de requête Prisma directe
-dans une commande.
+Every command stays thin: all business logic lives in a **service**,
+which talks to the DB through a **repository** — never a direct Prisma
+query inside a command.
 
-## 🚀 Installation
+## 🚀 Setup
 
-1. Copier `.env.example` en `.env` et renseigner :
-   - `DISCORD_TOKEN` et `DISCORD_CLIENT_ID` ([Discord Developer Portal](https://discord.com/developers/applications))
-   - `DISCORD_GUILD_ID` (optionnel en dev — déploiement instantané des commandes)
-   - une clé IA optionnelle (`GEMINI_API_KEY`, `ANTHROPIC_API_KEY` ou `GROQ_API_KEY`) — sans clé, le bot tourne en mode démonstration
-   - le système de crédits est activé par défaut (`CREDITS_ENABLED=true`) ; voir `.env.example` pour tous les réglages (récompenses, anti-abus, mode IA par défaut)
+1. Copy `.env.example` to `.env` and fill in:
+   - `DISCORD_TOKEN` and `DISCORD_CLIENT_ID` ([Discord Developer Portal](https://discord.com/developers/applications))
+   - `DISCORD_GUILD_ID` (optional in dev — instant command deployment)
+   - an optional AI key (`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, or `GROQ_API_KEY`) — without a key, the bot runs in demo mode
+   - the credit system is enabled by default (`CREDITS_ENABLED=true`); see `.env.example` for all settings (rewards, anti-abuse, default AI mode)
 
-2. Installer les dépendances :
+2. Install dependencies:
    ```bash
    npm install
    ```
 
-3. Créer la base et la peupler :
+3. Create and seed the database:
    ```bash
    npm run prisma:migrate -- --name init
    npm run prisma:seed
    ```
 
-4. Déployer les slash commands sur Discord (optionnel — le bot les
-   resynchronise aussi automatiquement à chaque démarrage) :
+4. Deploy slash commands to Discord (optional — the bot also
+   resyncs them automatically on every startup):
    ```bash
    npm run deploy:commands
    ```
 
-5. Lancer le bot :
+5. Start the bot:
    ```bash
    npm run dev
    ```
 
-## 📦 Déploiement (hébergeur type Pterodactyl/Bot-Hosting)
+## 📦 Deployment (Pterodactyl/Bot-Hosting-style hosts)
 
-Ces panels lancent typiquement `npm install && node index.js`, sans étape de
-build/migration configurable. Deux mécanismes s'en chargent automatiquement :
+These panels typically run `npm install && node index.js`, with no
+configurable build/migration step. Two mechanisms handle this automatically:
 
-- **`postinstall`** (package.json) génère le client Prisma et compile
-  TypeScript à chaque `npm install`
-- **`index.js`** (racine) applique les migrations Prisma puis démarre le
-  code compilé
+- **`postinstall`** (package.json) generates the Prisma client and compiles
+  TypeScript on every `npm install`
+- **`index.js`** (root) applies Prisma migrations, then starts the
+  compiled code
 
-Il suffit de renseigner les variables d'environnement du panel — aucune
-commande de build à configurer.
+Just fill in the panel's environment variables — no build command to
+configure.
 
-## ✅ Vérifier que ça marche
+## ✅ Verifying it works
 
-Une fois le bot en ligne, `/ping` doit répondre avec la latence, et `/help`
-liste toutes les commandes disponibles groupées par domaine.
+Once the bot is online, `/ping` should respond with latency, and `/help`
+lists every available command grouped by domain.
 
 ## 🧰 Scripts
 
-| Commande | Effet |
+| Command | Effect |
 |---|---|
-| `npm run dev` | Bot en mode watch (rechargement auto) |
-| `npm run build` | Compile TypeScript → `dist/` |
-| `npm start` | Lance la version compilée |
-| `npm run deploy:commands` | (Re)déploie manuellement les slash commands (aussi fait automatiquement à chaque démarrage du bot) |
-| `npm run prisma:migrate` | Applique une migration DB |
-| `npm run prisma:studio` | Interface graphique pour inspecter la DB |
-| `npm run typecheck` | Vérifie les types sans compiler |
-| `npm test` | Lance la suite de tests (vitest) |
-| `npm run test:watch` | Tests en mode watch |
+| `npm run dev` | Bot in watch mode (auto-reload) |
+| `npm run build` | Compiles TypeScript → `dist/` |
+| `npm start` | Runs the compiled build |
+| `npm run deploy:commands` | Manually (re)deploys slash commands (also done automatically on every bot startup) |
+| `npm run prisma:migrate` | Applies a DB migration |
+| `npm run prisma:studio` | GUI for inspecting the DB |
+| `npm run typecheck` | Checks types without compiling |
+| `npm test` | Runs the test suite (vitest) |
+| `npm run test:watch` | Tests in watch mode |
 
-> 📄 Le détail précis de chaque commande (fonctionnement, décisions de
-> conception, ce qui est volontairement non construit) est dans
+> 📄 The precise details of each command (how it works, design decisions,
+> what's intentionally not built) are in
 > [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
-## 📋 Commandes
+## 📋 Commands
 
 <details>
-<summary>👤 Profil & Progression</summary>
+<summary>👤 Profile & Progression</summary>
 
-- `/profile` — profil global (XP, niveau, streak, compétences, achievements)
-- `/leaderboard` — classement par XP
-- `/setup` — configuration automatique (rôles, salon hub), idempotente
+- `/profile` — global profile (XP, level, streak, skills, achievements)
+- `/leaderboard` — XP leaderboard
+- `/setup` — automatic configuration (roles, hub channel), idempotent
 </details>
 
 <details>
 <summary>📖 Knowledge Engine</summary>
 
-- `/dictionary` (+ alias `/dict` `/term` `/define`) — dictionnaire technique, recherche floue
+- `/dictionary` (+ aliases `/dict` `/term` `/define`) — technical dictionary, fuzzy search
 </details>
 
 <details>
 <summary>🎓 Academy</summary>
 
-- `/learn` — cours interactifs (quiz, XP, prérequis)
-- `/plan` — parcours personnalisé généré par IA, à partir des cours réels
+- `/learn` — interactive courses (quizzes, XP, prerequisites)
+- `/plan` — personalized learning path generated by AI, based on real courses
 </details>
 
 <details>
-<summary>🤖 IA</summary>
+<summary>🤖 AI</summary>
 
-- `/explainme` — explication adaptée au niveau, avec suivi de conversation
-- `/docs` — recherche dans la documentation technique (RAG)
+- `/explainme` — level-adapted explanation, with follow-up conversation
+- `/docs` — search technical documentation (RAG)
 </details>
 
 <details>
 <summary>🛠️ Dev Tools</summary>
 
-- `/securityreview` — audit sécurité d'un extrait de code
-- `/codereview` — relecture qualité (lisibilité, duplication)
-- `/debugme` — Debug Coach façon tuteur socratique
-- `/threatmodel` — analyse de risques sur une architecture décrite
+- `/securityreview` — security audit of a code snippet
+- `/codereview` — quality review (readability, duplication)
+- `/debugme` — Socratic-style Debug Coach
+- `/threatmodel` — risk analysis on a described architecture
 </details>
 
 <details>
 <summary>🛡️ Cyber Academy</summary>
 
-- `/cyber learn` — cours de cybersécurité
-- `/cyber simulation` — Trust Nothing Simulation (phishing, 100% simulé)
-- `/cyber blueteam` — analyse de logs, repérer un IOC
-- `/cyber ctf list|challenge|leaderboard` — défis crypto/OSINT/forensics/web (statique)
+- `/cyber learn` — cybersecurity courses
+- `/cyber simulation` — Trust Nothing Simulation (phishing, 100% simulated)
+- `/cyber blueteam` — log analysis, spot an IOC
+- `/cyber ctf list|challenge|leaderboard` — crypto/OSINT/forensics/web (static) challenges
 </details>
 
 <details>
-<summary>🌐 Communauté</summary>
+<summary>🌐 Community</summary>
 
-- `/trivia` — question du jour (aussi postée automatiquement)
-- `/news` — dernières Hacktualités (vrais flux RSS)
+- `/trivia` — question of the day (also posted automatically)
+- `/news` — latest Hacktualités (real RSS feeds)
 </details>
 
 <details>
-<summary>💳 Crédits & Récompenses</summary>
+<summary>💳 Credits & Rewards</summary>
 
-- `/credits` — explique le système (solde, récompenses, coûts IA)
-- `/balance` — ton wallet (solde, activité récente, prochaine récompense)
-- `/credit-stats` — statistiques détaillées (total gagné/dépensé/remboursé, usage IA)
-- `/credit-history` — historique paginé des transactions
-- `/ai-costs` — coût en crédits de chaque fonctionnalité IA
-- `/daily`, `/weekly`, `/monthly` — récompenses périodiques gratuites (cooldown vérifié côté serveur)
+- `/credits` — explains the system (balance, rewards, AI costs)
+- `/balance` — your wallet (balance, recent activity, next reward)
+- `/credit-stats` — detailed stats (total earned/spent/refunded, AI usage)
+- `/credit-history` — paginated transaction history
+- `/ai-costs` — credit cost of each AI feature
+- `/daily`, `/weekly`, `/monthly` — free periodic rewards (cooldown enforced server-side)
 </details>
 
 <details>
 <summary>⚙️ Admin</summary>
 
-- `/settings` — active/désactive les modules par serveur
-- `/stats` — statistiques globales
-- `/credit-admin give|remove|set|bonus|subscriber` — gère les crédits d'un utilisateur (audité) : attribution/retrait/fixation, bonus événementiel ponctuel, statut supporter non-monétaire
-- `/ai status|open|close|maintenance|limited|stats|usage|panel|budget|audit-log` — AI Control Center : bascule le mode des services IA (sans affecter le reste de Nodify), statistiques et historique d'usage paginé, panneau de statut persistant, budget IA par serveur, journal d'audit
+- `/settings` — enable/disable modules per server
+- `/stats` — global statistics
+- `/credit-admin give|remove|set|bonus|subscriber` — manage a user's credits (audited): grant/remove/set, one-off event bonus, non-monetary supporter status
+- `/ai status|open|close|maintenance|limited|stats|usage|panel|budget|audit-log` — AI Control Center: toggle AI service mode (without affecting the rest of Nodify), paginated usage stats/history, persistent status panel, per-server AI budget, audit log
 </details>
 
-## 📊 Contenu actuel
+## 📊 Current content
 
-| Catalogue | Volume |
+| Catalog | Volume |
 |---|---|
-| Concepts du dictionnaire | 53 |
-| Questions du jour | 158 |
-| Cours Academy (tous domaines couverts) | 11 |
-| Défis CTF (crypto/OSINT/forensics/web) | 8 |
-| Sources Hacktualités (RSS réelles) | 10 |
-| Extraits de documentation (RAG) | 10 |
+| Dictionary concepts | 53 |
+| Daily questions | 158 |
+| Academy courses (all domains covered) | 11 |
+| CTF challenges (crypto/OSINT/forensics/web) | 8 |
+| Hacktualités sources (real RSS) | 10 |
+| Documentation excerpts (RAG) | 10 |
 
 ## 🗺️ Roadmap
 
-- ✅ Fondations, `/setup`, profil global, gamification
+- ✅ Foundations, `/setup`, global profile, gamification
 - ✅ Knowledge Engine, Academy, AIService (Anthropic/Groq)
 - ✅ Dev Tools, Cyber Academy (CTF, Blue/Red Team), Hacktualités
-- ✅ Sync de rôles Discord, prérequis entre cours, `/plan`, `/stats`, `/settings`
-- ✅ Contenu étoffé : dictionnaire (53), questions du jour (158), Academy sur
-  les 6 domaines (11 cours), Hacktualités diversifiées (10 sources, sélection
-  équitable), CTF Web statique (analyse d'artefacts, sans vraie cible réseau)
-- ✅ AI Credit System & AI Control Center : crédits non-monétaires, réservation/
-  remboursement atomique, Reward Engine générique, provider Gemini, statut IA
-  calculé + panneau persistant, anti-abus configurable, audit admin
-- ✅ Multi-provider avec coûts par provider, budgets IA par serveur, annulation
-  réelle des appels IA au timeout, alertes AI Incident, bonus événementiel et
-  statut supporter, audit log enfin consultable depuis Discord (`/ai audit-log`)
-- ⏳ CTF Pwn/Network/Reverse et Labs avec cibles en direct — nécessitent une
-  vraie infrastructure de sandbox/VM isolée, volontairement pas simulés sans
-  elle (le CTF Web reste statique, sans vraie application à attaquer)
+- ✅ Discord role sync, course prerequisites, `/plan`, `/stats`, `/settings`
+- ✅ Expanded content: dictionary (53), daily questions (158), Academy across
+  all 6 domains (11 courses), diversified Hacktualités (10 sources, fair
+  selection), static Web CTF (artifact analysis, no real network target)
+- ✅ AI Credit System & AI Control Center: non-monetary credits, atomic
+  reserve/refund, generic Reward Engine, Gemini provider, computed AI
+  status + persistent panel, configurable anti-abuse, admin audit
+- ✅ Multi-provider with per-provider cost, per-server AI budgets, real
+  request cancellation on timeout, AI Incident alerts, event bonuses and
+  supporter status, audit log finally viewable from Discord (`/ai audit-log`)
+- ⏳ CTF Pwn/Network/Reverse and Labs with live targets — require real
+  sandbox/VM infrastructure that doesn't exist, intentionally not simulated
+  without it (Web CTF stays static, no real application to attack)
 
-## 🧪 Qualité
+## 🧪 Quality
 
-- TypeScript strict (`exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`)
-- Tests automatisés (vitest) sur la logique pure
-- CI GitHub Actions : typecheck + tests à chaque push
-- Toutes les erreurs applicatives typées, jamais de `try/catch` silencieux
+- Strict TypeScript (`exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`)
+- Automated tests (vitest) on pure logic
+- GitHub Actions CI: typecheck + tests on every push
+- All application errors are typed, never a silent `try/catch`
