@@ -35,9 +35,10 @@ export async function recordDailyAnswer(
   guildId: string,
   date: string,
   correct: boolean,
+  category: string | null = null,
 ): Promise<boolean> {
   try {
-    await prisma.dailyQuestionAnswer.create({ data: { userId, guildId, date, correct } });
+    await prisma.dailyQuestionAnswer.create({ data: { userId, guildId, date, correct, category } });
     return true;
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {

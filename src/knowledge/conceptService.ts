@@ -4,6 +4,7 @@ import {
   findConceptsByKeys,
   listAliasesLite,
   listConceptsLite,
+  recordConceptView as recordConceptViewRepo,
 } from "../database/repositories/conceptRepository.js";
 import { similarity } from "../utils/textDistance.js";
 
@@ -134,4 +135,15 @@ export async function getConceptDetail(key: string): Promise<ConceptDetail | nul
   const concept = await findConceptByKey(key);
   if (!concept) return null;
   return toDetail(concept);
+}
+
+/**
+ * Enregistre qu'un utilisateur a consulté ce concept — alimente la révision
+ * espacée (/review, voir progression/spacedRepetitionService.ts). Best-effort :
+ * ne fait jamais échouer l'affichage du concept si l'enregistrement rate.
+ */
+export async function recordConceptView(userId: string, key: string): Promise<void> {
+  const concept = await findConceptByKey(key);
+  if (!concept) return;
+  await recordConceptViewRepo(userId, concept.id);
 }

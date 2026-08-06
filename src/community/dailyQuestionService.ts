@@ -87,7 +87,7 @@ export async function submitDailyAnswer(
   // recalculer le même mélange (même clé) pour comparer au bon index.
   const { correctIndex } = shuffleChoices(question.key, parseChoices(question.choices), question.correctIndex);
   const correct = choiceIndex === correctIndex;
-  const recorded = await recordDailyAnswer(userId, guildId, today, correct);
+  const recorded = await recordDailyAnswer(userId, guildId, today, correct, question.category);
 
   if (!recorded) {
     const existing = await getDailyAnswer(userId, guildId, today);

@@ -7,7 +7,7 @@ import {
   TextInputStyle,
   type RepliableInteraction,
 } from "discord.js";
-import { resolveConcept } from "../../knowledge/conceptService.js";
+import { recordConceptView, resolveConcept } from "../../knowledge/conceptService.js";
 import type { ConceptDetail } from "../../knowledge/conceptService.js";
 import { SKILL_CATEGORY_LABELS, type SkillCategory } from "../../types/skill.js";
 import { labelForLevelOrder } from "../../utils/leveling.js";
@@ -135,6 +135,11 @@ export async function replyWithConceptSearch(
   query: string,
 ): Promise<void> {
   const resolution = await resolveConcept(query);
+
+  if (resolution.type === "exact") {
+    // Best-effort, jamais bloquant pour l'affichage : voir conceptService.recordConceptView.
+    await recordConceptView(interaction.user.id, resolution.concept.key).catch(() => {});
+  }
 
   const payload =
     resolution.type === "exact"

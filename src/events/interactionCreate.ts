@@ -80,6 +80,16 @@ import {
 } from "../practice/exerciseView.js";
 import { handleGuideDmButton } from "../interactions/guideInteractions.js";
 import { GUIDE_DM_BUTTON_ID } from "../community/guideView.js";
+import {
+  handleDuelAcceptButton,
+  handleDuelAnswerButton,
+  handleDuelDeclineButton,
+} from "../interactions/duelInteractions.js";
+import {
+  parseDuelAcceptButtonId,
+  parseDuelAnswerButtonId,
+  parseDuelDeclineButtonId,
+} from "../social/duelView.js";
 import { recordActivity } from "../services/userService.js";
 import type { Event } from "../types/event.js";
 import { AIUnavailableError, AppError, InsufficientCreditsError } from "../utils/errors.js";
@@ -299,6 +309,26 @@ const event: Event<"interactionCreate"> = {
 
       if (interaction.customId === GUIDE_DM_BUTTON_ID) {
         await runWithGuards(interaction, interaction.customId, () => handleGuideDmButton(interaction));
+        return;
+      }
+
+      const duelAcceptId = parseDuelAcceptButtonId(interaction.customId);
+      if (duelAcceptId) {
+        await runWithGuards(interaction, interaction.customId, () => handleDuelAcceptButton(interaction, duelAcceptId));
+        return;
+      }
+
+      const duelDeclineId = parseDuelDeclineButtonId(interaction.customId);
+      if (duelDeclineId) {
+        await runWithGuards(interaction, interaction.customId, () => handleDuelDeclineButton(interaction, duelDeclineId));
+        return;
+      }
+
+      const duelAnswer = parseDuelAnswerButtonId(interaction.customId);
+      if (duelAnswer) {
+        await runWithGuards(interaction, interaction.customId, () =>
+          handleDuelAnswerButton(interaction, duelAnswer.duelId, duelAnswer.index),
+        );
         return;
       }
 

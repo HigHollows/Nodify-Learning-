@@ -32,3 +32,34 @@ export async function listAliasesLite() {
 export async function countConcepts() {
   return prisma.concept.count();
 }
+
+/** Fouille par titre/définition — utilisé par /search (recherche unifiée, voir search/searchService.ts). */
+export async function listConceptsForSearch() {
+  return prisma.concept.findMany({ select: { key: true, name: true, category: true, definition: true } });
+}
+
+/** Enregistre/rafraîchit la consultation d'un concept par un utilisateur — alimente la révision espacée (/review). */
+export async function recordConceptView(userId: string, conceptId: string): Promise<void> {
+  await prisma.userConceptView.upsert({
+    where: { userId_conceptId: { userId, conceptId } },
+    create: { userId, conceptId },
+    // `viewedAt` explicite : un `update: {}` vide ne génère aucune écriture
+    // réelle (rien à SET), donc `@updatedAt` ne se déclenche jamais tout
+    // seul dans ce cas — il faut le forcer explicitement.
+    update: { viewedAt: new Date() },
+  });
+}
+
+/**
+ * Concepts vus par l'utilisateur il y a au moins `minDaysAgo` jours,
+ * triés du plus ancien au plus récent (les meilleurs candidats à revoir
+ * en premier) — voir progression/spacedRepetitionService.ts.
+ */
+export async function listConceptsDueForReview(userId: string, minDaysAgo: Date, limit: number) {
+  return prisma.userConceptView.findMany({
+    where: { userId, viewedAt: { lte: minDaysAgo } },
+    orderBy: { viewedAt: "asc" },
+    take: limit,
+    include: { concept: { select: { key: true, name: true, definition: true } } },
+  });
+}

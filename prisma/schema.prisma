@@ -83,6 +83,12 @@ model User {
   longestStreak  Int       @default(0)
   lastActiveDate String? // date UTC "YYYY-MM-DD" du dernier jour actif
 
+  // Anti-doublon des DM automatiques (Phase 11) : "YYYY-MM-DD" du dernier
+  // envoi, jamais deux fois le même jour même si le check périodique tourne
+  // plusieurs fois — même pattern que GuildConfig.lastDailyQuestionDate.
+  lastStreakReminderDate String?
+  lastWeeklyRecapDate    String? // "YYYY-MM-DD" du lundi où le récap a été envoyé
+
   // Statut "supporter" non-monétaire (attribué par un admin, pas acheté —
   // les crédits ne sont pas une monnaie réelle) : donne un bonus sur la
   // récompense MONTHLY. Prépare une future vraie souscription sans
@@ -99,6 +105,7 @@ model User {
   dailyAnswers      DailyQuestionAnswer[]
   ctfSolves         CtfSolve[]
   exerciseCompletions UserExerciseCompletion[]
+  conceptViews        UserConceptView[]
 
   creditAccount      UserCreditAccount?
   creditTransactions CreditTransaction[]
@@ -197,6 +204,7 @@ model Concept {
   prerequisiteKeys String @default("[]")
 
   aliases ConceptAlias[]
+  views   UserConceptView[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -371,10 +379,36 @@ model DailyQuestionAnswer {
   date    String // "YYYY-MM-DD" UTC
   correct Boolean
 
+  // Dénormalisé depuis DailyQuestion.category au moment de la réponse
+  // (Phase 11) — permet une analyse "points faibles" par catégorie sans
+  // avoir besoin de retrouver la question d'origine (qui peut changer de
+  // contenu au fil du temps). Nullable : les réponses données avant cet
+  // ajout n'ont pas cette info, exclues proprement (pas de faux 0) des
+  // agrégations qui en dépendent.
+  category String?
+
   answeredAt DateTime @default(now())
 
   @@unique([userId, guildId, date])
   @@map("daily_question_answers")
+}
+
+/// Consultation d'un concept du dictionnaire (Phase 11) — alimente la
+/// révision espacée (`/review`) : un concept vu il y a longtemps et jamais
+/// revu depuis est un bon candidat à reproposer. Une ligne par (user,
+/// concept), mise à jour (pas dupliquée) à chaque nouvelle consultation.
+model UserConceptView {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  conceptId String
+  concept   Concept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+
+  viewedAt DateTime @updatedAt // dernière consultation — pas la première
+
+  @@unique([userId, conceptId])
+  @@map("user_concept_views")
 }
 
 /// CTF (Phase 8) — défis AUTONOMES rédigés à la main, résolubles sans cible

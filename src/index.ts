@@ -8,6 +8,8 @@ import { refreshStatusPanel } from "./credits/statusPanelService.js";
 import { loadCommands } from "./loaders/commandLoader.js";
 import { loadEvents } from "./loaders/eventLoader.js";
 import { logger } from "./utils/logger.js";
+import { checkAndSendStreakReminders } from "./progression/streakReminderService.js";
+import { checkAndSendWeeklyRecaps } from "./progression/weeklyRecapService.js";
 
 /** Vérifie toutes les 15 minutes s'il faut poster la question du jour quelque part. */
 const DAILY_QUESTION_CHECK_INTERVAL_MS = 15 * 60 * 1000;
@@ -15,6 +17,8 @@ const DAILY_QUESTION_CHECK_INTERVAL_MS = 15 * 60 * 1000;
 const NEWS_CHECK_INTERVAL_MS = 30 * 60 * 1000;
 /** Le panneau de statut IA n'a pas besoin d'un rafraîchissement temps réel. */
 const AI_STATUS_PANEL_REFRESH_INTERVAL_MS = 10 * 60 * 1000;
+/** Rappels de streak / récap hebdo : les deux se auto-limitent en interne (heure/jour UTC) — 15min suffit pour ne pas rater la fenêtre. */
+const PROGRESSION_DM_CHECK_INTERVAL_MS = 15 * 60 * 1000;
 
 async function main() {
   logger.info(`🚀 Démarrage de Nodify (env: ${env.NODE_ENV})`);
@@ -80,6 +84,18 @@ async function main() {
     });
   }, AI_STATUS_PANEL_REFRESH_INTERVAL_MS);
 
+  // Rappel de streak (DM en fin de journée UTC) + récap hebdo (DM le lundi)
+  // — chaque service vérifie lui-même l'heure/jour et l'idempotence en
+  // interne, un simple check périodique suffit ici (voir progression/).
+  const progressionDmInterval = setInterval(() => {
+    checkAndSendStreakReminders(client).catch((error: unknown) => {
+      logger.error({ err: error }, "Échec du check de rappel de streak");
+    });
+    checkAndSendWeeklyRecaps(client).catch((error: unknown) => {
+      logger.error({ err: error }, "Échec du check de récap hebdo");
+    });
+  }, PROGRESSION_DM_CHECK_INTERVAL_MS);
+
   // Arrêt propre : on ferme la connexion DB et le client Discord avant de quitter,
   // pour ne jamais couper une requête ou une écriture en plein vol.
   const shutdown = async (signal: string) => {
@@ -87,6 +103,7 @@ async function main() {
     clearInterval(dailyQuestionInterval);
     clearInterval(newsInterval);
     clearInterval(aiStatusPanelInterval);
+    clearInterval(progressionDmInterval);
     client.destroy();
     await disconnectDatabase();
     process.exit(0);
