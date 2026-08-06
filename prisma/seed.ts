@@ -3886,6 +3886,368 @@ const COURSES: CourseSeed[] = [
       },
     ],
   },
+  {
+    key: "osint-social-engineering",
+    title: "OSINT et ingénierie sociale",
+    description: "Techniques de reconnaissance à partir de sources publiques, et comprendre l'ingénierie sociale d'un point de vue défensif.",
+    category: "CYBERSECURITY",
+    skillKey: "red-team-fundamentals",
+    level: 3,
+    prerequisiteCourseKeys: ["redteam-fundamentals"],
+    lessons: [
+      {
+        order: 1,
+        title: "Qu'est-ce que l'OSINT ?",
+        content:
+          "⚠️ Comme pour tout le contenu Red Team de Nodify : uniquement dans un cadre autorisé (pentest, bug bounty, veille défensive sur sa propre organisation).\n\n" +
+          "L'**OSINT** (Open Source Intelligence) consiste à collecter et analyser des informations provenant exclusivement de sources **publiques et légales** : réseaux sociaux, sites web d'entreprise, dépôts de code publics, moteurs de recherche, enregistrements DNS/WHOIS publics.\n\n" +
+          "Contrairement à d'autres phases d'un test d'intrusion, l'OSINT ne touche jamais directement le système cible — c'est purement de la collecte passive, indétectable par la cible elle-même. Un attaquant l'utilise pour cartographier une organisation avant de passer à des phases plus actives ; un défenseur l'utilise pour découvrir ce qu'un attaquant pourrait voir de sa propre organisation, et corriger les fuites d'information avant qu'elles ne soient exploitées.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "En quoi l'OSINT diffère-t-il des autres phases d'un test d'intrusion (comme le scan de ports) ?",
+            choices: [
+              "L'OSINT nécessite un accès direct au système cible",
+              "L'OSINT est purement passif — il collecte uniquement des informations publiques, sans jamais interagir directement avec le système cible",
+              "L'OSINT est toujours illégal, contrairement aux autres phases",
+              "L'OSINT ne peut être utilisé que par des attaquants, jamais par des défenseurs",
+            ],
+            correctIndex: 1,
+            explanation:
+              "L'OSINT reste passif et invisible pour la cible (recherche d'informations déjà publiques) — c'est justement pour ça qu'il est indétectable, contrairement à un scan de ports qui laisse une trace dans les logs de la cible.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi une organisation aurait-elle intérêt à faire elle-même de l'OSINT sur son propre nom ?",
+            choices: [
+              "Ça n'a aucune utilité défensive",
+              "Pour découvrir quelles informations sensibles sont déjà exposées publiquement, et les corriger avant qu'un attaquant ne les exploite",
+              "C'est illégal de faire de l'OSINT sur sa propre organisation",
+              "Uniquement pour des raisons de marketing",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Se voir « depuis l'extérieur » via l'OSINT permet à une organisation de repérer des fuites d'information (métadonnées de documents, employés trop bavards sur les réseaux, sous-domaines oubliés) avant qu'un vrai attaquant ne le fasse.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Sources et techniques courantes",
+        content:
+          "Quelques sources OSINT classiques : le **WHOIS** (informations d'enregistrement d'un nom de domaine, parfois l'organisation propriétaire), les **enregistrements DNS publics** (sous-domaines révélant une infrastructure interne, ex: `staging.entreprise.com`), les **métadonnées de documents** publiés (auteur, logiciel utilisé, parfois chemin de fichier local révélé dans un PDF/Office), les **réseaux sociaux professionnels** (organigramme reconstituable, technologies utilisées mentionnées dans des offres d'emploi), les **dépôts de code publics** (un `.env` ou une clé API accidentellement committée et jamais retirée de l'historique git).\n\n" +
+          "Le principe du **« oversharing »** (partage excessif) est central : chaque information publiée séparément peut sembler anodine, mais leur combinaison (nom + entreprise + localisation + horaires habituels) peut suffire à construire un profil exploitable pour du spear phishing ciblé.",
+        xpReward: 30,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi un sous-domaine comme `staging.entreprise.com`, découvert via les enregistrements DNS publics, est-il intéressant pour un attaquant ?",
+            choices: [
+              "Il ne présente aucun intérêt particulier",
+              "Il révèle potentiellement l'existence d'un environnement de test, souvent moins sécurisé/durci qu'un environnement de production",
+              "Il donne directement le mot de passe administrateur",
+              "Les sous-domaines ne sont jamais visibles publiquement",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un environnement de staging/test est souvent moins prioritaire en termes de durcissement de sécurité qu'un environnement de production — sa découverte élargit la surface d'attaque exploitable.",
+          },
+          {
+            order: 2,
+            prompt: "Que désigne le principe de « oversharing » en contexte OSINT ?",
+            choices: [
+              "Publier volontairement de fausses informations pour tromper un attaquant",
+              "La combinaison d'informations individuellement anodines qui, mises ensemble, forment un profil exploitable pour une attaque ciblée",
+              "Un type de chiffrement des données personnelles",
+              "Une technique de défense contre le phishing",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Aucune information isolée n'est forcément dangereuse seule, mais leur accumulation (identité, employeur, localisation, habitudes) permet de construire un profil précis exploitable pour un spear phishing crédible.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Ingénierie sociale : le facteur humain",
+        content:
+          "L'**ingénierie sociale** exploite la psychologie humaine plutôt qu'une faille technique — manipuler quelqu'un pour qu'il effectue une action ou révèle une information qu'il n'aurait normalement pas dû partager.\n\n" +
+          "Leviers psychologiques classiques : l'**autorité** (se faire passer pour un supérieur ou un service IT), l'**urgence** (créer une pression temporelle qui court-circuite la réflexion), la **confiance** (exploiter une relation ou une familiarité apparente), la **réciprocité** (rendre un petit service pour en demander un plus grand ensuite), la **curiosité** (une clé USB « perdue » intentionnellement dans un parking d'entreprise).\n\n" +
+          "La défense principale n'est pas purement technique : c'est la **formation et la culture de vérification** — encourager systématiquement à vérifier une demande inhabituelle par un canal indépendant (rappeler la personne sur un numéro connu, plutôt que de répondre directement à un email/appel suspect), sans jamais culpabiliser une personne qui a des doutes et prend le temps de vérifier.",
+        xpReward: 30,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi une clé USB « perdue » intentionnellement dans un parking d'entreprise est-elle un vecteur d'ingénierie sociale efficace ?",
+            choices: [
+              "Elle contient toujours un virus détecté immédiatement",
+              "Elle exploite la curiosité naturelle d'une personne qui la trouve et la branche pour voir ce qu'elle contient",
+              "Ce n'est pas un vecteur réaliste, ça n'arrive jamais en pratique",
+              "Elle ne fonctionne que sur du matériel Windows",
+            ],
+            correctIndex: 1,
+            explanation:
+              "C'est un classique de l'ingénierie sociale (« USB drop attack ») : la curiosité pousse souvent une personne à brancher un appareil trouvé pour identifier son propriétaire, exécutant potentiellement du code malveillant au passage.",
+          },
+          {
+            order: 2,
+            prompt: "Quelle est la meilleure défense contre une demande urgente et inhabituelle reçue par email/téléphone (ex: « transfère ces fonds immédiatement, c'est le PDG ») ?",
+            choices: [
+              "Exécuter la demande immédiatement pour ne pas décevoir un supérieur",
+              "Vérifier la demande par un canal indépendant connu (rappeler sur un numéro déjà enregistré), avant d'agir",
+              "Ignorer complètement toute communication urgente",
+              "Transférer la demande à toute l'entreprise pour vérification collective",
+            ],
+            correctIndex: 1,
+            explanation:
+              "L'urgence artificielle est justement le levier utilisé pour empêcher la vérification — reprendre le contrôle en vérifiant par un canal indépendant et déjà connu (pas les coordonnées fournies dans le message suspect lui-même) neutralise ce levier.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "linux-shell-scripting",
+    title: "Linux avancé : shell scripting et processus",
+    description: "Aller au-delà des commandes de base : automatiser avec des scripts bash, comprendre la gestion des processus et des permissions en profondeur.",
+    category: "SYSTEMS",
+    skillKey: "linux",
+    level: 3,
+    prerequisiteCourseKeys: ["linux-fundamentals"],
+    lessons: [
+      {
+        order: 1,
+        title: "Écrire un script bash",
+        content:
+          "Un script bash automatise une séquence de commandes qu'on exécuterait autrement à la main. Il commence par un **shebang** (`#!/bin/bash`) qui indique quel interpréteur utiliser.\n\n" +
+          "```bash\n#!/bin/bash\nNOM=\"Nodify\"\nif [ -d \"/var/log/$NOM\" ]; then\n  echo \"Le dossier de logs existe déjà\"\nelse\n  mkdir -p \"/var/log/$NOM\"\n  echo \"Dossier créé\"\nfi\n```\n\n" +
+          "`$NOM` référence une variable, `[ -d ... ]` teste si un chemin est un dossier existant, `mkdir -p` crée le dossier (et ses parents manquants) sans erreur s'il existe déjà. Un script doit être rendu exécutable (`chmod +x script.sh`) avant de pouvoir être lancé directement avec `./script.sh`.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "À quoi sert la ligne `#!/bin/bash` au tout début d'un script ?",
+            choices: [
+              "C'est juste un commentaire décoratif sans effet",
+              "Elle indique au système quel interpréteur utiliser pour exécuter le script",
+              "Elle chiffre le contenu du script",
+              "Elle définit le nom du script",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Le shebang (`#!`) dit au système d'exploitation quel programme doit interpréter le reste du fichier — ici `/bin/bash`, l'interpréteur bash.",
+          },
+          {
+            order: 2,
+            prompt: "Que faut-il faire avant de pouvoir lancer un script avec `./script.sh` ?",
+            choices: [
+              "Rien, ça fonctionne toujours directement", "Le rendre exécutable avec `chmod +x script.sh`", "Le renommer en `.exe`", "Le compiler avec `gcc`",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un fichier script n'est pas exécutable par défaut sur Linux — `chmod +x` ajoute le bit d'exécution, nécessaire pour le lancer directement via `./script.sh`.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Gestion des processus",
+        content:
+          "Chaque programme en cours d'exécution est un **processus**, identifié par un PID (Process ID) unique. `ps aux` liste les processus actifs ; `top`/`htop` les affiche en temps réel avec leur consommation CPU/mémoire.\n\n" +
+          "```bash\nps aux | grep node        # trouve les processus Node.js en cours\nkill 1234                 # envoie SIGTERM (arrêt propre) au PID 1234\nkill -9 1234               # envoie SIGKILL (arrêt forcé, immédiat)\n```\n\n" +
+          "`SIGTERM` (par défaut) demande poliment au processus de s'arrêter, lui laissant l'occasion de nettoyer proprement (fermer des fichiers, sauvegarder un état) ; `SIGKILL` (`-9`) le termine immédiatement sans lui laisser aucune chance de réagir — à utiliser en dernier recours, un processus tué ainsi ne peut pas nettoyer derrière lui.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quelle est la différence entre `kill 1234` et `kill -9 1234` ?",
+            choices: [
+              "Aucune différence, ce sont des synonymes",
+              "`kill` seul envoie SIGTERM (arrêt propre, le processus peut nettoyer avant de s'arrêter) ; `kill -9` envoie SIGKILL (arrêt forcé immédiat, sans possibilité de nettoyage)",
+              "`kill -9` est toujours plus lent",
+              "`kill` seul ne fonctionne que sur les processus root",
+            ],
+            correctIndex: 1,
+            explanation:
+              "SIGTERM laisse une chance au processus de gérer sa propre terminaison proprement ; SIGKILL (signal 9) ne peut être ni intercepté ni ignoré par le processus — il est tué immédiatement, sans nettoyage possible.",
+          },
+          {
+            order: 2,
+            prompt: "À quoi sert le PID d'un processus ?",
+            choices: [
+              "À l'identifier de façon unique parmi tous les processus en cours, pour pouvoir le cibler (ex: avec `kill`)",
+              "À définir ses permissions d'accès aux fichiers",
+              "À indiquer sa consommation mémoire",
+              "À le rendre exécutable",
+            ],
+            correctIndex: 0,
+            explanation:
+              "Le PID (Process ID) est l'identifiant unique attribué à chaque processus en cours d'exécution — indispensable pour cibler précisément un processus avec des commandes comme `kill`.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Permissions en profondeur",
+        content:
+          "Les permissions Linux (`rwx` pour propriétaire/groupe/autres, vues via `ls -l`) contrôlent qui peut lire, écrire ou exécuter un fichier — mais deux bits spéciaux méritent une attention particulière côté sécurité.\n\n" +
+          "Le bit **SUID** (`chmod u+s fichier`) fait exécuter un programme avec les privilèges de son **propriétaire** plutôt que de l'utilisateur qui le lance — un script SUID appartenant à root, mal sécurisé, est une source classique d'élévation de privilèges. Le bit **sticky** sur un dossier (`chmod +t dossier`, visible via le `t` final dans `drwxrwxrwt`, ex: `/tmp`) empêche un utilisateur de supprimer les fichiers d'un autre utilisateur dans ce dossier partagé, même s'il a un accès en écriture au dossier lui-même.\n\n" +
+          "`umask` définit les permissions par défaut retirées à la création d'un nouveau fichier/dossier — un `umask` trop permissif (ex: `000`) crée par défaut des fichiers accessibles en écriture à tout le monde, un risque de sécurité facilement évitable.",
+        xpReward: 30,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que fait le bit SUID sur un exécutable ?",
+            choices: [
+              "Il chiffre automatiquement le fichier",
+              "Il fait exécuter le programme avec les privilèges de son PROPRIÉTAIRE, peu importe qui le lance",
+              "Il empêche toute exécution du fichier",
+              "Il rend le fichier invisible dans `ls`",
+            ],
+            correctIndex: 1,
+            explanation:
+              "SUID est puissant et dangereux si mal maîtrisé : un binaire SUID appartenant à root exécute son code avec les privilèges root, même lancé par un utilisateur normal — une mauvaise implémentation ouvre une voie d'élévation de privilèges.",
+          },
+          {
+            order: 2,
+            prompt: "À quoi sert le bit sticky sur un dossier comme `/tmp` ?",
+            choices: [
+              "À empêcher toute création de fichier dans le dossier",
+              "À empêcher un utilisateur de supprimer les fichiers appartenant à un autre utilisateur dans ce dossier partagé, même avec un accès en écriture au dossier",
+              "À chiffrer tous les fichiers du dossier",
+              "À rendre le dossier accessible uniquement à root",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Sans le bit sticky, un accès en écriture au dossier suffirait techniquement à supprimer les fichiers de n'importe qui d'autre dedans — le sticky bit restreint la suppression au seul propriétaire du fichier (ou root), même dans un dossier partagé en écriture par tous comme `/tmp`.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "devops-docker-compose-monitoring",
+    title: "DevOps avancé : Docker Compose et Monitoring",
+    description: "Orchestrer plusieurs conteneurs ensemble avec Docker Compose, et savoir observer un système en production (logs, métriques, alerting).",
+    category: "CLOUD",
+    skillKey: "cicd",
+    level: 3,
+    prerequisiteCourseKeys: ["docker-basics", "devops-cicd"],
+    lessons: [
+      {
+        order: 1,
+        title: "Docker Compose : orchestrer plusieurs conteneurs",
+        content:
+          "La plupart des applications réelles ne tournent pas dans un seul conteneur isolé — une app web a typiquement besoin d'une base de données, d'un cache, parfois d'un reverse proxy. **Docker Compose** décrit tous ces services dans un seul fichier `docker-compose.yml` et les démarre/arrête ensemble.\n\n" +
+          "```yaml\nservices:\n  app:\n    build: .\n    ports: [\"3000:3000\"]\n    depends_on: [db]\n  db:\n    image: postgres:16\n    environment:\n      POSTGRES_PASSWORD: secret\n    volumes:\n      - db-data:/var/lib/postgresql/data\nvolumes:\n  db-data:\n```\n\n" +
+          "`docker compose up` démarre tous les services définis, dans l'ordre indiqué par `depends_on` ; `docker compose down` les arrête. Les services communiquent entre eux par leur nom (`app` peut se connecter à `db:5432` directement, Compose crée un réseau interne automatiquement) — pas besoin de connaître une IP.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi utiliser Docker Compose plutôt que de lancer chaque conteneur manuellement avec `docker run` ?",
+            choices: [
+              "Compose est obligatoire pour utiliser Docker",
+              "Compose décrit et orchestre plusieurs services liés (app + DB + cache...) dans un seul fichier, démarrés/arrêtés ensemble de façon cohérente",
+              "Compose remplace complètement le besoin de Dockerfile",
+              "Compose ne fonctionne qu'en production, jamais en développement",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Sans Compose, il faudrait lancer et connecter manuellement chaque conteneur (réseau, ordre de démarrage, variables partagées) — Compose déclare toute cette topologie une seule fois dans un fichier versionné.",
+          },
+          {
+            order: 2,
+            prompt: "Comment le service `app` peut-il se connecter au service `db` dans un fichier Compose ?",
+            choices: [
+              "Il doit connaître l'adresse IP exacte du conteneur, qui change à chaque redémarrage",
+              "Directement par le nom du service (`db`), Compose crée un réseau interne qui résout ce nom automatiquement",
+              "C'est impossible, chaque conteneur est totalement isolé",
+              "Uniquement via une adresse publique sur internet",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Compose crée un réseau Docker dédié où chaque service est joignable par son nom déclaré dans le fichier — une résolution DNS interne automatique, sans avoir à gérer des IP qui changeraient à chaque redémarrage.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Logs : centraliser pour comprendre",
+        content:
+          "Sur un système avec plusieurs services/conteneurs, chercher une erreur en se connectant manuellement à chaque machine devient vite ingérable. La **centralisation des logs** regroupe tous les logs de tous les composants dans un système unique, interrogeable.\n\n" +
+          "Un bon log structuré (JSON plutôt que du texte libre) facilite énormément la recherche et l'agrégation automatisée : `{\"level\":\"error\",\"service\":\"api\",\"userId\":\"42\",\"message\":\"payment failed\",\"timestamp\":\"...\"}` peut être filtré/agrégé par n'importe quel champ, contrairement à une ligne de texte libre où il faut parser manuellement.\n\n" +
+          "Les niveaux de log (`debug` < `info` < `warn` < `error` < `fatal`) permettent de filtrer le bruit selon le contexte : en développement on veut souvent tout voir (`debug`), en production on ne veut typiquement voir que `warn` et au-dessus pour ne pas noyer les vrais signaux dans du bruit informatif.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi un log structuré (JSON) est-il préférable à un simple message texte libre en production ?",
+            choices: [
+              "Il prend moins de place sur le disque",
+              "Il permet de filtrer et d'agréger automatiquement par champ (service, niveau, userId...) sans avoir à parser manuellement du texte libre",
+              "Il n'a aucun avantage réel par rapport au texte libre",
+              "Il est obligatoire pour que les logs s'affichent dans la console",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un champ structuré (`{\"level\":\"error\", ...}`) est directement interrogeable par un outil d'agrégation de logs — un message texte libre nécessite un parsing fragile (regex) pour extraire la même information.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi limiter les logs affichés en production à `warn` et au-dessus, plutôt que tout afficher comme en développement ?",
+            choices: [
+              "Ce n'est jamais recommandé, il faut toujours tout logger en production",
+              "Trop de logs `debug`/`info` en production noient les signaux vraiment importants dans le bruit, rendant le diagnostic plus difficile",
+              "Les logs `debug` ne fonctionnent pas en production",
+              "Ça n'a aucun rapport avec la lisibilité des logs",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Un volume excessif de logs informatifs noie les erreurs réelles — filtrer par niveau adapté au contexte (moins verbeux en production) garde les logs exploitables pour un vrai diagnostic.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Métriques et alerting",
+        content:
+          "Contrairement aux logs (événements discrets, souvent riches en contexte), les **métriques** sont des mesures numériques suivies dans le temps (CPU %, temps de réponse moyen, nombre de requêtes/seconde, taux d'erreur) — moins détaillées individuellement, mais bien plus efficaces pour repérer une tendance ou déclencher une alerte automatique.\n\n" +
+          "Un système d'**alerting** surveille ces métriques et notifie une équipe quand un seuil anormal est franchi (ex: « taux d'erreur > 5% pendant 5 minutes »). Une bonne alerte doit être **actionnable** : signaler un problème sur lequel quelqu'un peut réellement agir, pas juste informer — trop d'alertes non actionnables mènent à la même fatigue d'alerte que dans un SIEM mal réglé (voir le cours Blue Team).\n\n" +
+          "Les tableaux de bord (dashboards) combinent ces métriques pour donner une vue d'ensemble en temps réel de la santé d'un système — utiles pour un diagnostic visuel rapide, complémentaires aux logs pour l'investigation détaillée d'un incident précis.",
+        xpReward: 30,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quelle est la différence principale entre un log et une métrique ?",
+            choices: [
+              "Ce sont des synonymes exacts",
+              "Un log est un événement discret riche en contexte ; une métrique est une mesure numérique suivie dans le temps, plus efficace pour détecter une tendance",
+              "Les métriques ne peuvent pas être visualisées dans un dashboard",
+              "Les logs ne peuvent jamais déclencher d'alerte",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Les logs racontent ce qui s'est précisément passé (utile pour investiguer un incident) ; les métriques quantifient une tendance dans le temps (utile pour surveiller la santé globale et déclencher des alertes automatiques).",
+          },
+          {
+            order: 2,
+            prompt: "Que signifie qu'une alerte doit être « actionnable » ?",
+            choices: [
+              "Elle doit contenir un maximum d'informations techniques",
+              "Elle doit signaler un problème réel sur lequel quelqu'un peut concrètement agir — pas juste informer sans conséquence pratique",
+              "Elle doit s'envoyer automatiquement toutes les heures",
+              "Elle doit toujours être envoyée à toute l'équipe sans exception",
+            ],
+            correctIndex: 1,
+            explanation:
+              "Une alerte qui ne mène à aucune action concrète possible n'est que du bruit — elle finit ignorée, exactement comme des règles de détection trop sensibles dans un SIEM, créant une fatigue d'alerte dangereuse.",
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 /**
@@ -5563,6 +5925,78 @@ const DAILY_QUESTIONS: DailyQuestionSeed[] = [
     correctIndex: 1,
     explanation: "Le polling gaspille des requêtes à vérifier 'rien n'a changé' la plupart du temps ; un webhook (callback HTTP déclenché par le serveur lors de l'événement) est plus efficace et plus réactif, sans interrogation répétée inutile.",
   },
+  {
+    key: "linux-symlink-command",
+    category: "SYSTEMS",
+    prompt: "Quelle commande crée un lien symbolique sur Linux ?",
+    choices: ["cp -s", "ln -s", "mv -s", "rm -s"],
+    correctIndex: 1,
+    explanation: "`ln -s cible lien` crée un lien symbolique — un simple pointeur vers un chemin, distinct d'une copie (`cp`) qui duplique réellement le contenu du fichier.",
+  },
+  {
+    key: "chmod-numeric-755",
+    category: "SYSTEMS",
+    prompt: "Que signifie `chmod 755 fichier` en permissions Linux ?",
+    choices: ["Le fichier devient inaccessible à tous", "Propriétaire : lecture/écriture/exécution, groupe et autres : lecture/exécution seulement", "Le fichier est supprimé", "Le fichier devient accessible en écriture à tout le monde"],
+    correctIndex: 1,
+    explanation: "755 en octal se lit par groupe de 3 bits (rwx) : 7 = rwx (propriétaire), 5 = r-x (groupe), 5 = r-x (autres) — un mode très courant pour un script/exécutable partagé en lecture.",
+  },
+  {
+    key: "load-average-def",
+    category: "SYSTEMS",
+    prompt: "Que mesure le 'load average' (charge moyenne) affiché par des commandes comme `top` ou `uptime` sur Linux ?",
+    choices: ["La température du processeur", "Le nombre moyen de processus en attente ou en cours d'exécution sur une période donnée", "L'espace disque restant", "La vitesse du réseau"],
+    correctIndex: 1,
+    explanation: "Le load average résume la demande sur le CPU (processus actifs ou en attente de ressources) sur 1, 5 et 15 minutes — une valeur élevée et durable signale une machine sous forte charge.",
+  },
+  {
+    key: "csrf-token-purpose",
+    category: "CYBERSECURITY",
+    prompt: "À quoi sert un token CSRF inclus dans un formulaire web ?",
+    choices: ["À chiffrer les données du formulaire", "À vérifier que la requête provient bien du formulaire légitime du site, pas d'un site tiers malveillant exploitant une session active", "À accélérer la soumission du formulaire", "À identifier le navigateur utilisé"],
+    correctIndex: 1,
+    explanation: "Un token CSRF est une valeur imprévisible générée par le serveur et incluse dans le formulaire — un site tiers malveillant ne peut pas la connaître à l'avance, ce qui empêche de forger une requête valide au nom de la victime.",
+  },
+  {
+    key: "same-site-cookie-def",
+    category: "CYBERSECURITY",
+    prompt: "À quoi sert l'attribut de cookie `SameSite` ?",
+    choices: ["À chiffrer le contenu du cookie", "À restreindre l'envoi du cookie aux requêtes provenant du même site, réduisant le risque de CSRF", "À définir la durée de vie du cookie", "À le rendre accessible depuis JavaScript"],
+    correctIndex: 1,
+    explanation: "`SameSite=Strict` ou `Lax` empêche le navigateur d'envoyer le cookie sur une requête initiée depuis un autre site — une défense complémentaire aux tokens CSRF contre ce type d'attaque.",
+  },
+  {
+    key: "defense-in-depth-layers",
+    category: "CYBERSECURITY",
+    prompt: "Que signifie appliquer la 'défense en profondeur' (defense in depth) ?",
+    choices: ["Investir uniquement dans le meilleur pare-feu disponible", "Superposer plusieurs couches de sécurité indépendantes, pour qu'une seule défaillance ne compromette pas tout le système", "Chiffrer uniquement les données les plus sensibles", "Former uniquement les administrateurs système"],
+    correctIndex: 1,
+    explanation: "Aucune mesure de sécurité seule n'est infaillible — la défense en profondeur combine plusieurs couches indépendantes (réseau, application, données, humain) pour qu'une brèche à un niveau ne suffise pas à tout compromettre.",
+  },
+  {
+    key: "api-versioning-purpose",
+    category: "DEVELOPMENT",
+    prompt: "Pourquoi versionne-t-on une API (ex: `/api/v1/users`, `/api/v2/users`) ?",
+    choices: ["Pour ralentir volontairement les requêtes", "Pour permettre de faire évoluer l'API sans casser les clients existants qui dépendent encore de l'ancien comportement", "C'est purement décoratif, sans effet réel", "Pour limiter le nombre d'utilisateurs"],
+    correctIndex: 1,
+    explanation: "Un changement incompatible (breaking change) dans une API publique casserait tous les clients existants — le versionnement permet de faire coexister l'ancien et le nouveau comportement le temps d'une migration progressive.",
+  },
+  {
+    key: "environment-parity-def",
+    category: "DEVELOPMENT",
+    prompt: "Que désigne le principe de 'parité des environnements' (dev/staging/production similaires) en DevOps ?",
+    choices: ["Avoir exactement le même nombre de développeurs sur chaque environnement", "Garder les environnements de développement, test et production aussi similaires que possible, pour éviter le 'ça marche sur ma machine'", "Un synonyme de conteneurisation", "Une règle qui ne s'applique qu'aux bases de données"],
+    correctIndex: 1,
+    explanation: "Des environnements trop différents (versions, configuration) cachent des bugs qui n'apparaissent qu'en production — Docker/Docker Compose aident justement à réduire cet écart en figeant l'environnement d'exécution.",
+  },
+  {
+    key: "monorepo-vs-polyrepo",
+    category: "DEVELOPMENT",
+    prompt: "Quelle est la différence entre un 'monorepo' et une approche 'polyrepo' ?",
+    choices: ["Ce sont des synonymes exacts", "Un monorepo regroupe plusieurs projets/packages dans un seul dépôt Git ; le polyrepo utilise un dépôt séparé par projet", "Le monorepo ne fonctionne qu'avec Python", "Le polyrepo est toujours plus rapide à cloner"],
+    correctIndex: 1,
+    explanation: "Un monorepo facilite le partage de code et les changements coordonnés entre projets liés, au prix d'une taille de dépôt plus importante ; le polyrepo isole complètement chaque projet, au prix d'une coordination plus difficile entre projets dépendants.",
+  },
 ];
 
 /**
@@ -5836,6 +6270,64 @@ const CTF_CHALLENGES: CtfChallengeSeed[] = [
     hint: "Littéralement : \"exfiltration\" de données via le protocole \"DNS\".",
     points: 125,
     acceptedAnswers: ["dns exfiltration", "dns tunneling"],
+  },
+  {
+    key: "crypto-rot13-nested",
+    category: "CRYPTO",
+    difficulty: 1,
+    title: "Rotation classique",
+    description:
+      "Message chiffré avec ROT13 (chaque lettre décalée de 13 positions dans l'alphabet) : `Abqvsl Npnqrzl`.\n\n" +
+      "Déchiffre-le (2 mots, en respectant les majuscules).",
+    hint: "ROT13 est sa propre inverse : applique le même décalage de 13 une seconde fois pour retrouver le texte original.",
+    points: 50,
+    acceptedAnswers: ["nodify academy"],
+  },
+  {
+    key: "crypto-frequency-analysis",
+    category: "CRYPTO",
+    difficulty: 3,
+    title: "Analyse fréquentielle",
+    description:
+      "Un court message a été chiffré avec un chiffrement par substitution mono-alphabétique (chaque lettre est toujours remplacée par la même autre lettre). Dans un texte français suffisamment long chiffré ainsi, quelle lettre du texte chiffré a le plus de chances de correspondre à la lettre 'E' en clair, sachant que 'E' est la lettre la plus fréquente du français (réponds par le principe utilisé, en 2 mots en anglais) ?",
+    hint: "La technique consiste à compter combien de fois chaque lettre apparaît dans le texte chiffré et à la comparer aux fréquences connues de la langue.",
+    points: 100,
+    acceptedAnswers: ["frequency analysis", "analyse frequentielle"],
+  },
+  {
+    key: "osint-username-reuse",
+    category: "OSINT",
+    difficulty: 2,
+    title: "Le même pseudo partout",
+    description:
+      "Un chercheur en sécurité découvre qu'un pseudo unique et peu commun (`x_n0dify_dev_92`) est utilisé sur un forum de code, un réseau social professionnel et un compte de jeu vidéo. En croisant ces trois profils, quel type de risque cela crée-t-il pour la personne, même si chaque compte individuellement semble anodin (2 mots en français) ?",
+    hint: "Pense à ce qu'on peut reconstituer en combinant des informations partielles de plusieurs sources différentes mais liées par le même identifiant.",
+    points: 75,
+    acceptedAnswers: ["correlation d'identite", "correlation d'identites", "profilage numerique", "desanonymisation"],
+  },
+  {
+    key: "forensics-suspicious-process-name",
+    category: "FORENSICS",
+    difficulty: 2,
+    title: "Un nom presque parfait",
+    description:
+      "La liste des processus d'une machine compromise montre `svch0st.exe` tournant depuis un dossier temporaire utilisateur, aux côtés du légitime `svchost.exe` de Windows.\n\n" +
+      "Quelle technique le nom `svch0st.exe` (avec un zéro à la place du 'o') illustre-t-il, utilisée pour tromper un utilisateur ou un administrateur pressé (2 mots en anglais) ?",
+    hint: "C'est la même famille de technique que le typosquatting de domaines, appliquée à un nom de processus légitime.",
+    points: 100,
+    acceptedAnswers: ["process masquerading", "masquerading", "process spoofing"],
+  },
+  {
+    key: "reverse-base64-layered",
+    category: "REVERSE",
+    difficulty: 3,
+    title: "Encodage en couches",
+    description:
+      "Un binaire contient la chaîne suivante codée en dur : `Ym05a2FXWjU=`.\n\n" +
+      "Cette chaîne est encodée en Base64 — mais une fois décodée une première fois, le résultat obtenu ressemble encore à du Base64. Décode-la deux fois de suite pour obtenir le flag final (un seul mot).",
+    hint: "Décode `VG05a2FXWjU=` une première fois en Base64, puis décode le résultat obtenu une seconde fois de la même façon.",
+    points: 100,
+    acceptedAnswers: ["nodify"],
   },
 ];
 
