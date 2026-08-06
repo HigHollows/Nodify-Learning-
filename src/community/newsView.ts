@@ -5,10 +5,8 @@ const COLOR_BLUE = 0x3498db;
 
 /** Titre cliquable (`.setURL()` sur l'ancien embed) émulé en Markdown — Components V2 n'a pas d'équivalent natif "URL de titre". */
 export function buildNewsPost(article: FetchedArticle): MessageViewPayload {
-  const container = bannerContainer(COLOR_BLUE).addTextDisplayComponents(
-    textDisplay(`## [📰 ${article.title}](${article.url})`),
-    textDisplay(`-# Source : ${article.source}`),
-  );
+  const container = bannerContainer(`## [📰 ${article.title}](${article.url})`, COLOR_BLUE);
+  container.addTextDisplayComponents(textDisplay(`-# Source : ${article.source}`));
 
   return messageViewPayload(container);
 }

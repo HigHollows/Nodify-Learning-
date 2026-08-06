@@ -4,12 +4,12 @@ import { fileURLToPath } from "node:url";
 import {
   AttachmentBuilder,
   ContainerBuilder,
-  MediaGalleryBuilder,
-  MediaGalleryItemBuilder,
   MessageFlags,
+  SectionBuilder,
   SeparatorBuilder,
   SeparatorSpacingSize,
   TextDisplayBuilder,
+  ThumbnailBuilder,
 } from "discord.js";
 
 /**
@@ -67,44 +67,55 @@ export function bannerAttachment(): AttachmentBuilder {
   return new AttachmentBuilder(bannerBuffer, { name: BANNER_FILENAME });
 }
 
-function bannerGallery(): MediaGalleryBuilder {
-  return new MediaGalleryBuilder().addItems(
-    new MediaGalleryItemBuilder().setURL(`attachment://${BANNER_FILENAME}`).setDescription("Nodify"),
-  );
-}
-
 /**
- * Container avec bannière + couleur d'accent, SANS titre auto-formaté — pour
- * les cas où le titre doit être un lien Markdown (`.setURL()` sur l'ancien
- * embed, ex: Hacktualités) plutôt qu'un texte brut. `baseContainer()` couvre
- * le cas standard (titre texte).
+ * Petite miniature (pas une image pleine largeur) accolée au titre via
+ * `Section.setThumbnailAccessory()` — la bannière prenait trop de place en
+ * `MediaGallery` (pleine largeur), un thumbnail reste compact comme
+ * l'ancien `.setThumbnail()` d'embed.
  */
-export function bannerContainer(color: number): ContainerBuilder {
-  return new ContainerBuilder().setAccentColor(color).addMediaGalleryComponents(bannerGallery());
-}
-
-/** Container de base : bannière + titre + couleur d'accent — équivalent Components V2 de l'ancien `baseEmbed()`. */
-export function baseContainer(title: string, color: number): ContainerBuilder {
-  return bannerContainer(color).addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ${title}`));
+function bannerThumbnail(): ThumbnailBuilder {
+  return new ThumbnailBuilder().setURL(`attachment://${BANNER_FILENAME}`).setDescription("Nodify");
 }
 
 /**
- * Container avec une image de bannière piochée au hasard parmi les visuels
- * dédiés à la Question du jour (`assets/trivia/`) — l'attachment correspondant
- * doit être ajouté à `files` par l'appelant (voir `messageViewPayloadWithFiles`),
+ * Container avec couleur d'accent et une Section titre + miniature — pour
+ * les cas où le titre doit être un lien Markdown (`.setURL()` sur l'ancien
+ * embed, ex: Hacktualités) plutôt qu'un texte brut simple.
+ * `baseContainer()` couvre le cas standard (titre texte).
+ */
+export function bannerContainer(headingMarkdown: string, color: number): ContainerBuilder {
+  return new ContainerBuilder()
+    .setAccentColor(color)
+    .addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(headingMarkdown))
+        .setThumbnailAccessory(bannerThumbnail()),
+    );
+}
+
+/** Container de base : titre + miniature + couleur d'accent — équivalent Components V2 de l'ancien `baseEmbed()`. */
+export function baseContainer(title: string, color: number): ContainerBuilder {
+  return bannerContainer(`## ${title}`, color);
+}
+
+/**
+ * Container avec une miniature piochée au hasard parmi les visuels dédiés à
+ * la Question du jour (`assets/trivia/`) — l'attachment correspondant doit
+ * être ajouté à `files` par l'appelant (voir `messageViewPayloadWithFiles`),
  * la fonction ne renvoie que ce dont elle a besoin pour rester cohérente.
  */
 export function triviaContainer(title: string, color: number): { container: ContainerBuilder; attachment: AttachmentBuilder } {
   const pick = TRIVIA_IMAGES[Math.floor(Math.random() * TRIVIA_IMAGES.length)]!;
   const attachment = new AttachmentBuilder(pick.buffer, { name: pick.name });
-  const gallery = new MediaGalleryBuilder().addItems(
-    new MediaGalleryItemBuilder().setURL(`attachment://${pick.name}`).setDescription("Nodify Trivia"),
-  );
+  const thumbnail = new ThumbnailBuilder().setURL(`attachment://${pick.name}`).setDescription("Nodify Trivia");
 
   const container = new ContainerBuilder()
     .setAccentColor(color)
-    .addMediaGalleryComponents(gallery)
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ${title}`));
+    .addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ${title}`))
+        .setThumbnailAccessory(thumbnail),
+    );
 
   return { container, attachment };
 }
