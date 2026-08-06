@@ -12,6 +12,7 @@ on:
 jobs:
   notify:
     runs-on: ubuntu-latest
+    timeout-minutes: 2 # évite qu'un run reste bloqué en silence pendant des heures si Discord ne répond pas
     steps:
       - name: Envoyer une notification Discord
         env:
@@ -47,4 +48,7 @@ jobs:
               }]
             }')
 
-          curl -sf -H "Content-Type: application/json" -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
+          # --max-time borne l'appel : sans ça, un souci réseau/Discord fait
+          # rester curl bloqué indéfiniment plutôt que d'échouer proprement
+          # (c'est ce qui s'est passé le 06/08 : run resté bloqué 15min).
+          curl -sf --max-time 15 -H "Content-Type: application/json" -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
