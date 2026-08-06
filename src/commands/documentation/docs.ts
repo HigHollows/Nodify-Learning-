@@ -1,6 +1,10 @@
-import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder } from "discord.js";
 import { answerDocsQuestion } from "../../documentation/docsService.js";
+import { baseContainer, containerPayload, fieldText, textDisplay, thinSeparator } from "../../ui/container.js";
 import type { Command } from "../../types/command.js";
+
+const COLOR_ORANGE = 0xe67e22;
+const COLOR_BLUE = 0x3498db;
 
 const command: Command = {
   data: new SlashCommandBuilder()
@@ -21,35 +25,37 @@ const command: Command = {
     const result = await answerDocsQuestion(interaction.user.id, question, interaction.guildId ?? undefined);
 
     if (result.sources.length === 0) {
-      const embed = new EmbedBuilder()
-        .setTitle("📚 Documentation")
-        .setColor("Orange")
-        .setDescription(
+      const container = baseContainer("📚 Documentation", COLOR_ORANGE).addTextDisplayComponents(
+        textDisplay(
           `Rien trouvé dans le corpus documentaire Nodify pour « ${question} ». ` +
             "Le corpus est encore petit (Node.js, Discord.js, PostgreSQL, OWASP) — essaie `/explainme` pour une réponse plus générale.",
-        );
-      await interaction.editReply({ embeds: [embed] });
+        ),
+      );
+      await interaction.editReply(containerPayload(container));
       return;
     }
 
-    const embed = new EmbedBuilder().setTitle("📚 Documentation").setColor("Blue");
-
-    if (result.synthesized) {
-      embed.setDescription(result.synthesized);
-    } else {
-      embed.setDescription(
-        "*(Mode démonstration — aucune clé API IA configurée, voici directement les extraits trouvés)*",
-      );
-    }
-
-    embed.addFields(
-      result.sources.map((s) => ({
-        name: `${s.source} — ${s.title}`,
-        value: `${s.content.slice(0, 200)}${s.content.length > 200 ? "..." : ""}\n[Lien officiel](${s.url})`,
-      })),
+    const container = baseContainer("📚 Documentation", COLOR_BLUE).addTextDisplayComponents(
+      textDisplay(
+        result.synthesized ?? "*(Mode démonstration — aucune clé API IA configurée, voici directement les extraits trouvés)*",
+      ),
     );
 
-    await interaction.editReply({ embeds: [embed] });
+    container.addSeparatorComponents(thinSeparator());
+    container.addTextDisplayComponents(
+      textDisplay(
+        result.sources
+          .map((s) =>
+            fieldText(
+              `${s.source} — ${s.title}`,
+              `${s.content.slice(0, 200)}${s.content.length > 200 ? "..." : ""}\n[Lien officiel](${s.url})`,
+            ),
+          )
+          .join("\n\n"),
+      ),
+    );
+
+    await interaction.editReply(containerPayload(container));
   },
 };
 

@@ -1,15 +1,11 @@
-import {
-  ActionRowBuilder,
-  EmbedBuilder,
-  ModalBuilder,
-  TextInputBuilder,
-  TextInputStyle,
-} from "discord.js";
+import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
+import { baseContainer, containerPayload, textDisplay, type ContainerPayload } from "../ui/container.js";
 
 export const THREAT_MODEL_MODAL_ID = "threatmodel:modal";
 export const THREAT_MODEL_INPUT_ID = "description";
 
-const EMBED_DESCRIPTION_LIMIT = 4000;
+const TEXT_DISPLAY_LIMIT = 4000;
+const COLOR_PURPLE = 0x9b59b6;
 
 export function buildThreatModelModal(): ModalBuilder {
   const input = new TextInputBuilder()
@@ -28,16 +24,9 @@ export function buildThreatModelModal(): ModalBuilder {
     .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(input));
 }
 
-export function buildThreatModelReply(analysis: string) {
+export function buildThreatModelReply(analysis: string): ContainerPayload {
   const truncated =
-    analysis.length > EMBED_DESCRIPTION_LIMIT
-      ? `${analysis.slice(0, EMBED_DESCRIPTION_LIMIT)}\n\n*(réponse tronquée)*`
-      : analysis;
+    analysis.length > TEXT_DISPLAY_LIMIT ? `${analysis.slice(0, TEXT_DISPLAY_LIMIT)}\n\n*(réponse tronquée)*` : analysis;
 
-  const embed = new EmbedBuilder()
-    .setTitle("🧠 Threat Model")
-    .setColor("Purple")
-    .setDescription(truncated);
-
-  return { embeds: [embed], components: [] };
+  return containerPayload(baseContainer("🧠 Threat Model", COLOR_PURPLE).addTextDisplayComponents(textDisplay(truncated)));
 }

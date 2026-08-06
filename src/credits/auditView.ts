@@ -1,6 +1,6 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import type { AuditLogPage } from "./auditService.js";
-import { baseEmbed, EmbedColors, type MessageViewPayload } from "./embedTheme.js";
+import { baseContainer, EmbedColors, messageViewPayload, textDisplay, thinSeparator, type MessageViewPayload } from "../ui/container.js";
 
 export const AUDIT_LOG_PAGE_SIZE = 8;
 
@@ -16,24 +16,30 @@ export function buildAuditLogPageCustomId(page: number): string {
  */
 export function buildAuditLogReply(page: AuditLogPage, pageIndex: number): MessageViewPayload {
   const totalPages = Math.max(Math.ceil(page.total / AUDIT_LOG_PAGE_SIZE), 1);
-  const embed = baseEmbed("🗂️ NODIFY — AUDIT LOG", EmbedColors.neutral).setDescription(
-    "Actions administratives sensibles (mode IA, crédits, bonus, statut supporter...).",
+  const container = baseContainer("🗂️ NODIFY — AUDIT LOG", EmbedColors.neutral).addTextDisplayComponents(
+    textDisplay("Actions administratives sensibles (mode IA, crédits, bonus, statut supporter...)."),
   );
 
+  container.addSeparatorComponents(thinSeparator());
+
   if (page.entries.length === 0) {
-    embed.addFields({ name: "​", value: "Aucune action journalisée pour l'instant." });
+    container.addTextDisplayComponents(textDisplay("Aucune action journalisée pour l'instant."));
   } else {
-    for (const entry of page.entries) {
-      const target = entry.targetUserId ? ` → <@${entry.targetUserId}>` : "";
-      const reason = entry.reason ? ` — ${entry.reason}` : "";
-      embed.addFields({
-        name: `${entry.action}${target}`,
-        value: `Par <@${entry.adminId}>${reason} · <t:${Math.floor(entry.createdAt.getTime() / 1000)}:R>`,
-      });
-    }
+    container.addTextDisplayComponents(
+      textDisplay(
+        page.entries
+          .map((entry) => {
+            const target = entry.targetUserId ? ` → <@${entry.targetUserId}>` : "";
+            const reason = entry.reason ? ` — ${entry.reason}` : "";
+            return `**${entry.action}${target}**\nPar <@${entry.adminId}>${reason} · <t:${Math.floor(entry.createdAt.getTime() / 1000)}:R>`;
+          })
+          .join("\n\n"),
+      ),
+    );
   }
 
-  embed.setFooter({ text: `Page ${pageIndex + 1}/${totalPages} — ${page.total} action(s) au total` });
+  container.addSeparatorComponents(thinSeparator());
+  container.addTextDisplayComponents(textDisplay(`-# Page ${pageIndex + 1}/${totalPages} — ${page.total} action(s) au total`));
 
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
@@ -47,6 +53,7 @@ export function buildAuditLogReply(page: AuditLogPage, pageIndex: number): Messa
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(pageIndex + 1 >= totalPages),
   );
+  container.addActionRowComponents(row);
 
-  return { embeds: [embed], components: [row] };
+  return messageViewPayload(container);
 }

@@ -1,12 +1,19 @@
-import {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  EmbedBuilder,
-  type InteractionReplyOptions,
-} from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import type { InsufficientCreditsError } from "../utils/errors.js";
-import { baseEmbed, EmbedColors, formatCredits, SEPARATOR, type MessageViewPayload } from "./embedTheme.js";
+import {
+  baseContainer,
+  containerPayload,
+  EmbedColors,
+  ephemeralContainerPayload,
+  fieldText,
+  formatCredits,
+  messageViewPayload,
+  textDisplay,
+  thinSeparator,
+  type ContainerPayload,
+  type EphemeralContainerPayload,
+  type MessageViewPayload,
+} from "../ui/container.js";
 import type { CreditStats, SpendBudgetStatus, Wallet } from "./creditService.js";
 import { listAiCosts } from "./creditCosts.js";
 import type { RewardStatus } from "./rewardService.js";
@@ -19,16 +26,13 @@ export const CREDIT_BUTTON_IDS = {
   daily: "credits:claim:daily",
 };
 
-/** Réponse guidée en cas de solde insuffisant — jamais un simple message d'erreur brut. */
-export function buildInsufficientCreditsReply(
-  error: InsufficientCreditsError,
-): InteractionReplyOptions {
-  const embed = baseEmbed("⚠️ NODIFY — CRÉDITS INSUFFISANTS", EmbedColors.warning)
-    .setDescription(`Il te faut ${formatCredits(error.required)} pour utiliser cette fonctionnalité.`)
-    .addFields(
-      { name: "Solde actuel", value: formatCredits(error.current), inline: true },
-      { name: "Manquant", value: formatCredits(error.required - error.current), inline: true },
-    );
+/** Réponse guidée en cas de solde insuffisant — jamais un simple message d'erreur brut. Toujours éphémère. */
+export function buildInsufficientCreditsReply(error: InsufficientCreditsError): EphemeralContainerPayload {
+  const container = baseContainer("⚠️ NODIFY — CRÉDITS INSUFFISANTS", EmbedColors.warning).addTextDisplayComponents(
+    textDisplay(`Il te faut ${formatCredits(error.required)} pour utiliser cette fonctionnalité.`),
+    textDisplay(fieldText("Solde actuel", formatCredits(error.current))),
+    textDisplay(fieldText("Manquant", formatCredits(error.required - error.current))),
+  );
 
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
@@ -44,27 +48,33 @@ export function buildInsufficientCreditsReply(
       .setLabel("📖 Guide des crédits")
       .setStyle(ButtonStyle.Secondary),
   );
+  container.addActionRowComponents(row);
 
-  return { embeds: [embed], components: [row] };
+  return ephemeralContainerPayload(container);
 }
 
-export function buildCreditsGuideReply(): InteractionReplyOptions {
+export function buildCreditsGuideReply(): ContainerPayload {
   const costs = listAiCosts();
 
-  const embed = baseEmbed("💳 NODIFY — CRÉDITS", EmbedColors.info)
-    .setDescription(
+  const container = baseContainer("💳 NODIFY — CRÉDITS", EmbedColors.info).addTextDisplayComponents(
+    textDisplay(
       "Les crédits permettent d'utiliser certaines fonctionnalités nécessitant l'intelligence artificielle. " +
         "Ce ne sont pas une monnaie réelle et ils ne sont pas achetables.",
-    )
-    .addFields(
-      { name: SEPARATOR, value: "🎁 Récompenses" },
-      { name: "Daily / Weekly / Monthly", value: "Récompenses périodiques gratuites (voir `/daily`, `/weekly`, `/monthly`)" },
-      { name: "Apprentissage", value: "Cours, quiz et défis terminés rapportent aussi des crédits" },
-      { name: SEPARATOR, value: "🤖 Coûts IA" },
-      ...costs.map((c) => ({ name: c.label, value: formatCredits(c.cost), inline: true })),
-    );
+    ),
+  );
+  container.addSeparatorComponents(thinSeparator());
+  container.addTextDisplayComponents(
+    textDisplay("**🎁 Récompenses**"),
+    textDisplay("Daily / Weekly / Monthly — Récompenses périodiques gratuites (voir `/daily`, `/weekly`, `/monthly`)"),
+    textDisplay("Apprentissage — Cours, quiz et défis terminés rapportent aussi des crédits"),
+  );
+  container.addSeparatorComponents(thinSeparator());
+  container.addTextDisplayComponents(
+    textDisplay("**🤖 Coûts IA**"),
+    textDisplay(costs.map((c) => `${c.label} — ${formatCredits(c.cost)}`).join("\n")),
+  );
 
-  return { embeds: [embed], components: [] };
+  return containerPayload(container);
 }
 
 function rewardLine(label: string, status: RewardStatus): string {
@@ -88,31 +98,54 @@ export interface WalletViewData {
   isSupporter: boolean;
 }
 
-export function buildWalletReply(data: WalletViewData): InteractionReplyOptions {
-  const embed = baseEmbed("💳 NODIFY — CREDIT WALLET", EmbedColors.info)
-    .setDescription(
-      `Solde et activité récente de ${data.username}.${data.isSupporter ? " ⭐ Statut supporter." : ""}`,
-    )
-    .addFields(
-      { name: SEPARATOR, value: "🪙 Balance" },
-      { name: "​", value: formatCredits(data.wallet.balance) },
-      { name: SEPARATOR, value: "📈 Ce mois-ci" },
-      { name: "Gagnés", value: `+${data.monthEarned}`, inline: true },
-      { name: "Dépensés", value: `-${data.monthSpent}`, inline: true },
-      { name: SEPARATOR, value: "🔥 Learning streak" },
-      { name: "​", value: `${data.learningStreak} jour(s)` },
-      { name: SEPARATOR, value: "🎁 Récompenses" },
-      { name: "Daily", value: rewardLine("Daily", data.rewards.daily), inline: true },
-      { name: "Weekly", value: rewardLine("Weekly", data.rewards.weekly), inline: true },
-      {
-        name: "Monthly",
-        value: `${rewardLine("Monthly", data.rewards.monthly)}${data.isSupporter ? " (+ bonus supporter ⭐)" : ""}`,
-        inline: true,
-      },
-      { name: SEPARATOR, value: "📊 Budget IA anti-abus" },
-      { name: "Aujourd'hui", value: spendLine(data.spendStatus.dailyLimit, data.spendStatus.dailySpent), inline: true },
-      { name: "Ce mois-ci", value: spendLine(data.spendStatus.monthlyLimit, data.spendStatus.monthlySpent), inline: true },
-    );
+export function buildWalletReply(data: WalletViewData): ContainerPayload {
+  const container = baseContainer("💳 NODIFY — CREDIT WALLET", EmbedColors.info).addTextDisplayComponents(
+    textDisplay(`Solde et activité récente de ${data.username}.${data.isSupporter ? " ⭐ Statut supporter." : ""}`),
+  );
+
+  container.addSeparatorComponents(thinSeparator());
+  container.addTextDisplayComponents(
+    textDisplay("**🪙 Balance**"),
+    textDisplay(formatCredits(data.wallet.balance)),
+  );
+
+  container.addSeparatorComponents(thinSeparator());
+  container.addTextDisplayComponents(
+    textDisplay("**📈 Ce mois-ci**"),
+    textDisplay(`${fieldText("Gagnés", `+${data.monthEarned}`)}\n${fieldText("Dépensés", `-${data.monthSpent}`)}`),
+  );
+
+  container.addSeparatorComponents(thinSeparator());
+  container.addTextDisplayComponents(
+    textDisplay("**🔥 Learning streak**"),
+    textDisplay(`${data.learningStreak} jour(s)`),
+  );
+
+  container.addSeparatorComponents(thinSeparator());
+  container.addTextDisplayComponents(
+    textDisplay("**🎁 Récompenses**"),
+    textDisplay(
+      [
+        fieldText("Daily", rewardLine("Daily", data.rewards.daily)),
+        fieldText("Weekly", rewardLine("Weekly", data.rewards.weekly)),
+        fieldText(
+          "Monthly",
+          `${rewardLine("Monthly", data.rewards.monthly)}${data.isSupporter ? " (+ bonus supporter ⭐)" : ""}`,
+        ),
+      ].join("\n"),
+    ),
+  );
+
+  container.addSeparatorComponents(thinSeparator());
+  container.addTextDisplayComponents(
+    textDisplay("**📊 Budget IA anti-abus**"),
+    textDisplay(
+      [
+        fieldText("Aujourd'hui", spendLine(data.spendStatus.dailyLimit, data.spendStatus.dailySpent)),
+        fieldText("Ce mois-ci", spendLine(data.spendStatus.monthlyLimit, data.spendStatus.monthlySpent)),
+      ].join("\n"),
+    ),
+  );
 
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder().setCustomId(CREDIT_BUTTON_IDS.stats).setLabel("📊 Statistiques").setStyle(ButtonStyle.Secondary),
@@ -120,26 +153,43 @@ export function buildWalletReply(data: WalletViewData): InteractionReplyOptions 
     new ButtonBuilder().setCustomId(CREDIT_BUTTON_IDS.rewards).setLabel("🎁 Récompenses").setStyle(ButtonStyle.Secondary),
     new ButtonBuilder().setCustomId(CREDIT_BUTTON_IDS.costs).setLabel("💡 Coûts").setStyle(ButtonStyle.Secondary),
   );
+  container.addActionRowComponents(row);
 
-  return { embeds: [embed], components: [row] };
+  return containerPayload(container);
 }
 
-export function buildStatsReply(username: string, stats: CreditStats): InteractionReplyOptions {
-  const embed = baseEmbed("📊 NODIFY — CREDIT STATISTICS", EmbedColors.info)
-    .setDescription(`Statistiques de ${username}.`)
-    .addFields(
-      { name: "Total gagné", value: `${stats.totalEarned}`, inline: true },
-      { name: "Total dépensé", value: `${stats.totalSpent}`, inline: true },
-      { name: "Total remboursé", value: `${stats.totalRefunded}`, inline: true },
-      { name: SEPARATOR, value: "🤖 Usage IA" },
-      { name: "Requêtes", value: `${stats.aiRequestCount}`, inline: true },
-      { name: "Plus utilisée", value: stats.mostUsedFeature ?? "—", inline: true },
-      { name: SEPARATOR, value: "📅 Ce mois-ci" },
-      { name: "Gagné", value: `+${stats.thisMonth.earned}`, inline: true },
-      { name: "Dépensé", value: `-${stats.thisMonth.spent}`, inline: true },
-    );
+export function buildStatsReply(username: string, stats: CreditStats): ContainerPayload {
+  const container = baseContainer("📊 NODIFY — CREDIT STATISTICS", EmbedColors.info).addTextDisplayComponents(
+    textDisplay(`Statistiques de ${username}.`),
+    textDisplay(
+      [
+        fieldText("Total gagné", `${stats.totalEarned}`),
+        fieldText("Total dépensé", `${stats.totalSpent}`),
+        fieldText("Total remboursé", `${stats.totalRefunded}`),
+      ].join("\n"),
+    ),
+  );
 
-  return { embeds: [embed], components: [] };
+  container.addSeparatorComponents(thinSeparator());
+  container.addTextDisplayComponents(
+    textDisplay("**🤖 Usage IA**"),
+    textDisplay(
+      [
+        fieldText("Requêtes", `${stats.aiRequestCount}`),
+        fieldText("Plus utilisée", stats.mostUsedFeature ?? "—"),
+      ].join("\n"),
+    ),
+  );
+
+  container.addSeparatorComponents(thinSeparator());
+  container.addTextDisplayComponents(
+    textDisplay("**📅 Ce mois-ci**"),
+    textDisplay(
+      [fieldText("Gagné", `+${stats.thisMonth.earned}`), fieldText("Dépensé", `-${stats.thisMonth.spent}`)].join("\n"),
+    ),
+  );
+
+  return containerPayload(container);
 }
 
 /** `type` en dernier segment du customId (vide = pas de filtre) — ex: `credits:history:1:EARN`, `credits:history:0:`. */
@@ -154,23 +204,28 @@ export function buildHistoryReply(
   totalPages: number,
   type?: string,
 ): MessageViewPayload {
-  const embed = baseEmbed("📜 NODIFY — CREDIT HISTORY", EmbedColors.neutral).setDescription(
-    type ? `Transactions de ${username} — filtre : ${type}.` : `Dernières transactions de ${username}.`,
+  const container = baseContainer("📜 NODIFY — CREDIT HISTORY", EmbedColors.neutral).addTextDisplayComponents(
+    textDisplay(type ? `Transactions de ${username} — filtre : ${type}.` : `Dernières transactions de ${username}.`),
   );
 
   if (transactions.length === 0) {
-    embed.addFields({ name: "​", value: "Aucune transaction pour l'instant." });
+    container.addTextDisplayComponents(textDisplay("Aucune transaction pour l'instant."));
   } else {
-    for (const t of transactions) {
-      const sign = t.amount >= 0 ? "+" : "";
-      embed.addFields({
-        name: `${sign}${t.amount} — ${t.reason}`,
-        value: `<t:${Math.floor(t.createdAt.getTime() / 1000)}:R>`,
-      });
-    }
+    container.addSeparatorComponents(thinSeparator());
+    container.addTextDisplayComponents(
+      textDisplay(
+        transactions
+          .map((t) => {
+            const sign = t.amount >= 0 ? "+" : "";
+            return `**${sign}${t.amount} — ${t.reason}**\n<t:${Math.floor(t.createdAt.getTime() / 1000)}:R>`;
+          })
+          .join("\n\n"),
+      ),
+    );
   }
 
-  embed.setFooter({ text: `Page ${page + 1}/${Math.max(totalPages, 1)}` });
+  container.addSeparatorComponents(thinSeparator());
+  container.addTextDisplayComponents(textDisplay(`-# Page ${page + 1}/${Math.max(totalPages, 1)}`));
 
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
@@ -184,48 +239,47 @@ export function buildHistoryReply(
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page + 1 >= totalPages),
   );
+  container.addActionRowComponents(row);
 
-  return { embeds: [embed], components: [row] };
+  return messageViewPayload(container);
 }
 
-export function buildAiCostsReply(): InteractionReplyOptions {
+export function buildAiCostsReply(): ContainerPayload {
   const costs = listAiCosts();
-  const embed = baseEmbed("🤖 NODIFY — AI COSTS", EmbedColors.neutral)
-    .setDescription("Coût en crédits de chaque fonctionnalité IA.")
-    .addFields(costs.map((c) => ({ name: c.label, value: formatCredits(c.cost), inline: true })));
+  const container = baseContainer("🤖 NODIFY — AI COSTS", EmbedColors.neutral).addTextDisplayComponents(
+    textDisplay("Coût en crédits de chaque fonctionnalité IA."),
+    textDisplay(costs.map((c) => fieldText(c.label, formatCredits(c.cost))).join("\n")),
+  );
 
-  return { embeds: [embed], components: [] };
+  return containerPayload(container);
 }
 
 const REWARD_LABELS: Record<string, string> = { DAILY: "DAILY REWARD", WEEKLY: "WEEKLY REWARD", MONTHLY: "MONTHLY REWARD" };
 
-export function buildRewardClaimedReply(
-  type: string,
-  amount: number,
-  newBalance: number,
-): InteractionReplyOptions {
-  const embed = baseEmbed(`🎁 NODIFY — ${REWARD_LABELS[type] ?? type}`, EmbedColors.operational)
-    .setDescription("Ta récompense est prête.")
-    .addFields(
-      { name: "​", value: `+${amount} crédits` },
-      { name: "Nouveau solde", value: formatCredits(newBalance) },
-      { name: SEPARATOR, value: "Reviens à la prochaine période pour une nouvelle récompense." },
-    );
-
-  return { embeds: [embed], components: [] };
-}
-
-export function buildRewardCooldownReply(type: string, remainingLabel: string): InteractionReplyOptions {
-  const embed = baseEmbed(`🎁 NODIFY — ${REWARD_LABELS[type] ?? type}`, EmbedColors.neutral)
-    .setDescription("Tu as déjà récupéré cette récompense pour cette période.")
-    .addFields({ name: "Prochaine récompense", value: `dans ${remainingLabel}` });
-
-  return { embeds: [embed], components: [] };
-}
-
-export function buildRewardDisabledReply(type: string): InteractionReplyOptions {
-  const embed = baseEmbed(`🎁 NODIFY — ${REWARD_LABELS[type] ?? type}`, EmbedColors.neutral).setDescription(
-    "Cette récompense est désactivée sur Nodify pour l'instant.",
+export function buildRewardClaimedReply(type: string, amount: number, newBalance: number): ContainerPayload {
+  const container = baseContainer(`🎁 NODIFY — ${REWARD_LABELS[type] ?? type}`, EmbedColors.operational).addTextDisplayComponents(
+    textDisplay("Ta récompense est prête."),
+    textDisplay(`+${amount} crédits`),
+    textDisplay(fieldText("Nouveau solde", formatCredits(newBalance))),
   );
-  return { embeds: [embed], components: [] };
+  container.addSeparatorComponents(thinSeparator());
+  container.addTextDisplayComponents(textDisplay("Reviens à la prochaine période pour une nouvelle récompense."));
+
+  return containerPayload(container);
+}
+
+export function buildRewardCooldownReply(type: string, remainingLabel: string): ContainerPayload {
+  const container = baseContainer(`🎁 NODIFY — ${REWARD_LABELS[type] ?? type}`, EmbedColors.neutral).addTextDisplayComponents(
+    textDisplay("Tu as déjà récupéré cette récompense pour cette période."),
+    textDisplay(fieldText("Prochaine récompense", `dans ${remainingLabel}`)),
+  );
+
+  return containerPayload(container);
+}
+
+export function buildRewardDisabledReply(type: string): ContainerPayload {
+  const container = baseContainer(`🎁 NODIFY — ${REWARD_LABELS[type] ?? type}`, EmbedColors.neutral).addTextDisplayComponents(
+    textDisplay("Cette récompense est désactivée sur Nodify pour l'instant."),
+  );
+  return containerPayload(container);
 }

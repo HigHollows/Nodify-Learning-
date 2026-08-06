@@ -1,7 +1,10 @@
-import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import { SectionBuilder, SlashCommandBuilder, ThumbnailBuilder } from "discord.js";
 import { buildProfileView } from "../../services/profileService.js";
+import { baseContainer, containerPayload, fieldText, textDisplay, thinSeparator } from "../../ui/container.js";
 import type { Command } from "../../types/command.js";
 import { AppError } from "../../utils/errors.js";
+
+const COLOR_BLUE = 0x3498db;
 
 const command: Command = {
   data: new SlashCommandBuilder()
@@ -16,38 +19,43 @@ const command: Command = {
       throw new AppError("Ton profil n'a pas encore été créé, réessaie dans un instant.");
     }
 
-    const embed = new EmbedBuilder()
-      .setTitle(`👤 Profil de ${view.username}`)
-      .setColor("Blue")
-      .setThumbnail(interaction.user.displayAvatarURL())
-      .addFields(
-        {
-          name: `Niveau : ${view.level.name}`,
-          value: view.xpBar,
-        },
-        {
-          name: "🔥 Streak",
-          value: `${view.currentStreak} jour(s) — record : ${view.longestStreak} jour(s)`,
-        },
-        {
-          name: "Compétences",
-          value:
-            view.skills.length > 0
-              ? view.skills
-                  .map((s) => `${s.categoryLabel} **${s.name}** — ${s.level.name}`)
-                  .join("\n")
-              : "_Aucune pour l'instant — reviens quand l'Academy sera là 👀_",
-        },
-        {
-          name: `🏆 Succès (${view.achievementsUnlockedCount}/${view.achievementsTotalCount})`,
-          value:
-            view.achievements.length > 0
-              ? view.achievements.map((a) => `${a.icon} ${a.name}`).join("\n")
-              : "_Aucun débloqué pour l'instant_",
-        },
-      );
+    const container = baseContainer(`👤 Profil de ${view.username}`, COLOR_BLUE);
 
-    await interaction.reply({ embeds: [embed] });
+    // Section avec accessoire miniature — équivalent Components V2 de l'ancien `.setThumbnail()`.
+    container.addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(textDisplay(fieldText(`Niveau : ${view.level.name}`, view.xpBar)))
+        .setThumbnailAccessory(new ThumbnailBuilder().setURL(interaction.user.displayAvatarURL())),
+    );
+
+    container.addSeparatorComponents(thinSeparator());
+    container.addTextDisplayComponents(
+      textDisplay(fieldText("🔥 Streak", `${view.currentStreak} jour(s) — record : ${view.longestStreak} jour(s)`)),
+    );
+
+    container.addSeparatorComponents(thinSeparator());
+    container.addTextDisplayComponents(
+      textDisplay(
+        fieldText(
+          "Compétences",
+          view.skills.length > 0
+            ? view.skills.map((s) => `${s.categoryLabel} **${s.name}** — ${s.level.name}`).join("\n")
+            : "_Aucune pour l'instant — reviens quand l'Academy sera là 👀_",
+        ),
+      ),
+    );
+
+    container.addSeparatorComponents(thinSeparator());
+    container.addTextDisplayComponents(
+      textDisplay(
+        fieldText(
+          `🏆 Succès (${view.achievementsUnlockedCount}/${view.achievementsTotalCount})`,
+          view.achievements.length > 0 ? view.achievements.map((a) => `${a.icon} ${a.name}`).join("\n") : "_Aucun débloqué pour l'instant_",
+        ),
+      ),
+    );
+
+    await interaction.reply(containerPayload(container));
   },
 };
 

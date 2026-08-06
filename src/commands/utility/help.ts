@@ -1,5 +1,8 @@
-import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder } from "discord.js";
+import { baseContainer, containerPayload, fieldText, textDisplay } from "../../ui/container.js";
 import type { Command } from "../../types/command.js";
+
+const COLOR_BLUE = 0x3498db;
 
 /**
  * Regroupement statique plutôt que déduit dynamiquement des dossiers de
@@ -74,18 +77,14 @@ const command: Command = {
     .setDescription("Liste toutes les commandes Nodify, groupées par domaine."),
 
   async execute(interaction) {
-    const embed = new EmbedBuilder()
-      .setTitle("🧠 Commandes Nodify")
-      .setColor("Blue")
-      .setDescription("Tape `/` puis le nom d'une commande pour voir ses options détaillées.")
-      .addFields(
-        CATEGORIES.map((cat) => ({
-          name: cat.title,
-          value: cat.commands.map((c) => `\`${c}\``).join(" · "),
-        })),
-      );
+    const container = baseContainer("🧠 Commandes Nodify", COLOR_BLUE).addTextDisplayComponents(
+      textDisplay("Tape `/` puis le nom d'une commande pour voir ses options détaillées."),
+      textDisplay(
+        CATEGORIES.map((cat) => fieldText(cat.title, cat.commands.map((c) => `\`${c}\``).join(" · "))).join("\n\n"),
+      ),
+    );
 
-    await interaction.reply({ embeds: [embed] });
+    await interaction.reply(containerPayload(container));
   },
 };
 

@@ -2,7 +2,6 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  EmbedBuilder,
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
@@ -12,10 +11,15 @@ import { resolveConcept } from "../../knowledge/conceptService.js";
 import type { ConceptDetail } from "../../knowledge/conceptService.js";
 import { SKILL_CATEGORY_LABELS, type SkillCategory } from "../../types/skill.js";
 import { labelForLevelOrder } from "../../utils/leveling.js";
+import { baseContainer, containerPayload, fieldText, textDisplay, type ContainerPayload } from "../../ui/container.js";
 
 export const DICTIONARY_SEARCH_BUTTON_ID = "dictionary:search";
 export const DICTIONARY_SEARCH_MODAL_ID = "dictionary:search_modal";
 export const DICTIONARY_SEARCH_MODAL_INPUT_ID = "term";
+
+const COLOR_BLUE = 0x3498db;
+const COLOR_ORANGE = 0xe67e22;
+const COLOR_RED = 0xed4245;
 
 type ExplainLevel = "beginner" | "advanced";
 
@@ -34,23 +38,21 @@ export function parseExplainCustomId(
   return { key: parts[2]!, level };
 }
 
-export function buildDictionaryHomeReply() {
-  const embed = new EmbedBuilder()
-    .setTitle("📖 NODIFY TECH DICTIONARY")
-    .setColor("Blue")
-    .setDescription(
+export function buildDictionaryHomeReply(): ContainerPayload {
+  const container = baseContainer("📖 NODIFY TECH DICTIONARY", COLOR_BLUE).addTextDisplayComponents(
+    textDisplay(
       "Recherche un terme technique (JWT, Promise, API, DNS, XSS, Docker, RAG...).\n" +
         "Tu peux aussi taper directement `/dictionary terme:<mot>`.",
-    );
-
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(DICTIONARY_SEARCH_BUTTON_ID)
-      .setLabel("🔎 Rechercher")
-      .setStyle(ButtonStyle.Primary),
+    ),
   );
 
-  return { embeds: [embed], components: [row] };
+  container.addActionRowComponents(
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder().setCustomId(DICTIONARY_SEARCH_BUTTON_ID).setLabel("🔎 Rechercher").setStyle(ButtonStyle.Primary),
+    ),
+  );
+
+  return containerPayload(container);
 }
 
 export function buildSearchModal(): ModalBuilder {
@@ -68,75 +70,63 @@ export function buildSearchModal(): ModalBuilder {
     .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(input));
 }
 
-function buildConceptReply(concept: ConceptDetail, level: ExplainLevel) {
+function buildConceptReply(concept: ConceptDetail, level: ExplainLevel): ContainerPayload {
   const categoryLabel = SKILL_CATEGORY_LABELS[concept.category as SkillCategory] ?? concept.category;
-  const explanation =
-    level === "beginner" ? concept.explanationBeginner : concept.explanationAdvanced;
+  const explanation = level === "beginner" ? concept.explanationBeginner : concept.explanationAdvanced;
 
-  const embed = new EmbedBuilder()
-    .setTitle(`📖 ${concept.name}`)
-    .setColor("Blue")
-    .setDescription(concept.definition)
-    .addFields(
-      { name: "Catégorie", value: categoryLabel, inline: true },
-      { name: "Niveau", value: labelForLevelOrder(concept.levelOrder), inline: true },
-      {
-        name: level === "beginner" ? "💡 Explication (débutant)" : "💡 Explication (avancé)",
-        value: explanation,
-      },
-    );
+  const container = baseContainer(`📖 ${concept.name}`, COLOR_BLUE).addTextDisplayComponents(
+    textDisplay(concept.definition),
+    textDisplay([fieldText("Catégorie", categoryLabel), fieldText("Niveau", labelForLevelOrder(concept.levelOrder))].join("\n")),
+    textDisplay(fieldText(level === "beginner" ? "💡 Explication (débutant)" : "💡 Explication (avancé)", explanation)),
+  );
 
   if (concept.prerequisites.length > 0) {
-    embed.addFields({
-      name: "📋 Prérequis",
-      value: concept.prerequisites.map((p) => p.name).join(", "),
-    });
+    container.addTextDisplayComponents(
+      textDisplay(fieldText("📋 Prérequis", concept.prerequisites.map((p) => p.name).join(", "))),
+    );
   }
 
   if (concept.related.length > 0) {
-    embed.addFields({
-      name: "🔗 Concepts liés",
-      value: concept.related.map((r) => r.name).join(", "),
-    });
+    container.addTextDisplayComponents(
+      textDisplay(fieldText("🔗 Concepts liés", concept.related.map((r) => r.name).join(", "))),
+    );
   }
 
   if (concept.docUrl) {
-    embed.addFields({ name: "📚 Documentation", value: `[Lien officiel](${concept.docUrl})` });
+    container.addTextDisplayComponents(textDisplay(fieldText("📚 Documentation", `[Lien officiel](${concept.docUrl})`)));
   }
 
   const nextLevel: ExplainLevel = level === "beginner" ? "advanced" : "beginner";
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(explainButtonCustomId(concept.key, level))
-      .setLabel(nextLevel === "advanced" ? "💡 Expliquer en plus avancé" : "💡 Expliquer plus simplement")
-      .setStyle(ButtonStyle.Secondary),
+  container.addActionRowComponents(
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(explainButtonCustomId(concept.key, level))
+        .setLabel(nextLevel === "advanced" ? "💡 Expliquer en plus avancé" : "💡 Expliquer plus simplement")
+        .setStyle(ButtonStyle.Secondary),
+    ),
   );
 
-  return { embeds: [embed], components: [row] };
+  return containerPayload(container);
 }
 
-function buildSuggestionsReply(query: string, suggestions: { key: string; name: string }[]) {
-  const embed = new EmbedBuilder()
-    .setTitle("📖 Aucune correspondance exacte")
-    .setColor("Orange")
-    .setDescription(
-      `Rien d'exact pour « ${query} ». Tu voulais peut-être dire :\n` +
-        suggestions.map((s) => `• **${s.name}**`).join("\n"),
-    );
+function buildSuggestionsReply(query: string, suggestions: { key: string; name: string }[]): ContainerPayload {
+  const container = baseContainer("📖 Aucune correspondance exacte", COLOR_ORANGE).addTextDisplayComponents(
+    textDisplay(
+      `Rien d'exact pour « ${query} ». Tu voulais peut-être dire :\n` + suggestions.map((s) => `• **${s.name}**`).join("\n"),
+    ),
+  );
 
-  return { embeds: [embed], components: [] };
+  return containerPayload(container);
 }
 
-function buildNotFoundReply(query: string) {
-  const embed = new EmbedBuilder()
-    .setTitle("📖 Terme introuvable")
-    .setColor("Red")
-    .setDescription(
-      `Aucun résultat pour « ${query} ». Le dictionnaire Nodify est encore jeune — ` +
-        "ce terme sera peut-être ajouté bientôt.",
-    );
+function buildNotFoundReply(query: string): ContainerPayload {
+  const container = baseContainer("📖 Terme introuvable", COLOR_RED).addTextDisplayComponents(
+    textDisplay(
+      `Aucun résultat pour « ${query} ». Le dictionnaire Nodify est encore jeune — ce terme sera peut-être ajouté bientôt.`,
+    ),
+  );
 
-  return { embeds: [embed], components: [] };
+  return containerPayload(container);
 }
 
 /** Résout une recherche et répond sur n'importe quelle interaction repliable (slash, bouton, modal). */

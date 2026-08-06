@@ -1,4 +1,5 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
+import { baseContainer, containerPayload, textDisplay, type ContainerPayload } from "../ui/container.js";
 
 /**
  * Blue Team — simulation d'analyse de logs, 100% fictive et statique (pas
@@ -20,40 +21,40 @@ const IOC_LINE_INDEX = 1;
 
 export const BLUE_TEAM_CUSTOM_ID_PREFIX = "blueteam:line:";
 
+const COLOR_BLUE = 0x3498db;
+const COLOR_GREEN = 0x57f287;
+const COLOR_RED = 0xed4245;
+
 export function isCorrectBlueTeamLine(index: number): boolean {
   return index === IOC_LINE_INDEX;
 }
 
-export function buildBlueTeamStart() {
-  const embed = new EmbedBuilder()
-    .setTitle("🔵 Blue Team — Analyse de logs")
-    .setColor("Blue")
-    .setDescription(
+export function buildBlueTeamStart(): ContainerPayload {
+  const container = baseContainer("🔵 Blue Team — Analyse de logs", COLOR_BLUE).addTextDisplayComponents(
+    textDisplay(
       "Voici un extrait des logs d'authentification de l'entreprise (aucune activité " +
         "en dehors de la France dans cette organisation). Une seule ligne indique un " +
         "**indicateur de compromission (IOC)**. Laquelle ?\n\n" +
         LOG_LINES.map((line, i) => `**${i + 1}.** \`${line}\``).join("\n"),
-    );
-
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    LOG_LINES.map((_, i) =>
-      new ButtonBuilder()
-        .setCustomId(`${BLUE_TEAM_CUSTOM_ID_PREFIX}${i}`)
-        .setLabel(`Ligne ${i + 1}`)
-        .setStyle(ButtonStyle.Secondary),
     ),
   );
 
-  return { embeds: [embed], components: [row] };
+  container.addActionRowComponents(
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      LOG_LINES.map((_, i) =>
+        new ButtonBuilder().setCustomId(`${BLUE_TEAM_CUSTOM_ID_PREFIX}${i}`).setLabel(`Ligne ${i + 1}`).setStyle(ButtonStyle.Secondary),
+      ),
+    ),
+  );
+
+  return containerPayload(container);
 }
 
-export function buildBlueTeamResult(chosenIndex: number) {
+export function buildBlueTeamResult(chosenIndex: number): ContainerPayload {
   const correct = chosenIndex === IOC_LINE_INDEX;
 
-  const embed = new EmbedBuilder()
-    .setTitle(correct ? "✅ Bon diagnostic !" : "❌ Ce n'est pas ça")
-    .setColor(correct ? "Green" : "Red")
-    .setDescription(
+  const container = baseContainer(correct ? "✅ Bon diagnostic !" : "❌ Ce n'est pas ça", correct ? COLOR_GREEN : COLOR_RED).addTextDisplayComponents(
+    textDisplay(
       `La ligne **${IOC_LINE_INDEX + 1}** était le signal à repérer :\n` +
         `\`${LOG_LINES[IOC_LINE_INDEX]}\`\n\n` +
         "**Pourquoi c'est un IOC :** connexion réussie avec le compte `admin`, à une heure " +
@@ -62,9 +63,9 @@ export function buildBlueTeamResult(chosenIndex: number) {
         "le seuil du hasard.\n\n" +
         (correct
           ? "🏆 Succès débloqué : **Analyste Blue Team**"
-          : "Les autres lignes sont des événements normaux (sauvegarde planifiée, connexion " +
-              "bureau habituelle, échec de connexion isolé)."),
-    );
+          : "Les autres lignes sont des événements normaux (sauvegarde planifiée, connexion bureau habituelle, échec de connexion isolé)."),
+    ),
+  );
 
-  return { embeds: [embed], components: [] };
+  return containerPayload(container);
 }

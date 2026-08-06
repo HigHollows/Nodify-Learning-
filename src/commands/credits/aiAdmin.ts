@@ -5,7 +5,7 @@ import { getAdminControlCenterData, getAiUsagePage } from "../../credits/aiAdmin
 import { creditsEnabled } from "../../credits/creditService.js";
 import { getActiveProviderName } from "../../ai/aiService.js";
 import { getAiBudgetOverrides, setAiBudgetOverrides } from "../../database/repositories/guildRepository.js";
-import { baseEmbed, EmbedColors, SEPARATOR } from "../../credits/embedTheme.js";
+import { baseContainer, containerPayload, EmbedColors, fieldText, textDisplay, thinSeparator } from "../../ui/container.js";
 import { buildAdminControlCenterEmbed, buildAiUsageReply, type AiUsageFilters } from "../../credits/aiStatusView.js";
 import { AUDIT_LOG_PAGE_SIZE, buildAuditLogReply } from "../../credits/auditView.js";
 import { createOrMovePanel } from "../../credits/statusPanelService.js";
@@ -105,17 +105,20 @@ const command: Command = {
         ? "Mode : normal."
         : `Mode : ${config.aiMode}${config.maintenanceReason ? ` — ${config.maintenanceReason}` : ""}.`;
 
-      await interaction.reply({
-        embeds: [
-          baseEmbed("🤖 NODIFY — AI STATUS", EmbedColors.info)
-            .setDescription(description)
-            .addFields(
-              { name: "Statut calculé", value: status, inline: true },
-              { name: "Provider", value: provider, inline: true },
-              { name: "Crédits", value: creditsEnabled() ? "Activés" : "Désactivés", inline: true },
+      await interaction.reply(
+        containerPayload(
+          baseContainer("🤖 NODIFY — AI STATUS", EmbedColors.info).addTextDisplayComponents(
+            textDisplay(description),
+            textDisplay(
+              [
+                fieldText("Statut calculé", status),
+                fieldText("Provider", provider),
+                fieldText("Crédits", creditsEnabled() ? "Activés" : "Désactivés"),
+              ].join("\n"),
             ),
-        ],
-      });
+          ),
+        ),
+      );
       return;
     }
 
@@ -126,14 +129,13 @@ const command: Command = {
 
       await setAiMode(mode, interaction.user.id, reason);
 
-      await interaction.reply({
-        embeds: [
-          baseEmbed(`🤖 NODIFY — AI MODE: ${mode}`, EmbedColors.operational).addFields(
-            ...(reason ? [{ name: "Raison", value: reason }] : []),
-            { name: SEPARATOR, value: "Seuls les services IA sont concernés — le reste de Nodify continue de fonctionner normalement." },
-          ),
-        ],
-      });
+      const modeContainer = baseContainer(`🤖 NODIFY — AI MODE: ${mode}`, EmbedColors.operational);
+      if (reason) modeContainer.addTextDisplayComponents(textDisplay(fieldText("Raison", reason)));
+      modeContainer.addSeparatorComponents(thinSeparator());
+      modeContainer.addTextDisplayComponents(
+        textDisplay("Seuls les services IA sont concernés — le reste de Nodify continue de fonctionner normalement."),
+      );
+      await interaction.reply(containerPayload(modeContainer));
       return;
     }
 
@@ -159,13 +161,13 @@ const command: Command = {
 
       await createOrMovePanel(interaction.client, channel.id);
 
-      await interaction.reply({
-        embeds: [
-          baseEmbed("🤖 NODIFY — AI STATUS PANEL", EmbedColors.operational).setDescription(
-            `Le panneau de statut IA a été posté dans <#${channel.id}>.`,
+      await interaction.reply(
+        containerPayload(
+          baseContainer("🤖 NODIFY — AI STATUS PANEL", EmbedColors.operational).addTextDisplayComponents(
+            textDisplay(`Le panneau de statut IA a été posté dans <#${channel.id}>.`),
           ),
-        ],
-      });
+        ),
+      );
       return;
     }
 
@@ -195,14 +197,18 @@ const command: Command = {
             ? `${override} (override serveur)`
             : "illimité (override serveur)";
 
-      await interaction.reply({
-        embeds: [
-          baseEmbed("💰 NODIFY — AI BUDGET", EmbedColors.operational).addFields(
-            { name: "Plafond quotidien", value: describe(current.maxDailyAiSpend, env.MAX_DAILY_AI_SPEND), inline: true },
-            { name: "Plafond mensuel", value: describe(current.maxMonthlyAiSpend, env.MAX_MONTHLY_AI_SPEND), inline: true },
+      await interaction.reply(
+        containerPayload(
+          baseContainer("💰 NODIFY — AI BUDGET", EmbedColors.operational).addTextDisplayComponents(
+            textDisplay(
+              [
+                fieldText("Plafond quotidien", describe(current.maxDailyAiSpend, env.MAX_DAILY_AI_SPEND)),
+                fieldText("Plafond mensuel", describe(current.maxMonthlyAiSpend, env.MAX_MONTHLY_AI_SPEND)),
+              ].join("\n"),
+            ),
           ),
-        ],
-      });
+        ),
+      );
       return;
     }
 

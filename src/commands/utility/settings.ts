@@ -1,7 +1,10 @@
-import { EmbedBuilder, PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
+import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import { getModuleFlags, setModuleFlags } from "../../setup/guildSettingsService.js";
+import { baseContainer, containerPayload, textDisplay } from "../../ui/container.js";
 import type { Command } from "../../types/command.js";
 import { AppError } from "../../utils/errors.js";
+
+const COLOR_BLUE = 0x3498db;
 
 function statusLine(label: string, enabled: boolean): string {
   return `${enabled ? "✅" : "❌"} ${label}`;
@@ -51,25 +54,19 @@ const command: Command = {
 
     const flags = await getModuleFlags(interaction.guildId);
 
-    const embed = new EmbedBuilder()
-      .setTitle("⚙️ Réglages Nodify")
-      .setColor("Blue")
-      .setDescription(
+    const container = baseContainer("⚙️ Réglages Nodify", COLOR_BLUE).addTextDisplayComponents(
+      textDisplay(
         [
           statusLine("Academy (`/learn`, `/plan`)", flags.academyEnabled),
           statusLine("Cyber Academy (`/cyber`)", flags.cyberEnabled),
           statusLine("Hacktualités (post automatique)", flags.newsEnabled),
           statusLine("Question du jour (`/trivia` + post auto)", flags.dailyQuestionEnabled),
         ].join("\n"),
-      )
-      .setFooter({
-        text:
-          Object.keys(updates).length > 0
-            ? "Réglages mis à jour."
-            : "Aucun changement demandé — voici l'état actuel.",
-      });
+      ),
+      textDisplay(`-# ${Object.keys(updates).length > 0 ? "Réglages mis à jour." : "Aucun changement demandé — voici l'état actuel."}`),
+    );
 
-    await interaction.reply({ embeds: [embed] });
+    await interaction.reply(containerPayload(container));
   },
 };
 

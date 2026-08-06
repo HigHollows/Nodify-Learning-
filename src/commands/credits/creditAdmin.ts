@@ -3,7 +3,7 @@ import { adminGrant, adminRemove, adminSet } from "../../credits/creditService.j
 import { awardEventBonus } from "../../credits/rewardService.js";
 import { logAdminAction } from "../../credits/auditService.js";
 import { setSupporterStatus } from "../../database/repositories/userRepository.js";
-import { baseEmbed, EmbedColors } from "../../credits/embedTheme.js";
+import { baseContainer, containerPayload, EmbedColors, fieldText, textDisplay } from "../../ui/container.js";
 import type { Command } from "../../types/command.js";
 import { AppError } from "../../utils/errors.js";
 
@@ -76,14 +76,20 @@ const command: Command = {
         targetUserId: target.id,
       });
 
-      await interaction.reply({
-        embeds: [
-          baseEmbed(status ? "⭐ Statut supporter attribué" : "Statut supporter retiré", EmbedColors.operational).addFields(
-            { name: "Utilisateur", value: `<@${target.id}>`, inline: true },
-            { name: "Statut", value: status ? "Supporter" : "Standard", inline: true },
+      await interaction.reply(
+        containerPayload(
+          baseContainer(
+            status ? "⭐ Statut supporter attribué" : "Statut supporter retiré",
+            EmbedColors.operational,
+          ).addTextDisplayComponents(
+            textDisplay(
+              [fieldText("Utilisateur", `<@${target.id}>`), fieldText("Statut", status ? "Supporter" : "Standard")].join(
+                "\n",
+              ),
+            ),
           ),
-        ],
-      });
+        ),
+      );
       return;
     }
 
@@ -93,71 +99,87 @@ const command: Command = {
 
     if (subcommand === "give") {
       await adminGrant(interaction.user.id, target.id, amount, reason);
-      await interaction.reply({
-        embeds: [
-          baseEmbed("💳 Crédits attribués", EmbedColors.operational).addFields(
-            { name: "Utilisateur", value: `<@${target.id}>`, inline: true },
-            { name: "Montant", value: `+${amount}`, inline: true },
-            { name: "Raison", value: reason },
+      await interaction.reply(
+        containerPayload(
+          baseContainer("💳 Crédits attribués", EmbedColors.operational).addTextDisplayComponents(
+            textDisplay(
+              [
+                fieldText("Utilisateur", `<@${target.id}>`),
+                fieldText("Montant", `+${amount}`),
+                fieldText("Raison", reason),
+              ].join("\n"),
+            ),
           ),
-        ],
-      });
+        ),
+      );
       return;
     }
 
     if (subcommand === "bonus") {
       await awardEventBonus(target.id, amount, reason, interaction.guildId);
       await logAdminAction(interaction.user.id, "CREDITS_BONUS", { targetUserId: target.id, reason, metadata: { amount } });
-      await interaction.reply({
-        embeds: [
-          baseEmbed("🎉 Bonus événementiel attribué", EmbedColors.operational).addFields(
-            { name: "Utilisateur", value: `<@${target.id}>`, inline: true },
-            { name: "Montant", value: `+${amount}`, inline: true },
-            { name: "Raison", value: reason },
+      await interaction.reply(
+        containerPayload(
+          baseContainer("🎉 Bonus événementiel attribué", EmbedColors.operational).addTextDisplayComponents(
+            textDisplay(
+              [
+                fieldText("Utilisateur", `<@${target.id}>`),
+                fieldText("Montant", `+${amount}`),
+                fieldText("Raison", reason),
+              ].join("\n"),
+            ),
           ),
-        ],
-      });
+        ),
+      );
       return;
     }
 
     if (subcommand === "remove") {
       const succeeded = await adminRemove(interaction.user.id, target.id, amount, reason);
-      const embed = succeeded
-        ? baseEmbed("💳 Crédits retirés", EmbedColors.operational).addFields(
-            { name: "Utilisateur", value: `<@${target.id}>`, inline: true },
-            { name: "Montant", value: `-${amount}`, inline: true },
-            { name: "Raison", value: reason },
+      const container = succeeded
+        ? baseContainer("💳 Crédits retirés", EmbedColors.operational).addTextDisplayComponents(
+            textDisplay(
+              [
+                fieldText("Utilisateur", `<@${target.id}>`),
+                fieldText("Montant", `-${amount}`),
+                fieldText("Raison", reason),
+              ].join("\n"),
+            ),
           )
-        : baseEmbed("⚠️ Solde insuffisant", EmbedColors.warning).setDescription(
-            `<@${target.id}> n'a pas assez de crédits pour retirer ${amount}. Tu peux fixer son solde à 0 à la place.`,
+        : baseContainer("⚠️ Solde insuffisant", EmbedColors.warning).addTextDisplayComponents(
+            textDisplay(`<@${target.id}> n'a pas assez de crédits pour retirer ${amount}. Tu peux fixer son solde à 0 à la place.`),
           );
 
-      const components = succeeded
-        ? []
-        : [
-            new ActionRowBuilder<ButtonBuilder>().addComponents(
-              new ButtonBuilder()
-                .setCustomId(`${CREDIT_ADMIN_SET_ZERO_PREFIX}${target.id}`)
-                .setLabel("Mettre le solde à 0")
-                .setStyle(ButtonStyle.Danger),
-            ),
-          ];
+      if (!succeeded) {
+        container.addActionRowComponents(
+          new ActionRowBuilder<ButtonBuilder>().addComponents(
+            new ButtonBuilder()
+              .setCustomId(`${CREDIT_ADMIN_SET_ZERO_PREFIX}${target.id}`)
+              .setLabel("Mettre le solde à 0")
+              .setStyle(ButtonStyle.Danger),
+          ),
+        );
+      }
 
-      await interaction.reply({ embeds: [embed], components });
+      await interaction.reply(containerPayload(container));
       return;
     }
 
     if (subcommand === "set") {
       await adminSet(interaction.user.id, target.id, amount, reason);
-      await interaction.reply({
-        embeds: [
-          baseEmbed("💳 Solde fixé", EmbedColors.operational).addFields(
-            { name: "Utilisateur", value: `<@${target.id}>`, inline: true },
-            { name: "Nouveau solde", value: `${amount}`, inline: true },
-            { name: "Raison", value: reason },
+      await interaction.reply(
+        containerPayload(
+          baseContainer("💳 Solde fixé", EmbedColors.operational).addTextDisplayComponents(
+            textDisplay(
+              [
+                fieldText("Utilisateur", `<@${target.id}>`),
+                fieldText("Nouveau solde", `${amount}`),
+                fieldText("Raison", reason),
+              ].join("\n"),
+            ),
           ),
-        ],
-      });
+        ),
+      );
     }
   },
 };

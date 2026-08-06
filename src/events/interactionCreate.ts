@@ -122,12 +122,8 @@ async function runWithGuards(
     // Ces deux erreurs ont un rendu dédié (embeds stylés, pas un message brut)
     // et doivent être interceptées AVANT le fallback générique AppError.
     if (error instanceof AIUnavailableError) {
-      const reply = buildAiUnavailableReply(error);
-      const payload: InteractionReplyOptions = {
-        embeds: reply.embeds ?? [],
-        components: reply.components ?? [],
-        flags: MessageFlags.Ephemeral,
-      };
+      // buildAiUnavailableReply() inclut déjà IsComponentsV2 + Ephemeral (voir aiStatusView.ts).
+      const payload = buildAiUnavailableReply(error);
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp(payload).catch(() => undefined);
       } else {
@@ -137,12 +133,8 @@ async function runWithGuards(
     }
 
     if (error instanceof InsufficientCreditsError) {
-      const reply = buildInsufficientCreditsReply(error);
-      const payload: InteractionReplyOptions = {
-        embeds: reply.embeds ?? [],
-        components: reply.components ?? [],
-        flags: MessageFlags.Ephemeral,
-      };
+      // buildInsufficientCreditsReply() inclut déjà IsComponentsV2 + Ephemeral (voir creditView.ts).
+      const payload = buildInsufficientCreditsReply(error);
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp(payload).catch(() => undefined);
       } else {

@@ -4,6 +4,63 @@ Ce document rassemble les décisions de conception et le fonctionnement
 précis de chaque commande — utile pour comprendre le *pourquoi*, pas
 seulement le *quoi*. Le [README](../README.md) donne la vue d'ensemble.
 
+## Design System — Components V2 (`src/ui/container.ts`)
+
+Tous les messages du bot utilisent désormais l'API **Components V2** de
+Discord (`ContainerBuilder`, pas `EmbedBuilder`) — migration complète,
+plus aucun `EmbedBuilder` nulle part dans le code. Un seul module central
+(`src/ui/container.ts`, anciennement `credits/embedTheme.ts` qui ne
+couvrait que crédits/IA) fournit les helpers réutilisés par les ~24 fichiers
+de vue du bot :
+
+- **`baseContainer(title, color)`** — Container avec bannière GIF Nodify
+  (`assets/nodify-banner.gif`, MediaGallery) + titre en `TextDisplay`
+  (`## Titre`) + couleur d'accent. Équivalent direct de l'ancien
+  `baseEmbed()`.
+- **`bannerContainer(color)`** — même chose sans le titre auto-formaté, pour
+  les cas où le titre doit être un lien Markdown (`## [Titre](url)`, ex:
+  Hacktualités — l'ancien `.setURL()` d'embed n'a pas d'équivalent Container
+  natif, émulé en Markdown).
+- **`fieldText(name, value)`** — émule un embed field (`**Name**\nValue`) :
+  Components V2 n'a **pas de grille "inline" native** comme les fields
+  d'embed côte à côte — c'est la limitation la plus visible de la migration,
+  rendue le plus proche possible visuellement via ce format Markdown.
+- **`thinSeparator()`** — vrai `SeparatorBuilder` (ligne de séparation
+  native), remplace l'ancien hack texte `SEPARATOR = "─────"`.
+- **`textDisplay("-# ...")`** — préfixe Markdown `-#` = petit texte, utilisé
+  pour émuler l'ancien footer d'embed (pas d'équivalent natif non plus).
+- Section + `ThumbnailBuilder` (`setThumbnailAccessory`) émule l'ancien
+  `.setThumbnail()` (ex: avatar sur `/profile`).
+
+**Trois types de payload**, pour que le typage empêche une vraie erreur
+Discord plutôt que de la découvrir à l'exécution :
+- **`MessageViewPayload`** (`messageViewPayload()`) — `flags` strictement
+  `[IsComponentsV2]`, compatible `.reply()`/`.update()`/`.editReply()`/
+  `channel.send()`/`Message.edit()`. Le défaut pour tout ce qui n'a jamais
+  besoin d'être éphémère.
+- **`ContainerPayload`** (`containerPayload()`) — alias du précédent, nommé
+  différemment pour la lisibilité aux call sites qui n'utilisent jamais
+  `.update()`.
+- **`EphemeralContainerPayload`** (`ephemeralContainerPayload()`) — `flags`
+  inclut `Ephemeral`, ce qui le rend **volontairement incompatible** avec
+  `.update()`/`.editReply()`/`channel.send()` au niveau des types (ces
+  contextes n'acceptent pas ce flag) — une tentative de l'y passer est une
+  erreur de compilation, jamais un bug Discord découvert en production.
+
+**Bannière** : `assets/nodify-banner.gif` est lu une seule fois en mémoire
+au démarrage (`readFileSync`), un `AttachmentBuilder` frais est reconstruit
+à partir de ce buffer à chaque envoi (Discord exige le fichier sur chaque
+`reply`/`update`/`send` qui le référence via `attachment://`). Chemin résolu
+via `import.meta.url` (pas `process.cwd()`) pour rester correct peu importe
+le répertoire de lancement — vérifié en conditions réelles (dev via `tsx`
+ET depuis `dist/` compilé).
+
+**Vérification** : les ~54 fonctions de vue du bot ont été testées par
+script réel (`.toJSON()` sur chaque Container construit avec des données
+factices plausibles) — Discord.js valide la structure à la sérialisation
+(champs requis, longueurs), c'est la vérification la plus proche d'un vrai
+envoi Discord possible sans bot connecté. Toutes passent.
+
 ## `/setup`
 
 Crée (ou répare) :

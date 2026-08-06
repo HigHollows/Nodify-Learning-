@@ -1,8 +1,11 @@
-import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder } from "discord.js";
 import { generateLearningPlan, getActiveProviderName } from "../../ai/aiService.js";
 import { listCourseSummaries } from "../../education/academyService.js";
 import { assertModuleEnabled } from "../../setup/guildSettingsService.js";
+import { baseContainer, containerPayload, textDisplay } from "../../ui/container.js";
 import type { Command } from "../../types/command.js";
+
+const COLOR_PURPLE = 0x9b59b6;
 
 /**
  * Contrairement à un planificateur qui inventerait un parcours idéal,
@@ -43,18 +46,18 @@ const command: Command = {
       interaction.guildId ?? undefined,
     );
 
-    const embed = new EmbedBuilder()
-      .setTitle(`🗺️ Parcours pour : ${goal}`)
-      .setColor("Purple")
-      .setDescription(plan)
-      .setFooter({
-        text:
+    const container = baseContainer(`🗺️ Parcours pour : ${goal}`, COLOR_PURPLE).addTextDisplayComponents(
+      textDisplay(plan),
+      textDisplay(
+        `-# ${
           getActiveProviderName() === "stub"
             ? "⚠️ Mode démonstration — aucune clé API IA configurée"
-            : "Recommandations basées uniquement sur les cours réellement disponibles sur Nodify",
-      });
+            : "Recommandations basées uniquement sur les cours réellement disponibles sur Nodify"
+        }`,
+      ),
+    );
 
-    await interaction.editReply({ embeds: [embed] });
+    await interaction.editReply(containerPayload(container));
   },
 };
 

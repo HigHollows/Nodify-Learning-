@@ -1,8 +1,4 @@
-import {
-  EmbedBuilder,
-  PermissionFlagsBits,
-  SlashCommandBuilder,
-} from "discord.js";
+import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import type { Command } from "../../types/command.js";
 import { AppError } from "../../utils/errors.js";
 import {
@@ -10,6 +6,9 @@ import {
   type ResourceStatus,
   type SetupResourceResult,
 } from "../../setup/setupService.js";
+import { baseContainer, containerPayload, fieldText, textDisplay } from "../../ui/container.js";
+
+const COLOR_BLUE = 0x3498db;
 
 const STATUS_ICON: Record<ResourceStatus, string> = {
   created: "🆕",
@@ -40,18 +39,17 @@ const command: Command = {
 
     const report = await runSetup(interaction.guild);
 
-    const embed = new EmbedBuilder()
-      .setTitle("⚙️ Configuration Nodify")
-      .setColor("Blue")
-      .addFields(
-        { name: "Rôles de progression", value: formatResults(report.roles) },
-        { name: "Salons", value: formatResults(report.channels) },
-      )
-      .setFooter({
-        text: "🆕 créé · ♻️ réparé (avait été supprimé) · ✅ déjà en place",
-      });
+    const container = baseContainer("⚙️ Configuration Nodify", COLOR_BLUE).addTextDisplayComponents(
+      textDisplay(
+        [
+          fieldText("Rôles de progression", formatResults(report.roles)),
+          fieldText("Salons", formatResults(report.channels)),
+        ].join("\n\n"),
+      ),
+      textDisplay("-# 🆕 créé · ♻️ réparé (avait été supprimé) · ✅ déjà en place"),
+    );
 
-    await interaction.editReply({ embeds: [embed] });
+    await interaction.editReply(containerPayload(container));
   },
 };
 

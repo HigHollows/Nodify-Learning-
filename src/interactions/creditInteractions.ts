@@ -11,7 +11,7 @@ import {
   buildStatsReply,
   buildWalletReply,
 } from "../credits/creditView.js";
-import { baseEmbed, EmbedColors } from "../credits/embedTheme.js";
+import { baseContainer, containerPayload, EmbedColors, textDisplay, fieldText } from "../ui/container.js";
 import { claimReward, getRewardStatus, type RewardStatus } from "../credits/rewardService.js";
 import { getProfile } from "../services/userService.js";
 import { isSupporter } from "../database/repositories/userRepository.js";
@@ -48,15 +48,17 @@ export async function handleRewardsButton(interaction: ButtonInteraction): Promi
         ? `${label} — disponible (\`/${label.toLowerCase()}\`)`
         : `${label} — dans ${status.remainingLabel}`;
 
-  await interaction.reply({
-    embeds: [
-      baseEmbed("🎁 NODIFY — RÉCOMPENSES", EmbedColors.info).addFields(
-        { name: "Daily", value: line("Daily", daily) },
-        { name: "Weekly", value: line("Weekly", weekly) },
-        { name: "Monthly", value: line("Monthly", monthly) },
+  await interaction.reply(
+    containerPayload(
+      baseContainer("🎁 NODIFY — RÉCOMPENSES", EmbedColors.info).addTextDisplayComponents(
+        textDisplay(
+          [fieldText("Daily", line("Daily", daily)), fieldText("Weekly", line("Weekly", weekly)), fieldText("Monthly", line("Monthly", monthly))].join(
+            "\n",
+          ),
+        ),
       ),
-    ],
-  });
+    ),
+  );
 }
 
 /** Bouton "🎁 Récompense quotidienne" (raccourci direct, ex: depuis l'embed insufficient-credits). */
@@ -92,15 +94,10 @@ export async function handleCreditAdminSetZero(interaction: ButtonInteraction, t
 
   await adminSet(interaction.user.id, targetUserId, 0, "Solde mis à 0 (solde insuffisant pour le retrait demandé)");
 
-  await interaction.update({
-    embeds: [
-      baseEmbed("💳 Solde fixé", EmbedColors.operational).addFields(
-        { name: "Utilisateur", value: `<@${targetUserId}>`, inline: true },
-        { name: "Nouveau solde", value: "0", inline: true },
-      ),
-    ],
-    components: [],
-  });
+  const container = baseContainer("💳 Solde fixé", EmbedColors.operational).addTextDisplayComponents(
+    textDisplay([fieldText("Utilisateur", `<@${targetUserId}>`), fieldText("Nouveau solde", "0")].join("\n")),
+  );
+  await interaction.update(containerPayload(container));
 }
 
 /** Pagination de l'historique — customId `credits:history:<page>:<type>` (type vide = pas de filtre). */

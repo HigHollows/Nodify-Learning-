@@ -1,14 +1,7 @@
-import {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  EmbedBuilder,
-  ModalBuilder,
-  TextInputBuilder,
-  TextInputStyle,
-} from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { creditsEnabled } from "../../credits/creditService.js";
 import { getCreditCost } from "../../credits/creditCosts.js";
+import { baseContainer, containerPayload, textDisplay, type ContainerPayload } from "../../ui/container.js";
 
 export const SECURITY_REVIEW_MODAL_ID = "devtools:securityreview_modal";
 export const CODE_REVIEW_MODAL_ID = "devtools:codereview_modal";
@@ -17,12 +10,18 @@ export const DEBUGME_MODAL_ID = "devtools:debugme_modal";
 export const CODE_INPUT_ID = "code";
 export const ERROR_INPUT_ID = "error";
 
-/** Description Discord (embed) limitée à 4096 caractères — on tronque plutôt que de planter. */
-const EMBED_DESCRIPTION_LIMIT = 4000;
+// Couleurs identiques aux anciennes couleurs nommées discord.js (Colors.Red/Green/Blue/Orange).
+const COLOR_RED = 0xed4245;
+const COLOR_GREEN = 0x57f287;
+const COLOR_BLUE = 0x3498db;
+const COLOR_ORANGE = 0xe67e22;
+
+/** Contenu d'un TextDisplay limité à 4000 caractères — on tronque plutôt que de planter. */
+const TEXT_DISPLAY_LIMIT = 4000;
 
 function truncate(text: string): string {
-  return text.length > EMBED_DESCRIPTION_LIMIT
-    ? `${text.slice(0, EMBED_DESCRIPTION_LIMIT)}\n\n*(réponse tronquée)*`
+  return text.length > TEXT_DISPLAY_LIMIT
+    ? `${text.slice(0, TEXT_DISPLAY_LIMIT)}\n\n*(réponse tronquée)*`
     : text;
 }
 
@@ -83,62 +82,49 @@ export function buildDebugModal(): ModalBuilder {
     );
 }
 
-export function buildSecurityReviewReply(findings: string, reviewId: string) {
-  const embed = new EmbedBuilder()
-    .setTitle("🔒 Security Review")
-    .setColor("Red")
-    .setDescription(truncate(findings));
+export function buildSecurityReviewReply(findings: string, reviewId: string): ContainerPayload {
+  const container = baseContainer("🔒 Security Review", COLOR_RED).addTextDisplayComponents(textDisplay(truncate(findings)));
 
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(`devtools:fix:${reviewId}`)
-      .setLabel(`🔧 Voir une correction suggérée${costLabel("securityreview")}`)
-      .setStyle(ButtonStyle.Primary),
+  container.addActionRowComponents(
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`devtools:fix:${reviewId}`)
+        .setLabel(`🔧 Voir une correction suggérée${costLabel("securityreview")}`)
+        .setStyle(ButtonStyle.Primary),
+    ),
   );
 
-  return { embeds: [embed], components: [row] };
+  return containerPayload(container);
 }
 
-export function buildCodeFixReply(fix: string) {
-  const embed = new EmbedBuilder()
-    .setTitle("🔧 Correction suggérée")
-    .setColor("Green")
-    .setDescription(truncate(fix));
-
-  return { embeds: [embed], components: [] };
+export function buildCodeFixReply(fix: string): ContainerPayload {
+  return containerPayload(baseContainer("🔧 Correction suggérée", COLOR_GREEN).addTextDisplayComponents(textDisplay(truncate(fix))));
 }
 
-export function buildCodeReviewReply(feedback: string) {
-  const embed = new EmbedBuilder()
-    .setTitle("🧹 Code Review")
-    .setColor("Blue")
-    .setDescription(truncate(feedback));
-
-  return { embeds: [embed], components: [] };
+export function buildCodeReviewReply(feedback: string): ContainerPayload {
+  return containerPayload(baseContainer("🧹 Code Review", COLOR_BLUE).addTextDisplayComponents(textDisplay(truncate(feedback))));
 }
 
-export function buildDebugGuideReply(guidance: string, debugId: string) {
-  const embed = new EmbedBuilder()
-    .setTitle("🐛 Debug Coach")
-    .setColor("Orange")
-    .setDescription(truncate(guidance))
-    .setFooter({ text: "Réfléchis avant de redemander un indice — le but est de comprendre, pas d'avoir la réponse toute cuite." });
-
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(`devtools:debughint:${debugId}`)
-      .setLabel(`💡 Encore un indice${costLabel("debugme")}`)
-      .setStyle(ButtonStyle.Secondary),
+export function buildDebugGuideReply(guidance: string, debugId: string): ContainerPayload {
+  const container = baseContainer("🐛 Debug Coach", COLOR_ORANGE).addTextDisplayComponents(
+    textDisplay(truncate(guidance)),
+    textDisplay("-# Réfléchis avant de redemander un indice — le but est de comprendre, pas d'avoir la réponse toute cuite."),
   );
 
-  return { embeds: [embed], components: [row] };
+  container.addActionRowComponents(
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`devtools:debughint:${debugId}`)
+        .setLabel(`💡 Encore un indice${costLabel("debugme")}`)
+        .setStyle(ButtonStyle.Secondary),
+    ),
+  );
+
+  return containerPayload(container);
 }
 
-export function buildDebugHintReply(hint: string) {
-  const embed = new EmbedBuilder()
-    .setTitle("🐛 Debug Coach — indice supplémentaire")
-    .setColor("Orange")
-    .setDescription(truncate(hint));
-
-  return { embeds: [embed], components: [] };
+export function buildDebugHintReply(hint: string): ContainerPayload {
+  return containerPayload(
+    baseContainer("🐛 Debug Coach — indice supplémentaire", COLOR_ORANGE).addTextDisplayComponents(textDisplay(truncate(hint))),
+  );
 }

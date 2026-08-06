@@ -56,15 +56,20 @@ src/
 ├── database/           Prisma client + repositories
 ├── config/             Environment variable validation (zod)
 ├── utils/               Logger, typed errors, rate limiter, leveling
-├── ai/                 Centralized AIService (Gemini / Anthropic / Groq / Stub)
-├── credits/             Credit Engine, Reward Engine, AI Control Center
-├── knowledge/           Knowledge Engine (concepts, dictionary)
-├── education/            Academy (courses, quizzes, progression)
-├── cybersecurity/          Cyber Academy, CTF, Blue/Red Team, Trust Sim
-├── documentation/           RAG over technical docs
-├── community/                Daily question, Hacktualités
-└── setup/                     /setup, /settings, role sync
+├── ui/                   Components V2 design system (Container, banner)
+├── ai/                    Centralized AIService (Gemini / Anthropic / Groq / Stub)
+├── credits/                Credit Engine, Reward Engine, AI Control Center
+├── knowledge/                Knowledge Engine (concepts, dictionary)
+├── education/                  Academy (courses, quizzes, progression)
+├── cybersecurity/                Cyber Academy, CTF, Blue/Red Team, Trust Sim
+├── documentation/                   RAG over technical docs
+├── community/                          Daily question, Hacktualités
+└── setup/                                 /setup, /settings, role sync
 ```
+
+All bot messages use Discord's **Components V2** (`ContainerBuilder`, not
+`EmbedBuilder`) with a shared banner image — see `src/ui/container.ts` and
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md#design-system--components-v2-srcuicontainerts).
 
 Every command stays thin: all business logic lives in a **service**,
 which talks to the DB through a **repository** — never a direct Prisma
@@ -240,6 +245,8 @@ lists every available command grouped by domain.
 - ✅ Multi-provider with per-provider cost, per-server AI budgets, real
   request cancellation on timeout, AI Incident alerts, event bonuses and
   supporter status, audit log finally viewable from Discord (`/ai audit-log`)
+- ✅ Full migration to Discord Components V2 (`ContainerBuilder`) across every
+  message in the bot, with a shared banner image — no `EmbedBuilder` left
 - ⏳ CTF Pwn/Network/Reverse and Labs with live targets — require real
   sandbox/VM infrastructure that doesn't exist, intentionally not simulated
   without it (Web CTF stays static, no real application to attack)

@@ -1,12 +1,18 @@
-import {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  EmbedBuilder,
-  type InteractionReplyOptions,
-} from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import type { AIUnavailableError } from "../utils/errors.js";
-import { baseEmbed, EmbedColors, SEPARATOR, type MessageViewPayload } from "./embedTheme.js";
+import {
+  baseContainer,
+  containerPayload,
+  EmbedColors,
+  ephemeralContainerPayload,
+  fieldText,
+  messageViewPayload,
+  textDisplay,
+  thinSeparator,
+  type ContainerPayload,
+  type EphemeralContainerPayload,
+  type MessageViewPayload,
+} from "../ui/container.js";
 import type { AIStatus } from "./creditTypes.js";
 import type { SystemConfigView } from "./aiControlService.js";
 import type { AICallSummary, UsageStats } from "../database/repositories/aiCallRepository.js";
@@ -45,31 +51,33 @@ const STATUS_ICON: Record<AIStatus, string> = {
 /**
  * Réponse à l'utilisateur quand l'IA n'est pas disponible pour sa commande —
  * jamais un message d'erreur brut : le rendu précise que seule l'IA est
- * concernée, pas le reste de Nodify.
+ * concernée, pas le reste de Nodify. Toujours éphémère (erreur personnelle).
  */
-export function buildAiUnavailableReply(error: AIUnavailableError): InteractionReplyOptions {
+export function buildAiUnavailableReply(error: AIUnavailableError): EphemeralContainerPayload {
   if (error.mode === "CLOSED") {
-    const embed = baseEmbed("🔴 NODIFY — AI STATUS", EmbedColors.critical)
-      .setDescription("Nodify AI est temporairement indisponible.")
-      .addFields(
-        { name: "Status", value: "Offline" },
-        { name: "Raison", value: "Les services IA ont été temporairement désactivés." },
-        { name: SEPARATOR, value: "Les autres fonctionnalités de Nodify restent opérationnelles." },
-      );
-    return { embeds: [embed], components: [] };
+    const container = baseContainer("🔴 NODIFY — AI STATUS", EmbedColors.critical).addTextDisplayComponents(
+      textDisplay("Nodify AI est temporairement indisponible."),
+      textDisplay(fieldText("Status", "Offline")),
+      textDisplay(fieldText("Raison", "Les services IA ont été temporairement désactivés.")),
+    );
+    container.addSeparatorComponents(thinSeparator());
+    container.addTextDisplayComponents(textDisplay("Les autres fonctionnalités de Nodify restent opérationnelles."));
+    return ephemeralContainerPayload(container);
   }
 
   if (error.mode === "MAINTENANCE") {
-    const embed = baseEmbed("🔧 NODIFY — AI MAINTENANCE", EmbedColors.warning)
-      .setDescription("Nodify AI est actuellement en maintenance.")
-      .addFields({ name: SEPARATOR, value: "Les autres fonctionnalités de Nodify restent opérationnelles." });
-    return { embeds: [embed], components: [] };
+    const container = baseContainer("🔧 NODIFY — AI MAINTENANCE", EmbedColors.warning).addTextDisplayComponents(
+      textDisplay("Nodify AI est actuellement en maintenance."),
+    );
+    container.addSeparatorComponents(thinSeparator());
+    container.addTextDisplayComponents(textDisplay("Les autres fonctionnalités de Nodify restent opérationnelles."));
+    return ephemeralContainerPayload(container);
   }
 
-  const embed = baseEmbed("🟠 NODIFY — AI LIMITED", EmbedColors.warning).setDescription(
-    error.userMessage,
+  const container = baseContainer("🟠 NODIFY — AI LIMITED", EmbedColors.warning).addTextDisplayComponents(
+    textDisplay(error.userMessage),
   );
-  return { embeds: [embed], components: [] };
+  return ephemeralContainerPayload(container);
 }
 
 export interface StatusPanelData {
@@ -82,27 +90,40 @@ export interface StatusPanelData {
 
 /** Le panneau de statut IA persistant — un seul par serveur, jamais recréé inutilement. */
 export function buildStatusPanelEmbed(data: StatusPanelData): MessageViewPayload {
-  const embed = baseEmbed("🤖 NODIFY — AI STATUS", STATUS_COLOR[data.status])
-    .setDescription("Nodify AI services and availability.")
-    .addFields(
-      { name: `${STATUS_ICON[data.status]} Status`, value: STATUS_LABEL[data.status], inline: true },
-      { name: "🧠 Provider", value: data.provider, inline: true },
-      { name: SEPARATOR, value: "📊 Today's usage" },
-      { name: "Requests", value: `${data.todayRequestCount}`, inline: true },
-      { name: "🪙 Credit system", value: data.creditsEnabled ? "Enabled" : "Disabled", inline: true },
-    );
+  const container = baseContainer("🤖 NODIFY — AI STATUS", STATUS_COLOR[data.status]).addTextDisplayComponents(
+    textDisplay("Nodify AI services and availability."),
+    textDisplay(
+      [
+        fieldText(`${STATUS_ICON[data.status]} Status`, STATUS_LABEL[data.status]),
+        fieldText("🧠 Provider", data.provider),
+      ].join("\n"),
+    ),
+  );
+
+  container.addSeparatorComponents(thinSeparator());
+  container.addTextDisplayComponents(
+    textDisplay("**📊 Today's usage**"),
+    textDisplay(
+      [
+        fieldText("Requests", `${data.todayRequestCount}`),
+        fieldText("🪙 Credit system", data.creditsEnabled ? "Enabled" : "Disabled"),
+      ].join("\n"),
+    ),
+  );
 
   if (data.config.aiMode === "MAINTENANCE" && data.config.maintenanceReason) {
-    embed.addFields({ name: "Reason", value: data.config.maintenanceReason });
+    container.addTextDisplayComponents(textDisplay(fieldText("Reason", data.config.maintenanceReason)));
   }
 
-  embed.setFooter({ text: `Last update — ${new Date().toISOString().slice(11, 16)} UTC` });
+  container.addSeparatorComponents(thinSeparator());
+  container.addTextDisplayComponents(textDisplay(`-# Last update — ${new Date().toISOString().slice(11, 16)} UTC`));
 
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder().setCustomId("ai:status:refresh").setLabel("🔄 Refresh").setStyle(ButtonStyle.Secondary),
   );
+  container.addActionRowComponents(row);
 
-  return { embeds: [embed], components: [row] };
+  return messageViewPayload(container);
 }
 
 export interface AdminControlCenterData {
@@ -115,36 +136,67 @@ export interface AdminControlCenterData {
 }
 
 export function buildAdminControlCenterEmbed(data: AdminControlCenterData): MessageViewPayload {
-  const embed = baseEmbed("🤖 NODIFY — AI CONTROL CENTER", STATUS_COLOR[data.status])
-    .addFields(
-      { name: `${STATUS_ICON[data.status]} Status`, value: STATUS_LABEL[data.status], inline: true },
-      { name: "🧠 Provider", value: data.provider, inline: true },
-      { name: "💳 Credits", value: data.creditsEnabled ? "Enabled" : "Disabled", inline: true },
-      { name: SEPARATOR, value: "📊 Today" },
-      { name: "Requests", value: `${data.today.requestCount}`, inline: true },
-      { name: "Credits spent", value: `${data.today.creditsSpent}`, inline: true },
-      { name: SEPARATOR, value: "📅 This week" },
-      { name: "Requests", value: `${data.week.requestCount}`, inline: true },
-      { name: "Credits spent", value: `${data.week.creditsSpent}`, inline: true },
-      { name: SEPARATOR, value: "🗓️ This month" },
-      { name: "Requests", value: `${data.month.requestCount}`, inline: true },
-      { name: "Credits spent", value: `${data.month.creditsSpent}`, inline: true },
-      { name: SEPARATOR, value: "⚠️ Reliability (this month)" },
-      { name: "Errors", value: `${data.month.errorCount}`, inline: true },
-      { name: "Refunded", value: `${data.month.refundedCount}`, inline: true },
-    );
+  const container = baseContainer("🤖 NODIFY — AI CONTROL CENTER", STATUS_COLOR[data.status]).addTextDisplayComponents(
+    textDisplay(
+      [
+        fieldText(`${STATUS_ICON[data.status]} Status`, STATUS_LABEL[data.status]),
+        fieldText("🧠 Provider", data.provider),
+        fieldText("💳 Credits", data.creditsEnabled ? "Enabled" : "Disabled"),
+      ].join("\n"),
+    ),
+  );
+
+  container.addSeparatorComponents(thinSeparator());
+  container.addTextDisplayComponents(
+    textDisplay("**📊 Today**"),
+    textDisplay(
+      [fieldText("Requests", `${data.today.requestCount}`), fieldText("Credits spent", `${data.today.creditsSpent}`)].join(
+        "\n",
+      ),
+    ),
+  );
+
+  container.addSeparatorComponents(thinSeparator());
+  container.addTextDisplayComponents(
+    textDisplay("**📅 This week**"),
+    textDisplay(
+      [fieldText("Requests", `${data.week.requestCount}`), fieldText("Credits spent", `${data.week.creditsSpent}`)].join(
+        "\n",
+      ),
+    ),
+  );
+
+  container.addSeparatorComponents(thinSeparator());
+  container.addTextDisplayComponents(
+    textDisplay("**🗓️ This month**"),
+    textDisplay(
+      [
+        fieldText("Requests", `${data.month.requestCount}`),
+        fieldText("Credits spent", `${data.month.creditsSpent}`),
+      ].join("\n"),
+    ),
+  );
+
+  container.addSeparatorComponents(thinSeparator());
+  container.addTextDisplayComponents(
+    textDisplay("**⚠️ Reliability (this month)**"),
+    textDisplay(
+      [fieldText("Errors", `${data.month.errorCount}`), fieldText("Refunded", `${data.month.refundedCount}`)].join("\n"),
+    ),
+  );
 
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder().setCustomId("ai:admin:refresh").setLabel("🔄 Refresh").setStyle(ButtonStyle.Secondary),
     new ButtonBuilder().setCustomId("ai:admin:close").setLabel("🔴 Close AI").setStyle(ButtonStyle.Danger),
     new ButtonBuilder().setCustomId("ai:admin:maintenance").setLabel("🔧 Maintenance").setStyle(ButtonStyle.Secondary),
   );
+  container.addActionRowComponents(row);
 
-  return { embeds: [embed], components: [row] };
+  return messageViewPayload(container);
 }
 
-export function buildSimpleStatusEmbed(title: string, color: number, description: string): InteractionReplyOptions {
-  return { embeds: [baseEmbed(title, color).setDescription(description)], components: [] };
+export function buildSimpleStatusEmbed(title: string, color: number, description: string): ContainerPayload {
+  return containerPayload(baseContainer(title, color).addTextDisplayComponents(textDisplay(description)));
 }
 
 export const AI_USAGE_PAGE_SIZE = 8;
@@ -172,26 +224,32 @@ export interface AiUsageData {
 export function buildAiUsageReply(data: AiUsageData): MessageViewPayload {
   const totalPages = Math.max(Math.ceil(data.total / AI_USAGE_PAGE_SIZE), 1);
 
-  const embed = baseEmbed("🤖 NODIFY — AI USAGE", EmbedColors.neutral).addFields(
-    { name: SEPARATOR, value: "🏆 Top fonctionnalités (7 jours)" },
-    ...(data.topFeatures.length > 0
-      ? data.topFeatures.map((f) => ({ name: getFeatureLabel(f.feature), value: `${f.count} appel(s)`, inline: true }))
-      : [{ name: "​", value: "Aucune donnée." }]),
-    { name: SEPARATOR, value: "📜 Appels" },
+  const container = baseContainer("🤖 NODIFY — AI USAGE", EmbedColors.neutral).addTextDisplayComponents(
+    textDisplay("**🏆 Top fonctionnalités (7 jours)**"),
+    textDisplay(
+      data.topFeatures.length > 0
+        ? data.topFeatures.map((f) => fieldText(getFeatureLabel(f.feature), `${f.count} appel(s)`)).join("\n")
+        : "Aucune donnée.",
+    ),
   );
 
-  if (data.calls.length === 0) {
-    embed.addFields({ name: "​", value: "Aucun appel trouvé pour ces filtres." });
-  } else {
-    for (const call of data.calls) {
-      embed.addFields({
-        name: `${getFeatureLabel(call.feature)} — ${call.status}`,
-        value: `<@${call.userId}> · ${call.creditCost} crédit(s) · <t:${Math.floor(call.createdAt.getTime() / 1000)}:R>`,
-      });
-    }
-  }
+  container.addSeparatorComponents(thinSeparator());
+  container.addTextDisplayComponents(
+    textDisplay("**📜 Appels**"),
+    textDisplay(
+      data.calls.length === 0
+        ? "Aucun appel trouvé pour ces filtres."
+        : data.calls
+            .map(
+              (call) =>
+                `**${getFeatureLabel(call.feature)} — ${call.status}**\n<@${call.userId}> · ${call.creditCost} crédit(s) · <t:${Math.floor(call.createdAt.getTime() / 1000)}:R>`,
+            )
+            .join("\n\n"),
+    ),
+  );
 
-  embed.setFooter({ text: `Page ${data.page + 1}/${totalPages} — ${data.total} appel(s) au total` });
+  container.addSeparatorComponents(thinSeparator());
+  container.addTextDisplayComponents(textDisplay(`-# Page ${data.page + 1}/${totalPages} — ${data.total} appel(s) au total`));
 
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
@@ -205,8 +263,9 @@ export function buildAiUsageReply(data: AiUsageData): MessageViewPayload {
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(data.page + 1 >= totalPages),
   );
+  container.addActionRowComponents(row);
 
-  return { embeds: [embed], components: [row] };
+  return messageViewPayload(container);
 }
 
 export interface AiIncidentData {
@@ -228,27 +287,27 @@ export function buildAiIncidentEmbed(data: AiIncidentData): MessageViewPayload {
   const title = isRecovery ? "✅ NODIFY — AI INCIDENT RESOLVED" : "⚠️ NODIFY — AI INCIDENT";
   const color = isRecovery ? EmbedColors.operational : STATUS_COLOR[data.newStatus];
 
-  const embed = baseEmbed(title, color)
-    .setDescription(
-      isRecovery
-        ? "Les services IA sont revenus à un état opérationnel."
-        : "Le statut des services IA vient de changer.",
-    )
-    .addFields(
-      { name: "Statut précédent", value: `${STATUS_ICON[data.previousStatus]} ${STATUS_LABEL[data.previousStatus]}`, inline: true },
-      { name: "Nouveau statut", value: `${STATUS_ICON[data.newStatus]} ${STATUS_LABEL[data.newStatus]}`, inline: true },
-      { name: "Provider", value: data.provider, inline: true },
-    );
+  const container = baseContainer(title, color).addTextDisplayComponents(
+    textDisplay(
+      isRecovery ? "Les services IA sont revenus à un état opérationnel." : "Le statut des services IA vient de changer.",
+    ),
+    textDisplay(
+      [
+        fieldText("Statut précédent", `${STATUS_ICON[data.previousStatus]} ${STATUS_LABEL[data.previousStatus]}`),
+        fieldText("Nouveau statut", `${STATUS_ICON[data.newStatus]} ${STATUS_LABEL[data.newStatus]}`),
+        fieldText("Provider", data.provider),
+      ].join("\n"),
+    ),
+  );
 
   if (data.reason && !isRecovery) {
-    embed.addFields({ name: "Raison connue", value: data.reason });
+    container.addTextDisplayComponents(textDisplay(fieldText("Raison connue", data.reason)));
   }
   if (data.lastSuccessfulRequestAt) {
-    embed.addFields({
-      name: "Dernière requête réussie",
-      value: `<t:${Math.floor(data.lastSuccessfulRequestAt.getTime() / 1000)}:R>`,
-    });
+    container.addTextDisplayComponents(
+      textDisplay(fieldText("Dernière requête réussie", `<t:${Math.floor(data.lastSuccessfulRequestAt.getTime() / 1000)}:R>`)),
+    );
   }
 
-  return { embeds: [embed], components: [] };
+  return messageViewPayload(container);
 }

@@ -1,21 +1,17 @@
-import {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  EmbedBuilder,
-  ModalBuilder,
-  TextInputBuilder,
-  TextInputStyle,
-} from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import type {
   CtfChallengeDetail,
   CtfChallengeSummary,
 } from "./ctfService.js";
 import type { CtfLeaderboardRow } from "../database/repositories/ctfRepository.js";
 import { labelForLevelOrder } from "../utils/leveling.js";
+import { baseContainer, containerPayload, fieldText, textDisplay, thinSeparator, type ContainerPayload } from "../ui/container.js";
 
 export const CTF_SUBMIT_MODAL_ID = "ctf:submit_modal";
 export const CTF_FLAG_INPUT_ID = "flag";
+
+const COLOR_PURPLE = 0x9b59b6;
+const COLOR_GREEN = 0x57f287;
 
 function submitButtonCustomId(key: string): string {
   return `ctf:submit:${key}`;
@@ -27,53 +23,63 @@ export function parseCtfSubmitButtonId(customId: string): string | null {
   return customId.slice("ctf:submit:".length);
 }
 
-export function buildCtfListReply(challenges: CtfChallengeSummary[]) {
-  const embed = new EmbedBuilder()
-    .setTitle("🚩 Défis CTF Nodify")
-    .setColor("Purple")
-    .setDescription(
+export function buildCtfListReply(challenges: CtfChallengeSummary[]): ContainerPayload {
+  const container = baseContainer("🚩 Défis CTF Nodify", COLOR_PURPLE).addTextDisplayComponents(
+    textDisplay(
       challenges.length > 0
         ? "Défis autonomes (pas besoin de cible en direct) — utilise `/cyber ctf challenge` pour voir le détail d'un défi."
         : "Aucun défi disponible pour l'instant.",
-    )
-    .addFields(
-      challenges.map((c) => ({
-        name: `${c.solved ? "✅" : "🔒"} ${c.title} — ${c.points} pts`,
-        value: `Catégorie : ${c.category} · Difficulté : ${labelForLevelOrder(c.difficulty)} · Clé : \`${c.key}\``,
-      })),
-    );
+    ),
+  );
 
-  return { embeds: [embed], components: [] };
+  if (challenges.length > 0) {
+    container.addSeparatorComponents(thinSeparator());
+    container.addTextDisplayComponents(
+      textDisplay(
+        challenges
+          .map((c) =>
+            fieldText(
+              `${c.solved ? "✅" : "🔒"} ${c.title} — ${c.points} pts`,
+              `Catégorie : ${c.category} · Difficulté : ${labelForLevelOrder(c.difficulty)} · Clé : \`${c.key}\``,
+            ),
+          )
+          .join("\n\n"),
+      ),
+    );
+  }
+
+  return containerPayload(container);
 }
 
-export function buildCtfChallengeReply(challenge: CtfChallengeDetail) {
-  const embed = new EmbedBuilder()
-    .setTitle(`🚩 ${challenge.title}`)
-    .setColor(challenge.solved ? "Green" : "Purple")
-    .setDescription(challenge.description)
-    .addFields(
-      { name: "Catégorie", value: challenge.category, inline: true },
-      { name: "Difficulté", value: labelForLevelOrder(challenge.difficulty), inline: true },
-      { name: "Points", value: `${challenge.points}`, inline: true },
-    );
+export function buildCtfChallengeReply(challenge: CtfChallengeDetail): ContainerPayload {
+  const container = baseContainer(`🚩 ${challenge.title}`, challenge.solved ? COLOR_GREEN : COLOR_PURPLE).addTextDisplayComponents(
+    textDisplay(challenge.description),
+    textDisplay(
+      [
+        fieldText("Catégorie", challenge.category),
+        fieldText("Difficulté", labelForLevelOrder(challenge.difficulty)),
+        fieldText("Points", `${challenge.points}`),
+      ].join("\n"),
+    ),
+  );
 
   if (challenge.hint) {
-    embed.addFields({ name: "💡 Indice", value: challenge.hint });
+    container.addTextDisplayComponents(textDisplay(fieldText("💡 Indice", challenge.hint)));
   }
 
   if (challenge.solved) {
-    embed.setFooter({ text: "Déjà résolu — bravo !" });
-    return { embeds: [embed], components: [] };
+    container.addSeparatorComponents(thinSeparator());
+    container.addTextDisplayComponents(textDisplay("-# Déjà résolu — bravo !"));
+    return containerPayload(container);
   }
 
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(submitButtonCustomId(challenge.key))
-      .setLabel("🚩 Soumettre un flag")
-      .setStyle(ButtonStyle.Primary),
+  container.addActionRowComponents(
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder().setCustomId(submitButtonCustomId(challenge.key)).setLabel("🚩 Soumettre un flag").setStyle(ButtonStyle.Primary),
+    ),
   );
 
-  return { embeds: [embed], components: [row] };
+  return containerPayload(container);
 }
 
 export function buildCtfSubmitModal(challengeKey: string): ModalBuilder {
@@ -112,23 +118,17 @@ export function buildCtfSubmitResultReply(
   return { content: lines.join("\n") };
 }
 
-export function buildCtfLeaderboardReply(entries: CtfLeaderboardRow[]) {
+export function buildCtfLeaderboardReply(entries: CtfLeaderboardRow[]): ContainerPayload {
   const RANK_ICON: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
 
-  const embed = new EmbedBuilder().setTitle("🚩 Classement CTF").setColor("Purple");
+  const description =
+    entries.length === 0
+      ? "Personne n'a encore résolu de défi CTF — sois le premier !"
+      : entries
+          .map((e, i) => `${RANK_ICON[i + 1] ?? `**#${i + 1}**`} **${e.username}** — ${e.totalPoints} pts (${e.solvedCount} défi(s))`)
+          .join("\n");
 
-  if (entries.length === 0) {
-    embed.setDescription("Personne n'a encore résolu de défi CTF — sois le premier !");
-  } else {
-    embed.setDescription(
-      entries
-        .map(
-          (e, i) =>
-            `${RANK_ICON[i + 1] ?? `**#${i + 1}**`} **${e.username}** — ${e.totalPoints} pts (${e.solvedCount} défi(s))`,
-        )
-        .join("\n"),
-    );
-  }
+  const container = baseContainer("🚩 Classement CTF", COLOR_PURPLE).addTextDisplayComponents(textDisplay(description));
 
-  return { embeds: [embed], components: [] };
+  return containerPayload(container);
 }

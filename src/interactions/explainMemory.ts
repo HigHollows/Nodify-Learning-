@@ -3,7 +3,6 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  EmbedBuilder,
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
@@ -14,7 +13,10 @@ import { explainFollowUp, getActiveProviderName } from "../ai/aiService.js";
 import type { LevelHint } from "../ai/types.js";
 import { creditsEnabled } from "../credits/creditService.js";
 import { getCreditCost } from "../credits/creditCosts.js";
+import { baseContainer, containerPayload, textDisplay, type ContainerPayload } from "../ui/container.js";
 import { AppError } from "../utils/errors.js";
+
+const EXPLAIN_COLOR = 0x9b59b6; // Purple — inchangé par rapport à l'ancien embed
 
 /** Le bouton relance un appel IA (`explainme`), donc reconsomme des crédits — affiché pour ne pas surprendre. */
 function costLabel(): string {
@@ -63,17 +65,20 @@ export function storeExplainContext(
   return id;
 }
 
-export function buildExplainReply(term: string, explanation: string, contextId: string) {
-  const embed = new EmbedBuilder()
-    .setTitle(`🤖 Explication : ${term}`)
-    .setColor("Purple")
-    .setDescription(explanation)
-    .setFooter({
-      text:
+export function buildExplainReply(term: string, explanation: string, contextId: string): ContainerPayload {
+  const container = baseContainer(`🤖 Explication : ${term}`, EXPLAIN_COLOR).addTextDisplayComponents(
+    textDisplay(explanation),
+  );
+
+  container.addTextDisplayComponents(
+    textDisplay(
+      `-# ${
         getActiveProviderName() === "stub"
           ? "⚠️ Mode démonstration — aucune clé API IA configurée"
-          : "Généré par IA — vérifie les informations critiques avant de t'y fier",
-    });
+          : "Généré par IA — vérifie les informations critiques avant de t'y fier"
+      }`,
+    ),
+  );
 
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
@@ -81,8 +86,9 @@ export function buildExplainReply(term: string, explanation: string, contextId: 
       .setLabel(`💬 Question de suivi${costLabel()}`)
       .setStyle(ButtonStyle.Secondary),
   );
+  container.addActionRowComponents(row);
 
-  return { embeds: [embed], components: [row] };
+  return containerPayload(container);
 }
 
 export function parseFollowUpButtonId(customId: string): string | null {

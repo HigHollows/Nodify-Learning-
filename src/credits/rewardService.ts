@@ -3,7 +3,7 @@ import { getLatestClaim, tryClaimReward } from "../database/repositories/rewardR
 import { isSupporter as isSupporterRepo } from "../database/repositories/userRepository.js";
 import { earnReward, getWallet } from "./creditService.js";
 import type { RewardType } from "./creditTypes.js";
-import { formatDuration } from "./embedTheme.js";
+import { formatDuration } from "../ui/container.js";
 import { AppError } from "../utils/errors.js";
 
 /**

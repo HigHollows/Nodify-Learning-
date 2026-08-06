@@ -1,6 +1,9 @@
-import { EmbedBuilder, MessageFlags, PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
+import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import { getNodifyStats } from "../../services/statsService.js";
+import { baseContainer, ephemeralContainerPayload, fieldText, textDisplay } from "../../ui/container.js";
 import type { Command } from "../../types/command.js";
+
+const COLOR_BLUE = 0x3498db;
 
 const command: Command = {
   data: new SlashCommandBuilder()
@@ -12,25 +15,25 @@ const command: Command = {
   async execute(interaction) {
     const stats = await getNodifyStats();
 
-    const embed = new EmbedBuilder()
-      .setTitle("📊 Statistiques Nodify")
-      .setColor("Blue")
-      .addFields(
-        { name: "Utilisateurs", value: `${stats.totalUsers}`, inline: true },
-        { name: "XP totale distribuée", value: `${stats.totalXpAwarded}`, inline: true },
-        { name: "Streak moyen", value: `${stats.averageStreak} jour(s)`, inline: true },
-        { name: "Leçons validées", value: `${stats.totalLessonsCompleted}`, inline: true },
-        { name: "Défis CTF résolus", value: `${stats.totalCtfSolves}`, inline: true },
-        {
-          name: "Cours le plus commencé",
-          value: stats.mostStartedCourseTitle
-            ? `${stats.mostStartedCourseTitle} (${stats.mostStartedCourseCount} démarrage(s))`
-            : "Aucun cours démarré pour l'instant",
-          inline: true,
-        },
-      );
+    const container = baseContainer("📊 Statistiques Nodify", COLOR_BLUE).addTextDisplayComponents(
+      textDisplay(
+        [
+          fieldText("Utilisateurs", `${stats.totalUsers}`),
+          fieldText("XP totale distribuée", `${stats.totalXpAwarded}`),
+          fieldText("Streak moyen", `${stats.averageStreak} jour(s)`),
+          fieldText("Leçons validées", `${stats.totalLessonsCompleted}`),
+          fieldText("Défis CTF résolus", `${stats.totalCtfSolves}`),
+          fieldText(
+            "Cours le plus commencé",
+            stats.mostStartedCourseTitle
+              ? `${stats.mostStartedCourseTitle} (${stats.mostStartedCourseCount} démarrage(s))`
+              : "Aucun cours démarré pour l'instant",
+          ),
+        ].join("\n"),
+      ),
+    );
 
-    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+    await interaction.reply(ephemeralContainerPayload(container));
   },
 };
 

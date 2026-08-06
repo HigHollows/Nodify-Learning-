@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatCredits, formatDuration } from "./embedTheme.js";
+import { formatCredits, formatDuration } from "./container.js";
 
 describe("formatCredits", () => {
   it("met un pluriel au-delà de 1", () => {
