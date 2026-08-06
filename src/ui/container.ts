@@ -32,6 +32,14 @@ const BANNER_PATH = path.join(__dirname, "..", "..", "assets", BANNER_FILENAME);
 // partir de ce buffer en mémoire à chaque envoi (pas de re-lecture disque).
 const bannerBuffer = readFileSync(BANNER_PATH);
 
+// Bannières dédiées à la Question du jour — une piochée au hasard à chaque
+// post (/trivia ET le post automatique), pas les 5 en même temps.
+const TRIVIA_DIR = path.join(__dirname, "..", "..", "assets", "trivia");
+const TRIVIA_IMAGES = ["trivia-1.png", "trivia-2.png", "trivia-3.png", "trivia-4.png", "trivia-5.png"].map((name) => ({
+  name,
+  buffer: readFileSync(path.join(TRIVIA_DIR, name)),
+}));
+
 export const EmbedColors = {
   neutral: 0x2b2d31, // Discord dark surface — informatif neutre
   operational: 0x3ba55c, // vert sobre — tout va bien
@@ -80,6 +88,27 @@ export function baseContainer(title: string, color: number): ContainerBuilder {
   return bannerContainer(color).addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ${title}`));
 }
 
+/**
+ * Container avec une image de bannière piochée au hasard parmi les visuels
+ * dédiés à la Question du jour (`assets/trivia/`) — l'attachment correspondant
+ * doit être ajouté à `files` par l'appelant (voir `messageViewPayloadWithFiles`),
+ * la fonction ne renvoie que ce dont elle a besoin pour rester cohérente.
+ */
+export function triviaContainer(title: string, color: number): { container: ContainerBuilder; attachment: AttachmentBuilder } {
+  const pick = TRIVIA_IMAGES[Math.floor(Math.random() * TRIVIA_IMAGES.length)]!;
+  const attachment = new AttachmentBuilder(pick.buffer, { name: pick.name });
+  const gallery = new MediaGalleryBuilder().addItems(
+    new MediaGalleryItemBuilder().setURL(`attachment://${pick.name}`).setDescription("Nodify Trivia"),
+  );
+
+  const container = new ContainerBuilder()
+    .setAccentColor(color)
+    .addMediaGalleryComponents(gallery)
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ${title}`));
+
+  return { container, attachment };
+}
+
 /** Bloc de texte libre (équivalent `.setDescription()` ou un paragraphe de contenu). */
 export function textDisplay(content: string): TextDisplayBuilder {
   return new TextDisplayBuilder().setContent(content);
@@ -110,6 +139,11 @@ export interface MessageViewPayload {
 
 export function messageViewPayload(container: ContainerBuilder): MessageViewPayload {
   return { components: [container], files: [bannerAttachment()], flags: [MessageFlags.IsComponentsV2] };
+}
+
+/** Comme `messageViewPayload()`, mais avec une pièce jointe précise plutôt que la bannière par défaut (ex: `triviaContainer()`). */
+export function messageViewPayloadWithFiles(container: ContainerBuilder, files: AttachmentBuilder[]): MessageViewPayload {
+  return { components: [container], files, flags: [MessageFlags.IsComponentsV2] };
 }
 
 /** Alias : `containerPayload` est l'usage le plus courant (interaction.reply), identique à `messageViewPayload`. */

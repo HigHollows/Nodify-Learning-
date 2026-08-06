@@ -1,6 +1,14 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, type InteractionReplyOptions } from "discord.js";
 import { SKILL_CATEGORY_LABELS, type SkillCategory } from "../types/skill.js";
-import { baseContainer, ephemeralContainerPayload, messageViewPayload, textDisplay, type EphemeralContainerPayload, type MessageViewPayload } from "../ui/container.js";
+import {
+  baseContainer,
+  ephemeralContainerPayload,
+  messageViewPayloadWithFiles,
+  textDisplay,
+  triviaContainer,
+  type EphemeralContainerPayload,
+  type MessageViewPayload,
+} from "../ui/container.js";
 
 const CHOICE_LETTERS = ["A", "B", "C", "D"];
 
@@ -15,11 +23,17 @@ export interface DailyQuestionForDisplay {
   choices: string[];
 }
 
-/** Postée à la fois automatiquement (channel.send) et via /trivia (interaction.reply) — jamais éphémère. */
+/**
+ * Postée à la fois automatiquement (channel.send) et via /trivia
+ * (interaction.reply) — jamais éphémère. Bannière piochée au hasard parmi 5
+ * visuels dédiés (assets/trivia/) à chaque post, plutôt que la bannière
+ * Nodify générique — un seul visuel par post, jamais les 5 en même temps.
+ */
 export function buildDailyQuestionPost(question: DailyQuestionForDisplay): MessageViewPayload {
   const categoryLabel = SKILL_CATEGORY_LABELS[question.category as SkillCategory] ?? question.category;
 
-  const container = baseContainer("🧠 Question du jour", COLOR_BLUE).addTextDisplayComponents(
+  const { container, attachment } = triviaContainer("🧠 Question du jour", COLOR_BLUE);
+  container.addTextDisplayComponents(
     textDisplay(question.prompt),
     textDisplay(`-# ${categoryLabel} — une seule réponse comptée par jour`),
   );
@@ -35,7 +49,7 @@ export function buildDailyQuestionPost(question: DailyQuestionForDisplay): Messa
     ),
   );
 
-  return messageViewPayload(container);
+  return messageViewPayloadWithFiles(container, [attachment]);
 }
 
 export function buildDailyAnswerFeedback(correct: boolean, explanation: string): EphemeralContainerPayload {
