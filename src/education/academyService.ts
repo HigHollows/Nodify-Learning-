@@ -15,6 +15,7 @@ import {
 import { awardCourseCompleted, awardLessonPassed } from "../credits/rewardService.js";
 import { unlockAchievement } from "../services/achievementService.js";
 import { childLogger } from "../utils/logger.js";
+import { shuffleChoices } from "../utils/quizShuffle.js";
 
 const log = childLogger("academyService");
 
@@ -144,6 +145,11 @@ export async function startOrResumeCourse(
   return { type: "lesson", lesson: toLessonView(lesson, course.title, totalLessons) };
 }
 
+/** Clé stable pour le mélange des choix — même leçon + même ordre de question → même mélange à l'affichage et à la correction. */
+function questionSeed(lessonId: string, order: number): string {
+  return `${lessonId}:${order}`;
+}
+
 function toLessonView(
   lesson: NonNullable<Awaited<ReturnType<typeof findLessonById>>>,
   courseTitle: string,
@@ -160,7 +166,7 @@ function toLessonView(
     questions: lesson.questions.map((q) => ({
       order: q.order,
       prompt: q.prompt,
-      choices: JSON.parse(q.choices) as string[],
+      choices: shuffleChoices(questionSeed(lesson.id, q.order), JSON.parse(q.choices) as string[], q.correctIndex).choices,
     })),
   };
 }
@@ -187,7 +193,14 @@ export async function evaluateAnswer(
   const question = lesson.questions.find((q) => q.order === questionOrder);
   if (!question) return null;
 
-  const correct = choiceIndex === question.correctIndex;
+  // La leçon est re-fetch ici, séparément de l'affichage — on recalcule le
+  // même mélange (même clé) pour comparer au bon index.
+  const { correctIndex } = shuffleChoices(
+    questionSeed(lessonId, question.order),
+    JSON.parse(question.choices) as string[],
+    question.correctIndex,
+  );
+  const correct = choiceIndex === correctIndex;
   const updatedRunningCorrect = runningCorrect + (correct ? 1 : 0);
   const totalQuestions = lesson.questions.length;
   const isLastQuestion = questionOrder >= totalQuestions;
@@ -207,7 +220,11 @@ export async function evaluateAnswer(
           nextQuestion: {
             order: nextQuestionData.order,
             prompt: nextQuestionData.prompt,
-            choices: JSON.parse(nextQuestionData.choices) as string[],
+            choices: shuffleChoices(
+              questionSeed(lessonId, nextQuestionData.order),
+              JSON.parse(nextQuestionData.choices) as string[],
+              nextQuestionData.correctIndex,
+            ).choices,
           },
         }
       : {}),

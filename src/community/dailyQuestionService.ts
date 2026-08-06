@@ -12,6 +12,7 @@ import { HUB_CATEGORY } from "../setup/resources.js";
 import { AppError } from "../utils/errors.js";
 import { todayUtc } from "../utils/date.js";
 import { childLogger } from "../utils/logger.js";
+import { shuffleChoices } from "../utils/quizShuffle.js";
 import { buildDailyQuestionPost } from "./dailyQuestionView.js";
 
 const log = childLogger("dailyQuestionService");
@@ -57,11 +58,12 @@ export async function getTodaysQuestion(): Promise<DailyQuestionRow> {
 }
 
 export function toDisplay(question: DailyQuestionRow) {
+  const { choices } = shuffleChoices(question.key, parseChoices(question.choices), question.correctIndex);
   return {
     key: question.key,
     category: question.category,
     prompt: question.prompt,
-    choices: parseChoices(question.choices),
+    choices,
   };
 }
 
@@ -81,7 +83,10 @@ export async function submitDailyAnswer(
   if (!question) return null;
 
   const today = todayUtc();
-  const correct = choiceIndex === question.correctIndex;
+  // La question est re-fetch ici, séparément de l'affichage — on doit
+  // recalculer le même mélange (même clé) pour comparer au bon index.
+  const { correctIndex } = shuffleChoices(question.key, parseChoices(question.choices), question.correctIndex);
+  const correct = choiceIndex === correctIndex;
   const recorded = await recordDailyAnswer(userId, guildId, today, correct);
 
   if (!recorded) {
