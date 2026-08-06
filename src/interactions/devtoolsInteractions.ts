@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { ButtonInteraction, ModalSubmitInteraction } from "discord.js";
+import { MessageFlags, type ButtonInteraction, type ModalSubmitInteraction } from "discord.js";
 import {
   debugGuide,
   debugHint,
@@ -12,11 +12,27 @@ import {
   buildCodeReviewReply,
   buildDebugGuideReply,
   buildDebugHintReply,
+  buildDmFailedReply,
+  buildDmSentReply,
   buildSecurityReviewReply,
   CODE_INPUT_ID,
   ERROR_INPUT_ID,
 } from "../commands/devtools/devtoolsView.js";
+import { trySendDirectMessage } from "../utils/dm.js";
 import { AppError } from "../utils/errors.js";
+
+/**
+ * Dev Tools (Security Review / Code Review / Debug Coach) — toute la partie
+ * personnelle (code collé, analyse, corrections, indices) se déroule en DM,
+ * pour ne jamais encombrer le salon ni y exposer publiquement le code d'un
+ * membre. Seul le déclenchement (`/securityreview` etc., qui ouvre un Modal
+ * — invisible dans le salon, aucun message posté) reste dans le salon ; la
+ * réponse à la SOUMISSION du modal est un court accusé éphémère
+ * ("va voir tes DMs" / erreur si DMs fermés), jamais le contenu lui-même.
+ * Les boutons de suivi ("Voir la correction", "Encore un indice") sont
+ * cliqués depuis le DM et y répondent naturellement — même code, aucune
+ * logique DM supplémentaire nécessaire pour eux.
+ */
 
 /**
  * Le code/les échanges à reprendre sur un bouton de suivi (ex: "Voir la
@@ -25,6 +41,8 @@ import { AppError } from "../utils/errors.js";
  * dont l'état tenait dans quelques nombres. On garde donc ce contexte en
  * mémoire, avec une expiration courte : perdre ces données à un redémarrage
  * du bot n'a aucune conséquence (l'utilisateur relance juste la commande).
+ * Clé = id aléatoire court, jamais l'userId : aucun risque de mélanger deux
+ * sessions même si deux membres soumettent en même temps.
  */
 const TTL_MS = 10 * 60 * 1000;
 
@@ -65,12 +83,13 @@ function storeContext<T extends { expiresAt: number }>(
 
 export async function handleSecurityReviewSubmit(interaction: ModalSubmitInteraction): Promise<void> {
   const code = interaction.fields.getTextInputValue(CODE_INPUT_ID);
-  await interaction.deferReply();
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const findings = await reviewCodeSecurity(interaction.user.id, code, interaction.guildId ?? undefined);
   const reviewId = storeContext(pendingReviews, { code, findings });
 
-  await interaction.editReply(buildSecurityReviewReply(findings, reviewId));
+  const sent = await trySendDirectMessage(interaction.user, buildSecurityReviewReply(findings, reviewId));
+  await interaction.editReply(sent ? buildDmSentReply() : buildDmFailedReply());
 }
 
 export async function handleSecurityFixButton(
@@ -94,10 +113,12 @@ export async function handleSecurityFixButton(
 
 export async function handleCodeReviewSubmit(interaction: ModalSubmitInteraction): Promise<void> {
   const code = interaction.fields.getTextInputValue(CODE_INPUT_ID);
-  await interaction.deferReply();
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const feedback = await reviewCodeQuality(interaction.user.id, code, interaction.guildId ?? undefined);
-  await interaction.editReply(buildCodeReviewReply(feedback));
+
+  const sent = await trySendDirectMessage(interaction.user, buildCodeReviewReply(feedback));
+  await interaction.editReply(sent ? buildDmSentReply() : buildDmFailedReply());
 }
 
 // --- Debug Coach -------------------------------------------------------------
@@ -105,7 +126,7 @@ export async function handleCodeReviewSubmit(interaction: ModalSubmitInteraction
 export async function handleDebugSubmit(interaction: ModalSubmitInteraction): Promise<void> {
   const errorMessage = interaction.fields.getTextInputValue(ERROR_INPUT_ID);
   const code = interaction.fields.getTextInputValue(CODE_INPUT_ID) || undefined;
-  await interaction.deferReply();
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const guidance = await debugGuide(interaction.user.id, errorMessage, code, interaction.guildId ?? undefined);
   const debugId = storeContext(pendingDebugSessions, {
@@ -114,7 +135,8 @@ export async function handleDebugSubmit(interaction: ModalSubmitInteraction): Pr
     lastGuidance: guidance,
   });
 
-  await interaction.editReply(buildDebugGuideReply(guidance, debugId));
+  const sent = await trySendDirectMessage(interaction.user, buildDebugGuideReply(guidance, debugId));
+  await interaction.editReply(sent ? buildDmSentReply() : buildDmFailedReply());
 }
 
 export async function handleDebugHintButton(

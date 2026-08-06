@@ -128,3 +128,26 @@ export function buildDebugHintReply(hint: string): ContainerPayload {
     baseContainer("🐛 Debug Coach — indice supplémentaire", COLOR_ORANGE).addTextDisplayComponents(textDisplay(truncate(hint))),
   );
 }
+
+// --- Confirmation/erreur dans le salon d'origine — tout le reste (code,
+// analyse, corrections) part en DM pour ne jamais encombrer le salon ni y
+// exposer le code de l'utilisateur. ---
+
+export function buildDmSentReply(): ContainerPayload {
+  return containerPayload(
+    baseContainer("✅ Vérifie tes messages privés", COLOR_GREEN).addTextDisplayComponents(
+      textDisplay("Je t'ai envoyé un message privé pour la suite — résultat, corrections et questions se passent là-bas."),
+    ),
+  );
+}
+
+export function buildDmFailedReply(): ContainerPayload {
+  return containerPayload(
+    baseContainer("❌ Impossible de t'envoyer un message privé", COLOR_RED).addTextDisplayComponents(
+      textDisplay(
+        "Active tes messages privés pour ce serveur (Paramètres de confidentialité du serveur → " +
+          "Autoriser les messages privés des membres du serveur), puis relance la commande.",
+      ),
+    ),
+  );
+}
