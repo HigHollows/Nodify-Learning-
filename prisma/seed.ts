@@ -1643,6 +1643,182 @@ const CONCEPTS: ConceptSeed[] = [
     prerequisiteKeys: [],
     aliases: ["arp poisoning", "empoisonnement arp"],
   },
+  {
+    key: "man-in-the-middle",
+    name: "Man-in-the-Middle (MITM)",
+    category: "CYBERSECURITY",
+    level: 2,
+    definition:
+      "Une attaque où un tiers s'intercale discrètement entre deux parties qui communiquent, capable de lire et potentiellement modifier les échanges sans que ni l'une ni l'autre ne s'en rende compte.",
+    explanationBeginner:
+      "Imagine une lettre envoyée par la poste, mais quelqu'un l'intercepte en chemin, la lit (voire la modifie), puis la renvoie comme si de rien n'était — l'expéditeur et le destinataire pensent communiquer directement, alors qu'un intermédiaire observe tout.",
+    explanationAdvanced:
+      "ARP spoofing (réseau local) et le détournement de DNS sont des vecteurs classiques pour se positionner en MITM. HTTPS/TLS est la défense principale : le chiffrement empêche l'intermédiaire de lire le contenu même s'il intercepte le trafic, et la vérification du certificat empêche de se faire passer pour le vrai serveur sans être détecté.",
+    docUrl: "https://owasp.org/www-community/attacks/Man-in-the-middle_attack",
+    relatedKeys: ["arp-spoofing", "tls-ssl"],
+    prerequisiteKeys: [],
+    aliases: ["mitm", "attaque de l'homme du milieu"],
+  },
+  {
+    key: "symmetric-encryption",
+    name: "Chiffrement symétrique",
+    category: "CYBERSECURITY",
+    level: 2,
+    definition:
+      "Un chiffrement qui utilise une seule et même clé pour chiffrer et déchiffrer les données (ex: AES) — rapide, mais nécessite un échange sécurisé préalable de cette clé.",
+    explanationBeginner:
+      "C'est comme un cadenas dont il n'existe qu'une seule clé : celui qui ferme le cadenas et celui qui l'ouvre doivent avoir exactement la même clé. Le défi est de faire parvenir cette clé secrète à l'autre partie sans qu'un tiers ne l'intercepte en chemin.",
+    explanationAdvanced:
+      "AES (Advanced Encryption Standard) est l'algorithme symétrique de référence aujourd'hui, bien plus rapide que les algorithmes asymétriques pour chiffrer de gros volumes de données. En pratique, il est presque toujours combiné avec du chiffrement asymétrique (voir TLS) : l'asymétrique sert uniquement à échanger la clé symétrique de façon sécurisée, puis le gros du trafic est chiffré en symétrique pour la performance.",
+    docUrl: "https://en.wikipedia.org/wiki/Symmetric-key_algorithm",
+    relatedKeys: ["asymmetric-encryption", "tls-ssl"],
+    prerequisiteKeys: [],
+    aliases: ["chiffrement a cle secrete"],
+  },
+  {
+    key: "asymmetric-encryption",
+    name: "Chiffrement asymétrique",
+    category: "CYBERSECURITY",
+    level: 3,
+    definition:
+      "Un chiffrement qui utilise une paire de clés mathématiquement liées — une clé publique (partageable, sert à chiffrer) et une clé privée (secrète, sert à déchiffrer) — résolvant le problème d'échange de clé du chiffrement symétrique.",
+    explanationBeginner:
+      "Imagine une boîte aux lettres avec une fente : n'importe qui peut y déposer une lettre (chiffrer avec la clé publique, connue de tous), mais seul le propriétaire avec la vraie clé peut l'ouvrir et lire le contenu (déchiffrer avec la clé privée, gardée secrète).",
+    explanationAdvanced:
+      "RSA est l'algorithme asymétrique historique le plus connu, basé sur la difficulté de factoriser de grands nombres premiers. Bien plus lent que le symétrique pour de gros volumes, il sert typiquement à établir un canal sécurisé (échange de clé, signature) plutôt qu'à chiffrer directement de grandes quantités de données — voir TLS pour l'usage combiné avec le symétrique.",
+    docUrl: "https://en.wikipedia.org/wiki/Public-key_cryptography",
+    relatedKeys: ["symmetric-encryption", "digital-signature"],
+    prerequisiteKeys: [],
+    aliases: ["chiffrement a cle publique", "cryptographie asymetrique"],
+  },
+  {
+    key: "digital-signature",
+    name: "Signature numérique",
+    category: "CYBERSECURITY",
+    level: 3,
+    definition:
+      "Un mécanisme cryptographique qui utilise la clé privée pour « signer » un message, vérifiable par n'importe qui avec la clé publique correspondante — garantit l'authenticité et l'intégrité, sans confidentialité.",
+    explanationBeginner:
+      "C'est l'inverse du chiffrement classique : ici la clé privée sert à signer (pas à déchiffrer), et la clé publique sert à vérifier (pas à chiffrer). Une signature valide prouve que le message vient bien du détenteur de la clé privée et n'a pas été modifié depuis.",
+    explanationAdvanced:
+      "En pratique, on ne signe pas le message entier (coûteux) mais son hash — signer un hash de taille fixe est bien plus rapide, et toute modification du message change le hash, donc invalide la signature. Les certificats TLS reposent sur des signatures numériques : l'autorité de certification signe la clé publique du site avec sa propre clé privée.",
+    docUrl: "https://en.wikipedia.org/wiki/Digital_signature",
+    relatedKeys: ["asymmetric-encryption", "hashing"],
+    prerequisiteKeys: ["asymmetric-encryption"],
+    aliases: ["signature electronique"],
+  },
+  {
+    key: "malware",
+    name: "Malware",
+    category: "CYBERSECURITY",
+    level: 1,
+    definition:
+      "Terme générique pour tout logiciel conçu intentionnellement pour nuire, exploiter ou compromettre un système — virus, ver, cheval de Troie, ransomware, spyware et rootkit en sont des catégories.",
+    explanationBeginner:
+      "Malware = « malicious software », logiciel malveillant. C'est le terme parapluie qui regroupe toutes les catégories de programmes créés pour causer du tort : voler des données, chiffrer des fichiers contre rançon, espionner, ou donner un accès non autorisé à un attaquant.",
+    explanationAdvanced:
+      "Les catégories se distinguent par leur mécanisme de propagation (virus = a besoin d'un hôte, ver = autonome sur le réseau) et leur objectif final (ransomware = extorsion, spyware = collecte discrète, rootkit = dissimulation). L'analyse de malware distingue l'analyse statique (examiner le code sans l'exécuter) de l'analyse dynamique (l'exécuter dans un environnement isolé — sandbox — pour observer son comportement réel).",
+    docUrl: "https://www.cisa.gov/topics/cyber-threats-and-advisories/nation-state-cyber-actors/malware",
+    relatedKeys: ["ransomware", "social-engineering"],
+    prerequisiteKeys: [],
+    aliases: ["logiciel malveillant"],
+  },
+  {
+    key: "rootkit",
+    name: "Rootkit",
+    category: "CYBERSECURITY",
+    level: 4,
+    definition:
+      "Un type de malware spécifiquement conçu pour dissimuler sa propre présence (et celle d'autres malwares) au système d'exploitation et aux outils de détection, souvent en s'intégrant à un niveau très profond de l'OS.",
+    explanationBeginner:
+      "Contrairement à un malware qui se contente de faire son travail malveillant discrètement, un rootkit va plus loin : il modifie le système lui-même pour mentir sur ce qui tourne réellement — un outil de détection classique peut littéralement ne pas « voir » un processus caché par un rootkit.",
+    explanationAdvanced:
+      "Les rootkits en mode noyau (kernel-mode) sont les plus dangereux et difficiles à détecter, car ils s'exécutent au même niveau de privilège que le système d'exploitation lui-même, pouvant intercepter et falsifier les appels système utilisés par les outils de détection. Leur suppression fiable nécessite souvent une réinstallation complète du système plutôt qu'un simple nettoyage, la confiance dans l'intégrité du système étant compromise à la racine.",
+    docUrl: "https://en.wikipedia.org/wiki/Rootkit",
+    relatedKeys: ["malware", "privilege-escalation"],
+    prerequisiteKeys: ["malware"],
+    aliases: [],
+  },
+  {
+    key: "sharding",
+    name: "Sharding",
+    category: "DEVELOPMENT",
+    level: 4,
+    definition:
+      "Une technique de partitionnement horizontal qui divise les données d'une base entre plusieurs machines (shards) selon une clé, chaque shard ne gérant qu'une fraction du volume total.",
+    explanationBeginner:
+      "Plutôt qu'une seule énorme base qui stocke tout, on la découpe en plusieurs morceaux plus petits répartis sur différentes machines — par exemple, les utilisateurs dont l'id commence par A-M sur un shard, N-Z sur un autre. Chaque machine gère moins de données, donc reste plus rapide.",
+    explanationAdvanced:
+      "Le choix de la clé de sharding est critique : une mauvaise clé peut créer des shards très déséquilibrés (« hot shard » surchargé pendant que les autres restent sous-utilisés). Les requêtes qui doivent croiser des données de plusieurs shards deviennent nettement plus complexes qu'une simple requête sur une base unique — le sharding est généralement un dernier recours après avoir épuisé index, cache et réplication.",
+    docUrl: "https://en.wikipedia.org/wiki/Shard_(database_architecture)",
+    relatedKeys: ["load-balancer"],
+    prerequisiteKeys: [],
+    aliases: ["partitionnement horizontal"],
+  },
+  {
+    key: "circuit-breaker",
+    name: "Circuit Breaker",
+    category: "DEVELOPMENT",
+    level: 4,
+    definition:
+      "Un pattern qui détecte qu'un service dépendant échoue de façon répétée et arrête temporairement de l'appeler, pour éviter qu'une panne ne se propage en cascade à tout le système.",
+    explanationBeginner:
+      "Comme un disjoncteur électrique qui coupe le circuit en cas de surcharge pour éviter un incendie, un circuit breaker logiciel « coupe » les appels vers un service qui échoue trop souvent — plutôt que de continuer à attendre indéfiniment une réponse qui n'arrivera pas, il échoue vite avec une erreur claire ou une réponse dégradée.",
+    explanationAdvanced:
+      "Un circuit breaker a généralement 3 états : fermé (fonctionnement normal, appels passent), ouvert (trop d'échecs récents, appels bloqués immédiatement sans même essayer), semi-ouvert (après un délai, quelques appels de test sont autorisés pour voir si le service s'est rétabli). Ce mécanisme protège l'appelant (évite l'épuisement de ses propres ressources en attendant un service mort) autant que le service en difficulté (évite de le submerger pendant qu'il tente de se rétablir).",
+    docUrl: "https://martinfowler.com/bliki/CircuitBreaker.html",
+    relatedKeys: ["microservices"],
+    prerequisiteKeys: [],
+    aliases: ["disjoncteur logiciel"],
+  },
+  {
+    key: "cap-theorem",
+    name: "Théorème CAP",
+    category: "DEVELOPMENT",
+    level: 4,
+    definition:
+      "Un théorème qui énonce qu'un système distribué ne peut garantir simultanément que 2 des 3 propriétés — Cohérence, Disponibilité, Tolérance au partitionnement — en cas de coupure réseau entre nœuds.",
+    explanationBeginner:
+      "Dans un système réparti sur plusieurs machines, si le réseau entre elles tombe en panne (ce qui arrive inévitablement), il faut choisir : soit continuer à répondre aux requêtes même si certaines données pourraient être périmées (disponibilité), soit refuser de répondre tant qu'on n'est pas sûr d'avoir la donnée la plus récente (cohérence) — impossible d'avoir les deux à 100% en même temps pendant la panne.",
+    explanationAdvanced:
+      "La tolérance au partitionnement n'étant pas négociable pour un vrai système distribué (le réseau tombera en panne, c'est une question de quand), le choix réel se fait entre CP (cohérence stricte, ex: bases relationnelles distribuées classiques) et AP (disponibilité, cohérence à terme — ex: Cassandra, DynamoDB). Beaucoup de bases modernes offrent des réglages ajustables par requête plutôt qu'un choix figé pour tout le système.",
+    docUrl: "https://en.wikipedia.org/wiki/CAP_theorem",
+    relatedKeys: [],
+    prerequisiteKeys: [],
+    aliases: ["cap theorem", "theoreme de brewer"],
+  },
+  {
+    key: "mongodb",
+    name: "MongoDB",
+    category: "DEVELOPMENT",
+    level: 2,
+    definition:
+      "Une base de données NoSQL orientée document, qui stocke des données au format JSON-like flexible plutôt que dans des tables rigides à schéma fixe.",
+    explanationBeginner:
+      "Contrairement à une base SQL où toutes les lignes d'une table doivent avoir exactement les mêmes colonnes, MongoDB permet à chaque document d'une collection d'avoir une structure légèrement différente — pratique quand le schéma évolue souvent ou varie selon les enregistrements.",
+    explanationAdvanced:
+      "Les documents peuvent imbriquer directement des tableaux et sous-objets, évitant souvent des jointures nécessaires en SQL — au prix d'un risque de duplication si la donnée imbriquée doit être répétée dans plusieurs documents. MongoDB reste transactionnel (ACID) au niveau d'un document depuis ses versions récentes, avec un support de transactions multi-documents plus limité et coûteux en performance que le modèle relationnel.",
+    docUrl: "https://www.mongodb.com/docs/manual/core/document/",
+    relatedKeys: [],
+    prerequisiteKeys: [],
+    aliases: ["base document"],
+  },
+  {
+    key: "cold-start",
+    name: "Cold Start",
+    category: "CLOUD",
+    level: 3,
+    definition:
+      "Le délai supplémentaire subi lors du premier appel à une fonction serverless inactive, le temps que l'infrastructure provisionne une nouvelle instance pour l'exécuter.",
+    explanationBeginner:
+      "Une fonction serverless qui n'a pas tourné récemment doit être « réveillée » — une nouvelle instance doit démarrer avant de pouvoir répondre, ce qui ajoute une latence perceptible sur ce premier appel. Les appels suivants (tant que l'instance reste chaude) n'ont plus ce délai.",
+    explanationAdvanced:
+      "Le cold start varie fortement selon le runtime (souvent plus rapide pour des langages compilés/légers comme Go que pour des runtimes avec une JVM à démarrer) et la taille du package déployé. Des stratégies existent pour l'atténuer : garder artificiellement des instances « chaudes » via des appels périodiques (provisioned concurrency chez AWS Lambda), au prix de payer pour cette disponibilité permanente — un compromis entre coût et latence.",
+    docUrl: "https://en.wikipedia.org/wiki/Serverless_computing",
+    relatedKeys: ["serverless"],
+    prerequisiteKeys: ["serverless"],
+    aliases: ["demarrage a froid"],
+  },
 ];
 
 /**
@@ -5051,6 +5227,712 @@ const COURSES: CourseSeed[] = [
       },
     ],
   },
+  {
+    key: "system-design-fundamentals",
+    title: "System Design : les fondamentaux",
+    description: "Scaling, caching, load balancing, CDN — comment penser l'architecture d'un système avant qu'il ne rencontre de vrais problèmes d'échelle.",
+    category: "DEVELOPMENT",
+    skillKey: "apis",
+    level: 4,
+    prerequisiteCourseKeys: ["backend-graphql-caching-queues", "cloud-computing-fundamentals"],
+    lessons: [
+      {
+        order: 1,
+        title: "Penser en termes de charge et de latence",
+        content:
+          "Deux métriques dominent toute décision de system design : le **débit** (throughput — combien de requêtes/seconde le système absorbe) et la **latence** (temps de réponse d'une requête individuelle). Elles sont souvent en tension : optimiser l'une peut dégrader l'autre.\n\n" +
+          "La première question à se poser face à un problème de design n'est jamais « quelle techno utiliser » mais « quelle charge réelle dois-je supporter ? » — un système pour 100 utilisateurs/jour et un système pour 10 millions n'ont presque rien en commun architecturalement, même s'ils rendent le même service fonctionnel. Sur-architecturer pour une charge qui n'arrivera jamais est aussi coûteux (en temps, en complexité) que sous-architecturer pour une charge réelle.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quelle est la première question à se poser avant de choisir une architecture ?",
+            choices: [
+              "Quel framework est le plus à la mode",
+              "Quelle charge réelle (débit, nombre d'utilisateurs) le système doit-il supporter",
+              "Quel langage de programmation utiliser",
+              "Quelle couleur donner au logo",
+            ],
+            correctIndex: 1,
+            explanation: "L'architecture adaptée dépend directement de la charge réelle attendue — un système pour 100 utilisateurs et un système pour 10 millions n'ont presque rien en commun, même avec la même fonctionnalité.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi sur-architecturer pour une charge qui n'arrivera jamais est-il un problème réel ?",
+            choices: [
+              "Ce n'est jamais un problème, plus de robustesse est toujours préférable",
+              "Ça ajoute de la complexité et du temps de développement coûteux, sans bénéfice réel si la charge prévue n'arrive jamais",
+              "Ça rend le système plus lent dans tous les cas",
+              "Ça empêche techniquement le système de fonctionner",
+            ],
+            correctIndex: 1,
+            explanation: "La complexité a un coût réel (temps de développement, maintenance, bugs potentiels) — l'investir pour une échelle hypothétique jamais atteinte est un vrai gaspillage, pas une simple prudence gratuite.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Caching et bases de données à l'échelle",
+        content:
+          "À grande échelle, la base de données devient presque toujours le goulot d'étranglement en premier — d'où l'importance du caching (déjà vu en détail dans un cours précédent) et de stratégies complémentaires :\n\n" +
+          "- **Réplication en lecture** (read replicas) : plusieurs copies de la base pour répartir les lectures (souvent bien plus nombreuses que les écritures), tout en gardant une seule source d'écriture pour éviter les conflits.\n" +
+          "- **Sharding** (partitionnement horizontal) : diviser les données entre plusieurs bases selon une clé (ex: par région géographique, par plage d'id utilisateur) — chaque shard ne gère qu'une fraction du volume total, mais complexifie les requêtes qui touchent plusieurs shards à la fois.\n" +
+          "- **Index** (déjà vu) reste la première optimisation à considérer avant d'aller vers du sharding, bien plus complexe à opérer.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi la réplication en lecture (read replicas) aide-t-elle à scaler une base de données ?",
+            choices: [
+              "Elle augmente automatiquement l'espace disque disponible",
+              "Elle répartit les lectures (souvent bien plus nombreuses que les écritures) entre plusieurs copies, tout en gardant une seule source d'écriture cohérente",
+              "Elle chiffre automatiquement les données",
+              "Elle élimine complètement le besoin d'index",
+            ],
+            correctIndex: 1,
+            explanation: "Dans la plupart des applications, les lectures dominent largement les écritures — répartir ces lectures sur plusieurs répliques soulage la base principale, qui reste la seule à gérer les écritures pour éviter les conflits de cohérence.",
+          },
+          {
+            order: 2,
+            prompt: "Quel est le principal défi introduit par le sharding (partitionnement horizontal) ?",
+            choices: [
+              "Aucun défi particulier, c'est une solution simple",
+              "Les requêtes qui doivent croiser des données réparties sur plusieurs shards deviennent nettement plus complexes",
+              "Le sharding rend impossible toute écriture",
+              "Le sharding ne fonctionne qu'avec des bases NoSQL"
+            ],
+            correctIndex: 1,
+            explanation: "Une requête qui ne touche qu'un seul shard reste simple et rapide ; une requête qui doit agréger des données de plusieurs shards nécessite une logique applicative bien plus complexe (ou une couche d'orchestration dédiée).",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Répartition de charge et tolérance aux pannes",
+        content:
+          "Un **load balancer** répartit le trafic entrant entre plusieurs instances d'un service (déjà vu comme concept) — mais un vrai design résilient va plus loin :\n\n" +
+          "- **Health checks** : le load balancer vérifie périodiquement que chaque instance répond correctement, et retire automatiquement une instance défaillante de la rotation, sans intervention humaine.\n" +
+          "- **Redondance géographique** : répartir les instances sur plusieurs zones de disponibilité (voir le cours Cloud Fundamentals) protège contre la panne d'un datacenter entier, pas juste d'une machine.\n" +
+          "- **Circuit breaker** : un pattern qui détecte qu'un service dépendant échoue de façon répétée et arrête temporairement de l'appeler (retournant une erreur rapide ou une réponse dégradée), pour éviter qu'une panne en cascade ne se propage à tout le système — plutôt que de continuer à attendre indéfiniment un service qui ne répondra pas.",
+        xpReward: 30,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que fait un health check dans un système avec load balancer ?",
+            choices: [
+              "Il mesure la température des serveurs physiques",
+              "Il vérifie périodiquement qu'une instance répond correctement et la retire automatiquement de la rotation si elle est défaillante",
+              "Il chiffre le trafic entre les instances",
+              "Il ne sert qu'au moment du déploiement initial",
+            ],
+            correctIndex: 1,
+            explanation: "Sans health check, le load balancer continuerait d'envoyer du trafic vers une instance en panne — la vérification périodique permet de la retirer automatiquement dès qu'elle cesse de répondre correctement.",
+          },
+          {
+            order: 2,
+            prompt: "À quoi sert un circuit breaker dans une architecture distribuée ?",
+            choices: [
+              "À couper physiquement l'alimentation électrique d'un serveur",
+              "À arrêter temporairement d'appeler un service dépendant qui échoue de façon répétée, pour éviter une panne en cascade sur tout le système",
+              "À chiffrer les communications entre services",
+              "À augmenter automatiquement le nombre d'instances"
+            ],
+            correctIndex: 1,
+            explanation: "Sans circuit breaker, continuer à appeler (et attendre) un service défaillant peut épuiser les ressources (connexions, threads) de l'appelant et propager la panne — le circuit breaker échoue vite et explicitement à la place.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "cryptography-fundamentals",
+    title: "Cryptographie : les fondamentaux",
+    description: "Chiffrement symétrique/asymétrique, hashing, TLS — comprendre les mécanismes qui protègent les données au repos et en transit.",
+    category: "CYBERSECURITY",
+    skillKey: "cryptography",
+    level: 3,
+    prerequisiteCourseKeys: ["cyber-fundamentals"],
+    lessons: [
+      {
+        order: 1,
+        title: "Chiffrement symétrique vs asymétrique",
+        content:
+          "Le **chiffrement symétrique** utilise UNE SEULE clé, partagée entre l'émetteur et le destinataire, pour chiffrer ET déchiffrer (ex: AES). Rapide, mais pose un problème de taille : comment échanger cette clé secrète en premier lieu, sur un canal potentiellement non sécurisé ?\n\n" +
+          "Le **chiffrement asymétrique** utilise une paire de clés mathématiquement liées (ex: RSA) : une **clé publique** (partageable librement, sert à chiffrer) et une **clé privée** (gardée secrète, sert à déchiffrer). Ce qui est chiffré avec la clé publique ne peut être déchiffré qu'avec la clé privée correspondante — résout le problème d'échange de clé, mais bien plus lent que le symétrique.\n\n" +
+          "En pratique (TLS notamment), les deux sont combinés : l'asymétrique établit un canal sécurisé pour échanger une clé symétrique éphémère, puis le reste de la communication utilise le symétrique (rapide) avec cette clé.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quel est le principal inconvénient du chiffrement symétrique ?",
+            choices: [
+              "Il est toujours plus lent que l'asymétrique",
+              "Il nécessite d'échanger une clé secrète unique de façon sécurisée entre les deux parties avant toute communication",
+              "Il ne peut chiffrer que du texte, jamais de fichiers binaires",
+              "Il n'existe aucun algorithme symétrique moderne"
+            ],
+            correctIndex: 1,
+            explanation: "Le symétrique est rapide, mais partager la clé secrète unique sur un canal potentiellement observé pose un vrai problème — c'est précisément ce que le chiffrement asymétrique résout.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi TLS combine-t-il chiffrement asymétrique ET symétrique plutôt que d'utiliser un seul des deux ?",
+            choices: [
+              "Par habitude historique, sans raison technique réelle",
+              "L'asymétrique établit un canal sécurisé pour échanger une clé symétrique, puis le reste de la communication utilise le symétrique (rapide) avec cette clé",
+              "Le symétrique seul est illégal dans certains pays",
+              "L'asymétrique seul ne fonctionne pas sur internet",
+            ],
+            correctIndex: 1,
+            explanation: "Cette combinaison tire parti des deux forces : l'asymétrique résout l'échange de clé sans problème de canal sécurisé préalable, le symétrique assure ensuite la rapidité pour le volume réel de données échangées.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Signatures numériques et certificats",
+        content:
+          "Une **signature numérique** utilise la clé privée pour « signer » un message (généralement son hash), et n'importe qui peut vérifier cette signature avec la clé publique correspondante — c'est l'inverse du chiffrement classique (privée pour signer/vérifier avec la publique, plutôt que publique pour chiffrer/déchiffrer avec la privée). Elle garantit deux choses : l'authenticité (le message vient bien du détenteur de la clé privée) et l'intégrité (le message n'a pas été modifié depuis la signature).\n\n" +
+          "Un **certificat TLS** est un document signé par une **autorité de certification** (CA) qui atteste qu'une clé publique donnée appartient bien à un domaine donné (ex: nodify.app) — c'est ce qui permet à ton navigateur de vérifier qu'il communique avec le vrai serveur, pas un intermédiaire qui se ferait passer pour lui. Le cadenas HTTPS du navigateur signifie « ce certificat est valide et signé par une CA reconnue », pas « ce site est digne de confiance sur le fond ».",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Que garantit une signature numérique valide sur un message ?",
+            choices: [
+              "Que le message est chiffré et illisible pour tous",
+              "L'authenticité (vient bien du détenteur de la clé privée) et l'intégrité (pas modifié depuis la signature)",
+              "Que le message a été envoyé instantanément",
+              "Que le message ne peut jamais être supprimé",
+            ],
+            correctIndex: 1,
+            explanation: "La signature numérique répond à deux questions : « qui a créé ce message » (authenticité, via la clé privée utilisée) et « a-t-il été altéré depuis » (intégrité, vérifiable via la signature du hash).",
+          },
+          {
+            order: 2,
+            prompt: "Que signifie précisément le cadenas HTTPS affiché par un navigateur ?",
+            choices: [
+              "Que le contenu du site est fiable et vérifié sur le fond",
+              "Que le certificat TLS présenté est valide et signé par une autorité de certification reconnue, garantissant l'identité technique du domaine",
+              "Que le site n'affiche jamais de publicité",
+              "Que le site est hébergé dans le pays de l'utilisateur",
+            ],
+            correctIndex: 1,
+            explanation: "Le cadenas atteste uniquement de la validité technique du certificat (identité du domaine, connexion chiffrée) — un site malveillant peut parfaitement avoir un certificat HTTPS valide tout en étant dangereux sur le fond.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Hashing et intégrité des données",
+        content:
+          "Le hashing (déjà vu dans le dictionnaire) transforme une donnée en empreinte de taille fixe, à sens unique — impossible de retrouver la donnée d'origine à partir du hash seul, contrairement au chiffrement (toujours réversible avec la bonne clé).\n\n" +
+          "Usage classique au-delà des mots de passe : vérifier l'**intégrité** d'un téléchargement. Un site publie le hash SHA-256 attendu d'un fichier à côté du lien de téléchargement — après téléchargement, calculer soi-même le hash du fichier reçu et le comparer au hash publié permet de détecter une corruption ou une altération malveillante pendant le transfert, sans avoir besoin de faire confiance au canal de téléchargement lui-même.\n\n" +
+          "Propriété cruciale d'un bon algorithme de hash cryptographique : l'**effet avalanche** — un tout petit changement dans l'entrée (même un seul bit) produit un hash complètement différent et imprévisible, rendant impossible de deviner comment modifier discrètement un fichier tout en gardant le même hash.",
+        xpReward: 30,
+        questions: [
+          {
+            order: 1,
+            prompt: "Comment vérifier l'intégrité d'un fichier téléchargé sans faire confiance au canal de téléchargement ?",
+            choices: [
+              "Impossible sans une connexion HTTPS",
+              "Calculer le hash du fichier reçu et le comparer au hash publié par la source officielle (ex: SHA-256 affiché à côté du lien)",
+              "Vérifier uniquement la taille du fichier",
+              "Ouvrir le fichier et vérifier visuellement qu'il semble correct",
+            ],
+            correctIndex: 1,
+            explanation: "Si le fichier a été altéré (corruption ou modification malveillante), son hash calculé différera du hash officiel publié — une simple comparaison suffit à détecter la moindre altération, même minime.",
+          },
+          {
+            order: 2,
+            prompt: "Qu'est-ce que « l'effet avalanche » d'un bon algorithme de hash ?",
+            choices: [
+              "Le hash devient de plus en plus long à chaque utilisation",
+              "Un tout petit changement dans l'entrée produit un hash complètement différent et imprévisible",
+              "L'algorithme s'auto-corrige en cas d'erreur",
+              "Le hash ralentit à chaque calcul successif",
+            ],
+            correctIndex: 1,
+            explanation: "L'effet avalanche garantit qu'il n'existe aucune façon prévisible de modifier légèrement une donnée tout en gardant (ou en devinant) un hash proche de l'original — un pilier de la sécurité du hashing cryptographique.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "malware-incident-response",
+    title: "Malware et réponse à incident",
+    description: "Théorie de l'analyse de malware et approfondissement de la réponse à incident — comprendre comment un logiciel malveillant se comporte et comment y réagir méthodiquement.",
+    category: "CYBERSECURITY",
+    skillKey: "blue-team-fundamentals",
+    level: 4,
+    prerequisiteCourseKeys: ["blue-team-fundamentals"],
+    lessons: [
+      {
+        order: 1,
+        title: "Catégories de malware",
+        content:
+          "⚠️ Contenu purement théorique — comprendre les catégories aide à interpréter une alerte de sécurité, pas à créer ou manipuler du code malveillant réel.\n\n" +
+          "- **Virus** : s'attache à un programme légitime et se propage quand ce programme est exécuté.\n" +
+          "- **Ver (worm)** : se propage de façon autonome sur un réseau, sans avoir besoin d'un programme hôte ni d'action humaine.\n" +
+          "- **Cheval de Troie (trojan)** : se fait passer pour un logiciel légitime pour inciter l'utilisateur à l'installer volontairement.\n" +
+          "- **Ransomware** : chiffre les fichiers de la victime et demande une rançon pour la clé de déchiffrement.\n" +
+          "- **Rootkit** : conçu pour dissimuler sa propre présence (et celle d'autres malwares) au système et aux outils de détection, souvent en modifiant des composants profonds de l'OS.\n" +
+          "- **Spyware** : collecte discrètement des informations (frappes clavier, historique, identifiants) sans le consentement de l'utilisateur.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quelle est la différence principale entre un virus et un ver (worm) ?",
+            choices: [
+              "Aucune différence, ce sont des synonymes",
+              "Un virus a besoin d'un programme hôte et d'une exécution pour se propager ; un ver se propage de façon autonome sur un réseau, sans hôte ni action humaine",
+              "Un ver ne peut infecter qu'un seul ordinateur à la fois",
+              "Un virus ne peut jamais se propager par réseau",
+            ],
+            correctIndex: 1,
+            explanation: "Le virus dépend d'un programme porteur exécuté par un utilisateur ; le ver exploite directement des vulnérabilités réseau pour se propager de machine en machine sans intervention humaine.",
+          },
+          {
+            order: 2,
+            prompt: "Quel est l'objectif spécifique d'un rootkit ?",
+            choices: [
+              "Chiffrer les fichiers contre rançon",
+              "Dissimuler sa propre présence (et celle d'autres malwares) au système et aux outils de détection",
+              "Envoyer des publicités intrusives",
+              "Ralentir volontairement le système infecté",
+            ],
+            correctIndex: 1,
+            explanation: "Contrairement à un ransomware (visible par nature — il réclame une rançon) ou un spyware (discret mais pas structurellement furtif), le rootkit est spécifiquement conçu pour l'invisibilité, souvent en s'intégrant profondément dans l'OS.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Indicateurs comportementaux",
+        content:
+          "L'analyse comportementale (par opposition à l'analyse par signature, qui compare à une base de malwares déjà connus) cherche des **patterns d'activité anormaux**, capables de détecter des menaces inédites :\n\n" +
+          "- Un processus qui établit des connexions réseau vers des adresses IP inhabituelles ou géographiquement improbables.\n" +
+          "- Une modification inattendue de clés de registre système (Windows) ou de fichiers de configuration système sensibles.\n" +
+          "- Un volume anormal de chiffrement de fichiers en peu de temps (signature comportementale typique d'un ransomware en action).\n" +
+          "- Un processus normal (ex: `powershell.exe`, `svchost.exe`) qui se comporte de façon inhabituelle — technique dite « living off the land » : détourner des outils système légitimes déjà présents plutôt que d'installer un outil malveillant détectable.\n\n" +
+          "L'avantage de l'analyse comportementale sur l'analyse par signature : elle peut détecter un malware jamais vu auparavant (zero-day), au prix d'un taux de faux positifs généralement plus élevé.",
+        xpReward: 30,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quel est l'avantage principal de l'analyse comportementale par rapport à l'analyse par signature ?",
+            choices: [
+              "Elle est toujours plus rapide à exécuter",
+              "Elle peut détecter une menace inédite (zero-day) jamais vue auparavant, en repérant un pattern anormal plutôt qu'une signature connue",
+              "Elle ne génère jamais de faux positif",
+              "Elle ne nécessite aucune mise à jour"
+            ],
+            correctIndex: 1,
+            explanation: "L'analyse par signature ne détecte que ce qui est déjà répertorié dans une base connue — l'analyse comportementale repère des patterns anormaux (même inédits), au prix généralement d'un taux de faux positifs plus élevé à gérer.",
+          },
+          {
+            order: 2,
+            prompt: "Qu'est-ce que la technique « living off the land » ?",
+            choices: [
+              "Une technique d'attaque qui nécessite un accès physique",
+              "Détourner des outils système légitimes déjà présents (ex: PowerShell) plutôt que d'installer un outil malveillant détectable séparément",
+              "Un type de malware qui infecte uniquement les serveurs agricoles",
+              "Une technique de chiffrement de fichiers",
+            ],
+            correctIndex: 1,
+            explanation: "En utilisant des outils déjà présents et légitimes du système, l'attaquant réduit le risque de détection par les antivirus classiques qui cherchent des fichiers malveillants — le comportement anormal de l'outil légitime reste le seul signal disponible.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Confinement et éradication en pratique",
+        content:
+          "Approfondissement des phases confinement/éradication du cycle de réponse à incident (vu dans le cours Blue Team fundamentals) :\n\n" +
+          "**Confinement à court terme** : isoler immédiatement la machine touchée du réseau (débrancher, désactiver l'interface réseau) sans nécessairement l'éteindre — éteindre peut détruire des preuves volatiles utiles en mémoire (processus en cours, connexions réseau actives) pour l'investigation forensique ultérieure.\n\n" +
+          "**Confinement à long terme** : des mesures plus durables (nouveaux comptes/mots de passe, segmentation réseau renforcée) pendant que l'investigation complète a lieu.\n\n" +
+          "**Éradication** : supprimer la cause racine — pas juste le fichier malveillant visible, mais aussi les mécanismes de persistance qu'un attaquant sophistiqué installe généralement (tâches planifiées, comptes créés, backdoors) pour revenir même après un nettoyage superficiel. Une éradication incomplète est une des causes les plus fréquentes de ré-infection après un incident supposément « réglé ».",
+        xpReward: 30,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi ne faut-il PAS éteindre immédiatement une machine compromise lors du confinement à court terme ?",
+            choices: [
+              "Éteindre une machine est techniquement impossible en cas d'infection",
+              "Éteindre détruit des preuves volatiles en mémoire (processus, connexions actives) utiles pour l'investigation forensique ultérieure",
+              "La machine doit rester allumée pour continuer à propager l'infection intentionnellement",
+              "Ça n'a aucune importance, éteindre ou isoler sont équivalents",
+            ],
+            correctIndex: 1,
+            explanation: "La mémoire vive contient des informations précieuses (processus actifs, connexions réseau, clés de chiffrement parfois) qui disparaissent à l'extinction — isoler du réseau sans éteindre préserve ces preuves pour l'analyse.",
+          },
+          {
+            order: 2,
+            prompt: "Pourquoi une éradication incomplète mène-t-elle souvent à une ré-infection ?",
+            choices: [
+              "Parce que les malwares se régénèrent spontanément",
+              "Parce que supprimer uniquement le fichier malveillant visible laisse en place les mécanismes de persistance (tâches planifiées, comptes créés, backdoors) qu'un attaquant sophistiqué installe généralement",
+              "Parce que le réseau reste automatiquement infecté",
+              "Ce n'est pas vrai, l'éradication est toujours complète par définition",
+            ],
+            correctIndex: 1,
+            explanation: "Un attaquant compétent installe souvent plusieurs mécanismes de retour (persistance) au-delà du malware initial visible — ne traiter que le symptôme visible sans chercher ces mécanismes cachés laisse la porte ouverte à un retour.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "kubernetes-fundamentals",
+    title: "Kubernetes : les fondamentaux",
+    description: "Orchestrer des conteneurs à grande échelle — pods, services, déploiements, et pourquoi Kubernetes existe au-delà de Docker seul.",
+    category: "CLOUD",
+    skillKey: "cloud-fundamentals",
+    level: 4,
+    prerequisiteCourseKeys: ["devops-docker-compose-monitoring"],
+    lessons: [
+      {
+        order: 1,
+        title: "Pourquoi Kubernetes, au-delà de Docker Compose ?",
+        content:
+          "Docker Compose (déjà vu) orchestre plusieurs conteneurs sur **une seule machine** — parfait pour du développement local ou une petite application. Kubernetes résout un problème différent : orchestrer des conteneurs sur un **cluster de plusieurs machines**, avec des garanties que Compose n'offre pas :\n\n" +
+          "- **Auto-healing** : si un conteneur (ou une machine entière) tombe, Kubernetes le relance automatiquement ailleurs dans le cluster, sans intervention manuelle.\n" +
+          "- **Scaling automatique** : ajuster dynamiquement le nombre d'instances d'un service selon la charge réelle (voir le concept d'auto-scaling déjà vu).\n" +
+          "- **Rolling updates** : déployer une nouvelle version progressivement, instance par instance, sans interruption de service, avec rollback automatique si la nouvelle version échoue ses health checks.\n\n" +
+          "Cette puissance a un coût réel : Kubernetes est notoirement complexe à opérer — beaucoup d'équipes plus petites restent sur Docker Compose (ou un PaaS géré) tant que leur échelle réelle ne justifie pas cette complexité supplémentaire.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quelle est la différence fondamentale entre Docker Compose et Kubernetes ?",
+            choices: [
+              "Aucune différence, ce sont des synonymes",
+              "Compose orchestre plusieurs conteneurs sur UNE machine ; Kubernetes orchestre des conteneurs sur un CLUSTER de plusieurs machines",
+              "Kubernetes ne peut gérer qu'un seul conteneur à la fois",
+              "Compose est plus récent que Kubernetes",
+            ],
+            correctIndex: 1,
+            explanation: "Compose reste limité à une seule machine hôte ; Kubernetes distribue et coordonne des conteneurs à travers plusieurs machines (nœuds) d'un cluster, avec des garanties de résilience que Compose n'offre pas nativement.",
+          },
+          {
+            order: 2,
+            prompt: "Que fait l'auto-healing de Kubernetes concrètement ?",
+            choices: [
+              "Il répare automatiquement les bugs dans le code applicatif",
+              "Il relance automatiquement un conteneur (ou le redéploie ailleurs) si celui-ci ou sa machine tombe, sans intervention manuelle",
+              "Il chiffre automatiquement les données",
+              "Il optimise automatiquement les requêtes SQL",
+            ],
+            correctIndex: 1,
+            explanation: "Kubernetes surveille en continu l'état réel du cluster par rapport à l'état désiré déclaré — si un conteneur ou un nœud tombe, il relance automatiquement ce qui manque, sans qu'un humain ait besoin de le redémarrer manuellement.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Pods, Services et Deployments",
+        content:
+          "Trois concepts de base structurent presque tout dans Kubernetes :\n\n" +
+          "- **Pod** : la plus petite unité déployable — un ou plusieurs conteneurs qui partagent le même réseau et stockage, toujours planifiés ensemble sur la même machine. Généralement un seul conteneur principal par pod, sauf besoin spécifique (conteneur auxiliaire dit « sidecar »).\n" +
+          "- **Service** : une adresse réseau stable qui route le trafic vers un ensemble de pods correspondants (via des labels), même quand les pods individuels sont recréés avec de nouvelles adresses IP à chaque redéploiement — sans Service, chaque redémarrage de pod casserait toute connexion pointant vers son ancienne IP.\n" +
+          "- **Deployment** : décrit l'état désiré d'un ensemble de pods (combien de répliques, quelle image, quelle stratégie de mise à jour) — Kubernetes travaille en permanence à faire converger la réalité vers cet état déclaré, le concept central derrière l'auto-healing et le scaling.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi un Service est-il nécessaire pour router du trafic vers des pods, plutôt que de cibler directement leur IP ?",
+            choices: [
+              "Ce n'est jamais nécessaire, cibler l'IP fonctionne aussi bien",
+              "Les pods sont recréés avec de nouvelles IP à chaque redéploiement — le Service fournit une adresse stable qui route toujours vers les bons pods actuels",
+              "Un Service chiffre automatiquement le trafic",
+              "Un Service ne sert qu'à la journalisation",
+            ],
+            correctIndex: 1,
+            explanation: "L'IP d'un pod change à chaque recréation (crash, mise à jour, scaling) — sans Service, chaque changement casserait les connexions existantes ; le Service découple l'adresse stable de l'identité changeante des pods sous-jacents.",
+          },
+          {
+            order: 2,
+            prompt: "À quoi sert un Deployment dans Kubernetes ?",
+            choices: [
+              "À stocker des logs applicatifs",
+              "À déclarer l'état désiré d'un ensemble de pods (nombre de répliques, image, stratégie de mise à jour), que Kubernetes s'efforce en permanence de maintenir",
+              "À chiffrer les communications réseau internes",
+              "À gérer uniquement les bases de données"
+            ],
+            correctIndex: 1,
+            explanation: "Le Deployment est une déclaration d'intention (approche déclarative, pas impérative) — Kubernetes compare en continu l'état réel du cluster à cet état désiré et corrige automatiquement tout écart.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Rolling updates et rollback",
+        content:
+          "Une **rolling update** déploie une nouvelle version progressivement : Kubernetes remplace les anciens pods par de nouveaux un par un (ou par petits lots), en vérifiant à chaque étape via les health checks que le nouveau pod est bien sain avant de continuer — jamais tous les pods remplacés simultanément, ce qui causerait une interruption de service complète.\n\n" +
+          "Si les nouveaux pods échouent leurs health checks (bug critique dans la nouvelle version, mauvaise configuration), Kubernetes peut être configuré pour arrêter automatiquement le déploiement, voire déclencher un **rollback** vers la version précédente stable — un filet de sécurité qui limite l'impact d'un déploiement raté, sans nécessiter une intervention manuelle en pleine urgence.\n\n" +
+          "Ce mécanisme illustre bien le principe d'idempotence et de réversibilité vus dans le cours DevOps CI/CD : un déploiement doit toujours pouvoir être annulé aussi facilement qu'il a été appliqué.",
+        xpReward: 30,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi une rolling update remplace-t-elle les pods progressivement plutôt que tous en même temps ?",
+            choices: [
+              "Pour économiser de la bande passante réseau",
+              "Pour éviter une interruption de service complète — le service reste disponible via les pods pas encore remplacés pendant la transition",
+              "Parce que Kubernetes ne peut techniquement gérer qu'un pod à la fois",
+              "Ça n'a aucun impact sur la disponibilité du service"
+            ],
+            correctIndex: 1,
+            explanation: "Remplacer tous les pods simultanément couperait le service pendant la transition — le remplacement progressif garde toujours une partie des pods (anciens ou nouveaux) disponibles pour servir le trafic.",
+          },
+          {
+            order: 2,
+            prompt: "Que se passe-t-il si les nouveaux pods d'une rolling update échouent leurs health checks ?",
+            choices: [
+              "Rien, le déploiement continue quand même",
+              "Kubernetes peut arrêter le déploiement et déclencher un rollback automatique vers la version précédente stable",
+              "Tout le cluster s'arrête immédiatement",
+              "Les anciens pods sont supprimés de force malgré l'échec",
+            ],
+            correctIndex: 1,
+            explanation: "C'est le filet de sécurité central du mécanisme : un déploiement qui échoue ses vérifications de santé peut être annulé automatiquement, limitant l'impact d'une mauvaise version sans attendre une intervention manuelle en urgence.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "nosql-databases",
+    title: "Bases de données NoSQL",
+    description: "Document, clé-valeur, colonne large — quand et pourquoi s'éloigner du modèle relationnel classique.",
+    category: "DEVELOPMENT",
+    skillKey: "sql",
+    level: 3,
+    prerequisiteCourseKeys: ["databases-sql-orm"],
+    lessons: [
+      {
+        order: 1,
+        title: "Pourquoi NoSQL : au-delà du modèle relationnel",
+        content:
+          "SQL (relationnel) impose un schéma fixe et normalisé (tables, clés étrangères) — excellent pour la cohérence et les requêtes complexes croisant plusieurs entités. NoSQL regroupe plusieurs familles de bases qui relâchent volontairement ces contraintes pour d'autres priorités :\n\n" +
+          "- **Document** (ex: MongoDB) : stocke des documents JSON-like flexibles, chacun pouvant avoir une structure légèrement différente — pratique quand le schéma évolue souvent ou varie d'un enregistrement à l'autre.\n" +
+          "- **Clé-valeur** (ex: Redis) : stockage ultra-simple et ultra-rapide, une clé pointe vers une valeur — idéal pour du cache ou des sessions, pas pour des requêtes complexes.\n" +
+          "- **Colonne large** (ex: Cassandra) : optimisé pour d'énormes volumes en écriture distribués sur plusieurs machines.\n\n" +
+          "Le choix n'est jamais « NoSQL est meilleur que SQL » dans l'absolu — c'est un compromis : NoSQL sacrifie souvent la cohérence forte immédiate et les jointures complexes pour gagner en flexibilité de schéma et en scalabilité horizontale plus simple.",
+        xpReward: 20,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quel est le compromis typique quand on choisit une base NoSQL plutôt que relationnelle ?",
+            choices: [
+              "NoSQL est toujours strictement meilleur, sans compromis",
+              "NoSQL gagne en flexibilité de schéma et scalabilité horizontale, souvent au prix d'une cohérence forte immédiate et de jointures complexes moins naturelles",
+              "NoSQL ne peut stocker que des nombres",
+              "NoSQL est toujours plus lent que SQL"
+            ],
+            correctIndex: 1,
+            explanation: "Il n'y a pas de gagnant absolu — NoSQL fait un compromis délibéré : flexibilité et scalabilité en échange de garanties de cohérence et de capacités de jointure généralement plus faibles que le relationnel.",
+          },
+          {
+            order: 2,
+            prompt: "Pour quel cas d'usage une base clé-valeur comme Redis est-elle particulièrement adaptée ?",
+            choices: [
+              "Des requêtes complexes croisant de nombreuses tables",
+              "Du cache ou des sessions utilisateur, où la vitesse d'accès par une clé simple prime sur la richesse des requêtes",
+              "Le stockage de très gros fichiers binaires",
+              "Les transactions bancaires complexes"
+            ],
+            correctIndex: 1,
+            explanation: "Le modèle clé-valeur est délibérément simple (pas de requêtes complexes possibles) mais extrêmement rapide pour un accès direct par clé — exactement ce dont a besoin un cache ou une session.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "MongoDB : le modèle document en pratique",
+        content:
+          "Dans MongoDB, une **collection** regroupe des **documents** (l'équivalent approximatif d'une table et de ses lignes en SQL, mais sans schéma rigide imposé) :\n\n" +
+          "```js\n// Un document utilisateur — chaque document peut avoir une structure différente\n{\n  _id: ObjectId('...'),\n  nom: 'Alice',\n  competences: ['JavaScript', 'Python'], // tableau directement imbriqué\n  adresse: { ville: 'Lyon', pays: 'France' } // objet imbriqué, pas de table séparée\n}\n```\n\n" +
+          "Cette capacité à imbriquer directement des tableaux et objets (plutôt que des tables séparées liées par clé étrangère) évite souvent des jointures — au prix d'une possible duplication de données si la même information imbriquée doit être répétée dans plusieurs documents. Le choix entre imbriquer et référencer (garder un id vers un autre document, comme une clé étrangère) dépend de si les données imbriquées changent souvent et sont partagées entre plusieurs documents parents.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quel est l'équivalent approximatif d'une « table » en MongoDB ?",
+            choices: [
+              "Un index", "Une collection", "Un schéma", "Une clé étrangère",
+            ],
+            correctIndex: 1,
+            explanation: "Une collection MongoDB regroupe des documents, l'équivalent approximatif d'une table SQL regroupant des lignes — sans imposer que tous les documents partagent exactement la même structure.",
+          },
+          {
+            order: 2,
+            prompt: "Quel est le risque principal d'imbriquer des données directement dans un document plutôt que de les référencer séparément ?",
+            choices: [
+              "Aucun risque, c'est toujours préférable",
+              "Une possible duplication de données si la même information imbriquée doit être répétée dans plusieurs documents",
+              "MongoDB interdit techniquement l'imbrication",
+              "Les documents imbriqués ne peuvent jamais être modifiés"
+            ],
+            correctIndex: 1,
+            explanation: "Si une donnée imbriquée (ex: les infos d'un auteur dans chaque article qu'il a écrit) change, il faut la mettre à jour dans TOUS les documents où elle est dupliquée — un compromis à évaluer selon la fréquence de changement et le partage réel de la donnée.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Cohérence : CAP theorem en pratique",
+        content:
+          "Le **théorème CAP** énonce qu'un système distribué ne peut garantir simultanément que 2 des 3 propriétés suivantes en cas de partition réseau (coupure de communication entre nœuds) : **Cohérence** (Consistency — toutes les lectures voient la donnée la plus récente), **Disponibilité** (Availability — chaque requête reçoit une réponse, même en cas de panne partielle), **Tolérance au partitionnement** (Partition tolerance — le système continue de fonctionner malgré une coupure réseau entre certains nœuds).\n\n" +
+          "En pratique, la tolérance au partitionnement n'est pas négociable pour un système distribué réel (le réseau tombe en panne, c'est une question de quand pas de si) — le vrai choix se fait donc entre Cohérence et Disponibilité (CP vs AP) lors d'une panne réseau. Beaucoup de bases NoSQL (comme Cassandra) privilégient la disponibilité, avec une **cohérence à terme** (eventual consistency) : une écriture finit par se propager à tous les nœuds, mais pas instantanément — une lecture juste après une écriture peut donc, brièvement, voir une valeur périmée.",
+        xpReward: 30,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi la tolérance au partitionnement n'est-elle pas vraiment un choix pour un système distribué réel ?",
+            choices: [
+              "Elle est toujours garantie automatiquement sans effort",
+              "Un réseau réel subit inévitablement des coupures partielles à un moment ou un autre — le vrai arbitrage se fait donc entre cohérence et disponibilité pendant ces coupures",
+              "Elle n'existe pas dans les systèmes modernes",
+              "Elle ne concerne que les bases SQL classiques",
+            ],
+            correctIndex: 1,
+            explanation: "Un système distribué doit composer avec des pannes réseau inévitables — la question réelle n'est donc pas « si » ça arrivera mais « que privilégier pendant que ça arrive », entre cohérence stricte et disponibilité continue.",
+          },
+          {
+            order: 2,
+            prompt: "Que signifie la « cohérence à terme » (eventual consistency) ?",
+            choices: [
+              "Les données ne sont jamais cohérentes",
+              "Une écriture finit par se propager à tous les nœuds, mais pas instantanément — une lecture juste après peut brièvement voir une valeur périmée",
+              "La cohérence est garantie immédiatement dans tous les cas",
+              "C'est un synonyme exact de cohérence stricte",
+            ],
+            correctIndex: 1,
+            explanation: "En privilégiant la disponibilité, un système accepte une fenêtre de temps où différents nœuds peuvent temporairement avoir des valeurs différentes pour la même donnée, avant que la propagation ne les aligne toutes.",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    key: "ai-rag-embeddings",
+    title: "IA avancée : RAG et Embeddings",
+    description: "Comment un LLM peut répondre avec des informations qu'il n'a jamais apprises — le mécanisme derrière le RAG (Retrieval-Augmented Generation).",
+    category: "AI",
+    skillKey: "ai-fundamentals",
+    level: 4,
+    prerequisiteCourseKeys: ["prompt-engineering"],
+    lessons: [
+      {
+        order: 1,
+        title: "Le problème que résout le RAG",
+        content:
+          "Un LLM a des connaissances figées à la date de son entraînement — il ne « sait » rien de ce qui s'est passé après, ni des documents privés d'une entreprise qu'il n'a jamais vus. Deux solutions existent pour combler ce manque : le **fine-tuning** (ré-entraîner le modèle sur de nouvelles données — coûteux, lent, et le modèle doit être réentraîné à chaque mise à jour des données) ou le **RAG** (Retrieval-Augmented Generation) : injecter les informations pertinentes directement dans le prompt au moment de la question, sans toucher au modèle lui-même.\n\n" +
+          "Le RAG suit 3 étapes : (1) une question utilisateur arrive, (2) le système recherche les documents/extraits les plus pertinents dans une base de connaissances externe, (3) ces extraits sont injectés dans le prompt envoyé au LLM, qui génère sa réponse en s'appuyant dessus — comme donner un dossier de contexte à quelqu'un juste avant de lui poser une question, plutôt que d'attendre qu'il ait tout mémorisé par cœur.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Quelle est la différence principale entre fine-tuning et RAG pour donner de nouvelles connaissances à un LLM ?",
+            choices: [
+              "Ce sont deux noms pour la même technique",
+              "Le fine-tuning ré-entraîne le modèle lui-même (coûteux, lent) ; le RAG injecte l'information pertinente dans le prompt au moment de la question, sans toucher au modèle",
+              "Le RAG nécessite toujours plus de puissance de calcul que le fine-tuning",
+              "Le fine-tuning ne fonctionne que sur de petits modèles"
+            ],
+            correctIndex: 1,
+            explanation: "Le fine-tuning modifie durablement les paramètres internes du modèle (coûteux à refaire à chaque mise à jour) ; le RAG laisse le modèle intact et lui fournit le contexte nécessaire à chaque requête, bien plus flexible pour des données qui changent souvent.",
+          },
+          {
+            order: 2,
+            prompt: "Dans le flux RAG, à quel moment les documents pertinents sont-ils récupérés ?",
+            choices: [
+              "Pendant l'entraînement initial du modèle, une fois pour toutes",
+              "Au moment de chaque question utilisateur, avant de générer la réponse",
+              "Après que le modèle ait déjà répondu, pour vérifier a posteriori",
+              "Les documents ne sont jamais récupérés dans un flux RAG"
+            ],
+            correctIndex: 1,
+            explanation: "Le retrieval se fait à chaque requête, en temps réel — c'est ce qui permet au RAG de rester à jour avec des données qui évoluent, sans jamais avoir besoin de réentraîner le modèle sous-jacent.",
+          },
+        ],
+      },
+      {
+        order: 2,
+        title: "Embeddings : transformer du texte en vecteurs",
+        content:
+          "Un **embedding** est une représentation numérique (un vecteur, une liste de nombres) d'un texte, générée de façon à ce que des textes sémantiquement proches (même sens, pas forcément mêmes mots) aient des vecteurs mathématiquement proches. C'est ce qui permet une recherche par **similarité sémantique** plutôt que par simple correspondance de mots-clés.\n\n" +
+          "Exemple concret : les phrases « comment déployer une application » et « procédure de mise en production » n'ont presque aucun mot en commun, mais un bon modèle d'embeddings les placerait proches dans l'espace vectoriel car elles portent un sens similaire — une recherche par mots-clés classique manquerait complètement ce rapprochement, une recherche par embeddings le trouverait naturellement.\n\n" +
+          "Ces vecteurs sont stockés dans une base de données vectorielle (déjà vue dans le dictionnaire) qui permet de retrouver rapidement, parmi des milliers/millions de documents, les plus proches sémantiquement d'une requête donnée.",
+        xpReward: 25,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi la recherche par embeddings peut-elle trouver un lien entre 'comment déployer une application' et 'procédure de mise en production', alors qu'une recherche par mots-clés classique ne le pourrait pas ?",
+            choices: [
+              "Les embeddings capturent la proximité sémantique (le sens), pas seulement la présence des mêmes mots — ces deux phrases sont proches en sens malgré des mots différents",
+              "Les embeddings ne fonctionnent que sur des phrases identiques",
+              "C'est un hasard, les embeddings ne sont pas fiables",
+              "La recherche par mots-clés trouve toujours plus de résultats"
+            ],
+            correctIndex: 0,
+            explanation: "L'embedding place les textes dans un espace vectoriel où la proximité géométrique reflète la proximité de sens — deux formulations différentes du même concept se retrouvent proches, contrairement à une simple correspondance de mots.",
+          },
+          {
+            order: 2,
+            prompt: "Qu'est-ce qu'un embedding, techniquement ?",
+            choices: [
+              "Un fichier audio",
+              "Un vecteur (liste de nombres) représentant un texte, généré pour que des textes de sens proche aient des vecteurs proches",
+              "Une image compressée",
+              "Un mot de passe chiffré",
+            ],
+            correctIndex: 1,
+            explanation: "Un embedding transforme du texte (ou d'autres types de contenu) en une représentation numérique dans un espace à plusieurs dimensions, où la distance entre deux vecteurs reflète la similarité sémantique des contenus d'origine.",
+          },
+        ],
+      },
+      {
+        order: 3,
+        title: "Limites et bonnes pratiques du RAG",
+        content:
+          "Le RAG améliore fortement la fiabilité factuelle d'un LLM, mais n'élimine pas complètement les risques :\n\n" +
+          "- **Qualité du retrieval** : si les documents récupérés ne sont pas réellement pertinents (mauvais découpage, mauvaise indexation), le modèle génère une réponse basée sur du contexte non pertinent — « garbage in, garbage out » s'applique aussi au RAG.\n" +
+          "- **Taille de la fenêtre de contexte** : on ne peut injecter qu'une quantité limitée de texte dans le prompt — le choix de QUELS extraits inclure (et dans quel ordre) impacte directement la qualité de la réponse.\n" +
+          "- **Le modèle peut encore halluciner** même avec du bon contexte fourni, en particulier s'il n'arrive pas à distinguer ce qui vient du contexte fourni de ses propres connaissances internes potentiellement obsolètes.\n\n" +
+          "Nodify utilise volontairement une recherche par mots-clés (pas par embeddings) pour son système de documentation interne — un choix pragmatique documenté dans le code, faute d'API d'embeddings publique exposée par le provider actuellement utilisé, pas une conviction que les mots-clés seraient supérieurs en théorie.",
+        xpReward: 30,
+        questions: [
+          {
+            order: 1,
+            prompt: "Pourquoi la qualité du retrieval est-elle critique dans un système RAG ?",
+            choices: [
+              "Elle n'a aucun impact sur la réponse finale",
+              "Si les documents récupérés ne sont pas réellement pertinents, le modèle génère une réponse basée sur du contexte non pertinent — la qualité de la réponse dépend directement de la qualité de ce qui a été retrouvé",
+              "Le retrieval ne concerne que la vitesse de réponse",
+              "Un mauvais retrieval améliore paradoxalement la créativité du modèle"
+            ],
+            correctIndex: 1,
+            explanation: "Le RAG ne peut être meilleur que les documents qu'il fournit au modèle — un retrieval qui ramène du contenu non pertinent produit une réponse construite sur de mauvaises bases, même si le modèle lui-même est excellent.",
+          },
+          {
+            order: 2,
+            prompt: "Le RAG élimine-t-il complètement le risque d'hallucination d'un LLM ?",
+            choices: [
+              "Oui, totalement, c'est justement son but",
+              "Non — le modèle peut encore halluciner, notamment s'il ne distingue pas bien le contexte fourni de ses propres connaissances internes potentiellement obsolètes",
+              "Le RAG augmente au contraire le risque d'hallucination",
+              "Le RAG ne concerne pas du tout les hallucinations"
+            ],
+            correctIndex: 1,
+            explanation: "Le RAG réduit significativement le risque d'hallucination en ancrant la réponse sur des données réelles fournies, mais ne l'élimine pas complètement — vérifier les informations critiques reste une bonne pratique, RAG ou non.",
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 /**
@@ -7008,6 +7890,238 @@ const DAILY_QUESTIONS: DailyQuestionSeed[] = [
     correctIndex: 1,
     explanation: "Un CDN garde une copie du contenu jusqu'à expiration du TTL configuré — pour forcer une mise à jour immédiate visible par tous les visiteurs, il faut invalider explicitement le cache existant plutôt que d'attendre l'expiration naturelle.",
   },
+  {
+    key: "kubernetes-pod-def",
+    category: "CLOUD",
+    prompt: "Quelle est la plus petite unité déployable dans Kubernetes ?",
+    choices: ["Le conteneur", "Le Pod", "Le nœud (node)", "Le namespace"],
+    correctIndex: 1,
+    explanation: "Un Pod regroupe un ou plusieurs conteneurs qui partagent le même réseau et stockage, toujours planifiés ensemble — c'est l'unité de base que Kubernetes déploie et gère, pas le conteneur seul.",
+  },
+  {
+    key: "kubernetes-service-purpose",
+    category: "CLOUD",
+    prompt: "Pourquoi un Service Kubernetes est-il nécessaire plutôt que de cibler directement l'IP d'un pod ?",
+    choices: ["Les pods n'ont jamais d'adresse IP", "Les pods sont recréés avec de nouvelles IP à chaque redéploiement — le Service fournit une adresse stable", "Un Service chiffre automatiquement le trafic", "Ça n'a aucune utilité réelle"],
+    correctIndex: 1,
+    explanation: "L'IP d'un pod change à chaque recréation — le Service route toujours vers les bons pods actuels via une adresse stable, sans que les clients aient à suivre ce changement.",
+  },
+  {
+    key: "sharding-vs-replication",
+    category: "DEVELOPMENT",
+    prompt: "Quelle est la différence entre le sharding et la réplication d'une base de données ?",
+    choices: ["Ce sont des synonymes exacts", "Le sharding répartit des PORTIONS différentes des données sur plusieurs machines ; la réplication garde des COPIES complètes des mêmes données sur plusieurs machines", "La réplication ne fonctionne que sur NoSQL", "Le sharding empêche toute lecture"],
+    correctIndex: 1,
+    explanation: "Le sharding divise le volume total (chaque shard n'a qu'une fraction des données) ; la réplication duplique l'intégralité des données ailleurs (pour la redondance et répartir les lectures) — deux stratégies complémentaires, pas interchangeables.",
+  },
+  {
+    key: "cap-theorem-tradeoff",
+    category: "DEVELOPMENT",
+    prompt: "Selon le théorème CAP, quel est le vrai arbitrage pour un système distribué réel lors d'une coupure réseau ?",
+    choices: ["Entre cohérence et disponibilité (la tolérance au partitionnement n'est pas négociable)", "Entre vitesse et sécurité", "Entre coût et performance", "Il n'y a aucun arbitrage réel, on peut tout avoir"],
+    correctIndex: 0,
+    explanation: "Un réseau réel subit inévitablement des coupures — la tolérance au partitionnement est donc de fait obligatoire, laissant le vrai choix entre cohérence stricte et disponibilité continue pendant ces coupures.",
+  },
+  {
+    key: "circuit-breaker-purpose",
+    category: "DEVELOPMENT",
+    prompt: "À quoi sert le pattern 'circuit breaker' dans une architecture distribuée ?",
+    choices: ["À couper l'alimentation électrique des serveurs", "À arrêter temporairement d'appeler un service dépendant qui échoue de façon répétée, évitant une panne en cascade", "À chiffrer les communications entre services", "À augmenter automatiquement le nombre d'instances"],
+    correctIndex: 1,
+    explanation: "Plutôt que de continuer à attendre indéfiniment un service défaillant (épuisant les ressources de l'appelant), le circuit breaker échoue vite et explicitement, protégeant les deux parties.",
+  },
+  {
+    key: "symmetric-vs-asymmetric-speed",
+    category: "CYBERSECURITY",
+    prompt: "Pourquoi TLS utilise-t-il le chiffrement asymétrique seulement pour l'échange de clé, puis bascule sur le symétrique pour le reste ?",
+    choices: ["Le symétrique est illégal pour de gros volumes", "Le symétrique est bien plus rapide que l'asymétrique pour chiffrer de gros volumes de données", "L'asymétrique ne peut chiffrer que 1 seul octet à la fois", "Ce n'est pas vrai, TLS n'utilise que de l'asymétrique"],
+    correctIndex: 1,
+    explanation: "L'asymétrique résout le problème d'échange sécurisé de clé, mais reste lent pour de gros volumes — une fois la clé symétrique échangée en sécurité, l'essentiel du trafic passe en symétrique pour la performance.",
+  },
+  {
+    key: "digital-signature-purpose",
+    category: "CYBERSECURITY",
+    prompt: "Que garantit une signature numérique valide ?",
+    choices: ["La confidentialité totale du message", "L'authenticité (vient bien du détenteur de la clé privée) et l'intégrité (pas modifié depuis la signature)", "Que le message a été envoyé instantanément", "Que le message ne peut jamais être lu par personne"],
+    correctIndex: 1,
+    explanation: "La signature numérique prouve qui a signé et que le contenu n'a pas changé depuis — elle ne chiffre pas le message lui-même (pas de confidentialité), c'est un rôle différent du chiffrement classique.",
+  },
+  {
+    key: "rootkit-vs-malware-general",
+    category: "CYBERSECURITY",
+    prompt: "Qu'est-ce qui distingue spécifiquement un rootkit des autres types de malware ?",
+    choices: ["Il ne peut infecter que des serveurs", "Il est conçu spécifiquement pour dissimuler sa propre présence (et celle d'autres malwares) au système et aux outils de détection", "Il ne peut jamais être supprimé", "C'est un synonyme exact de ransomware"],
+    correctIndex: 1,
+    explanation: "Contrairement à un ransomware (visible par nature) ou un virus classique, le rootkit vise spécifiquement l'invisibilité, souvent en s'intégrant profondément dans le système d'exploitation lui-même.",
+  },
+  {
+    key: "living-off-the-land-def",
+    category: "CYBERSECURITY",
+    prompt: "Qu'est-ce que la technique 'living off the land' en cybersécurité ?",
+    choices: ["Une attaque qui nécessite un accès physique", "Détourner des outils système légitimes déjà présents (ex: PowerShell) plutôt que d'installer un malware séparément détectable", "Un type de ransomware spécifique", "Une technique de chiffrement de disque"],
+    correctIndex: 1,
+    explanation: "En utilisant des outils déjà présents et légitimes, l'attaquant réduit le risque de détection par les antivirus classiques qui cherchent des fichiers malveillants identifiables.",
+  },
+  {
+    key: "mongodb-document-vs-sql-row",
+    category: "DEVELOPMENT",
+    prompt: "Quelle est la principale différence entre un document MongoDB et une ligne SQL classique ?",
+    choices: ["Aucune différence réelle", "Chaque document peut avoir une structure légèrement différente, contrairement aux lignes d'une table SQL qui partagent toutes le même schéma fixe", "Un document ne peut contenir qu'un seul champ", "MongoDB ne stocke que des nombres"],
+    correctIndex: 1,
+    explanation: "Le modèle document est flexible par nature : deux documents d'une même collection peuvent avoir des champs différents, contrairement à une table SQL où toutes les lignes respectent obligatoirement le même schéma de colonnes.",
+  },
+  {
+    key: "eventual-consistency-def",
+    category: "DEVELOPMENT",
+    prompt: "Que signifie la 'cohérence à terme' (eventual consistency) dans un système distribué ?",
+    choices: ["Les données ne sont jamais cohérentes", "Une écriture finit par se propager à tous les nœuds, mais pas instantanément — une lecture juste après peut brièvement voir une valeur périmée", "La cohérence est garantie instantanément dans tous les cas", "C'est un synonyme de cohérence stricte"],
+    correctIndex: 1,
+    explanation: "En privilégiant la disponibilité (choix AP du théorème CAP), un système accepte une fenêtre de temps où différents nœuds peuvent temporairement différer, avant que la propagation ne les aligne.",
+  },
+  {
+    key: "cold-start-serverless-def",
+    category: "CLOUD",
+    prompt: "Qu'est-ce qu'un 'cold start' dans le contexte serverless ?",
+    choices: ["Un redémarrage volontaire manuel", "Le délai supplémentaire au premier appel d'une fonction inactive, le temps qu'une instance soit provisionnée", "Une panne du fournisseur cloud", "Un type de cache CDN"],
+    correctIndex: 1,
+    explanation: "Une fonction serverless inactive doit être 'réveillée' avant de répondre — ce délai n'existe plus sur les appels suivants tant que l'instance reste chaude.",
+  },
+  {
+    key: "rag-vs-finetuning",
+    category: "AI",
+    prompt: "Quelle est la différence principale entre RAG et fine-tuning pour donner de nouvelles connaissances à un LLM ?",
+    choices: ["Ce sont deux noms pour la même technique", "Le fine-tuning ré-entraîne le modèle (coûteux, lent) ; le RAG injecte l'information dans le prompt à chaque requête, sans toucher au modèle", "Le RAG est toujours plus cher que le fine-tuning", "Le fine-tuning ne fonctionne que sur de petits modèles"],
+    correctIndex: 1,
+    explanation: "Le RAG laisse le modèle intact et lui fournit du contexte à la demande — bien plus flexible pour des données qui changent souvent que de réentraîner le modèle à chaque mise à jour.",
+  },
+  {
+    key: "embedding-similarity-search",
+    category: "AI",
+    prompt: "Pourquoi une recherche par embeddings peut-elle trouver un lien entre deux phrases qui n'ont presque aucun mot en commun ?",
+    choices: ["C'est un hasard, les embeddings ne sont pas fiables", "Les embeddings capturent la proximité sémantique (le sens), pas seulement la présence des mêmes mots", "La recherche par embeddings ignore le sens des mots", "Ça ne fonctionne jamais dans ce cas"],
+    correctIndex: 1,
+    explanation: "Un embedding place le texte dans un espace vectoriel où la proximité géométrique reflète la proximité de sens — deux formulations différentes du même concept se retrouvent proches malgré des mots différents.",
+  },
+  {
+    key: "js-json-stringify-vs-parse",
+    category: "DEVELOPMENT",
+    prompt: "Quelle est la différence entre `JSON.stringify()` et `JSON.parse()` ?",
+    choices: ["Ce sont des synonymes", "`stringify` convertit un objet JS en texte JSON ; `parse` convertit du texte JSON en objet JS — opérations inverses", "`parse` ne fonctionne qu'avec des nombres", "`stringify` chiffre les données"],
+    correctIndex: 1,
+    explanation: "`stringify` sérialise (objet → texte, pour envoyer/stocker) ; `parse` désérialise (texte → objet, pour manipuler en JS) — les deux opérations sont l'inverse exacte l'une de l'autre.",
+  },
+  {
+    key: "docker-layer-caching-order",
+    category: "CLOUD",
+    prompt: "Pourquoi copier `package.json` avant le reste du code source dans un Dockerfile accélère-t-il les builds répétés ?",
+    choices: ["Ça n'a aucun effet sur la vitesse de build", "Docker met en cache chaque étape (layer) — si package.json n'a pas changé, `npm install` reste en cache même si le code source change souvent", "package.json doit toujours être copié en premier par obligation technique", "Ça réduit la taille de l'image finale uniquement"],
+    correctIndex: 1,
+    explanation: "Le cache de layers Docker invalide une étape (et toutes les suivantes) seulement si son entrée change — séparer les dépendances (qui changent rarement) du code source (qui change souvent) maximise la réutilisation du cache.",
+  },
+  {
+    key: "git-force-push-risk",
+    category: "DEVELOPMENT",
+    prompt: "Quel est le risque principal d'un `git push --force` sur une branche partagée par une équipe ?",
+    choices: ["Aucun risque, c'est toujours sûr", "Les commits des autres membres, basés sur l'ancien historique, peuvent être écrasés côté distant", "Le dépôt distant est supprimé automatiquement", "Ça ralentit uniquement le prochain clone"],
+    correctIndex: 1,
+    explanation: "`--force` remplace l'historique distant sans vérifier s'il a divergé entre-temps — tout travail poussé par d'autres membres peut être perdu, laissant leurs copies locales incompatibles.",
+  },
+  {
+    key: "malware-analysis-static-vs-dynamic",
+    category: "CYBERSECURITY",
+    prompt: "Quelle est la différence entre l'analyse statique et dynamique d'un malware ?",
+    choices: ["Ce sont des synonymes", "L'analyse statique examine le code SANS l'exécuter ; l'analyse dynamique l'exécute dans un environnement isolé (sandbox) pour observer son comportement réel", "L'analyse dynamique ne fonctionne que sur des fichiers texte", "L'analyse statique nécessite toujours une infrastructure de sandbox"],
+    correctIndex: 1,
+    explanation: "L'analyse statique (désassemblage, lecture de code) évite tout risque d'exécution accidentelle ; l'analyse dynamique observe le comportement réel en environnement isolé — les deux approches se complètent.",
+  },
+  {
+    key: "incident-response-containment-order",
+    category: "CYBERSECURITY",
+    prompt: "Dans le cycle de réponse à incident, que vient faire le 'confinement' AVANT l'éradication ?",
+    choices: ["Il restaure directement les systèmes à leur état normal", "Il isole les systèmes touchés pour empêcher la propagation, avant de chercher à éliminer la cause racine", "Il supprime toutes les preuves de l'incident", "Il n'a aucune utilité réelle"],
+    correctIndex: 1,
+    explanation: "L'objectif immédiat du confinement est d'empêcher l'incident de s'étendre, avant l'étape plus longue d'identification et de suppression complète de la cause racine (éradication).",
+  },
+  {
+    key: "vigenere-vs-caesar",
+    category: "CYBERSECURITY",
+    prompt: "Quelle est la différence entre le chiffre de César et le chiffre de Vigenère ?",
+    choices: ["Ce sont des synonymes exacts", "César utilise un décalage FIXE pour toutes les lettres ; Vigenère utilise un décalage qui CHANGE selon une clé répétée", "Vigenère ne peut chiffrer que des chiffres", "César est plus récent que Vigenère"],
+    correctIndex: 1,
+    explanation: "César décale chaque lettre du même nombre de positions ; Vigenère fait varier ce décalage selon les lettres d'une clé répétée, rendant l'analyse fréquentielle simple beaucoup moins efficace.",
+  },
+  {
+    key: "python-fstring-purpose",
+    category: "DEVELOPMENT",
+    prompt: "À quoi servent les f-strings en Python (ex: `f\"Bonjour {nom}\"`) ?",
+    choices: ["À chiffrer une chaîne de caractères", "À interpoler directement des variables dans une chaîne, plus lisible que la concaténation avec `+`", "À convertir un nombre en chaîne uniquement", "À formater uniquement des dates"],
+    correctIndex: 1,
+    explanation: "Les f-strings permettent d'insérer directement des expressions/variables entre accolades dans une chaîne, évitant la concaténation manuelle plus verbeuse et sujette aux erreurs (`\"Bonjour \" + nom`).",
+  },
+  {
+    key: "python-context-manager-guarantee",
+    category: "DEVELOPMENT",
+    prompt: "Que garantit `with open(...) as f:` que `f = open(...)` seul ne garantit pas ?",
+    choices: ["Une lecture plus rapide du fichier", "La fermeture automatique du fichier même si une exception survient dans le bloc", "Un chiffrement automatique du contenu", "Que le fichier existe déjà"],
+    correctIndex: 1,
+    explanation: "Le context manager (`__enter__`/`__exit__`) garantit l'appel de `f.close()` à la sortie du bloc, même en cas d'erreur — un `open()`/`close()` manuel pourrait sauter le close si une exception survient entre les deux.",
+  },
+  {
+    key: "sql-create-index-syntax",
+    category: "DEVELOPMENT",
+    prompt: "Quelle commande SQL crée un index sur la colonne `email` de la table `users` ?",
+    choices: ["ALTER INDEX users(email)", "CREATE INDEX idx ON users(email)", "ADD INDEX TO users.email", "NEW INDEX users(email)"],
+    correctIndex: 1,
+    explanation: "`CREATE INDEX nom_index ON table(colonne)` est la syntaxe standard pour créer un index — accélère les requêtes qui filtrent/joignent sur cette colonne.",
+  },
+  {
+    key: "jwt-none-algorithm-risk",
+    category: "CYBERSECURITY",
+    prompt: "Pourquoi la valeur d'algorithme `none` dans l'en-tête d'un JWT est-elle historiquement dangereuse ?",
+    choices: ["Elle ralentit le traitement du token", "Un serveur mal implémenté peut l'accepter sans jamais vérifier de signature, permettant à quiconque de forger un token arbitraire", "Elle rend le token illisible", "Elle n'a aucun impact de sécurité réel"],
+    correctIndex: 1,
+    explanation: "Si le serveur fait confiance à `alg: none` sans validation stricte, n'importe qui peut créer un JWT avec n'importe quel contenu (ex: usurper un rôle admin) sans avoir besoin de connaître aucune clé secrète.",
+  },
+  {
+    key: "csp-unsafe-inline-risk",
+    category: "CYBERSECURITY",
+    prompt: "Pourquoi la directive CSP `script-src 'unsafe-inline'` affaiblit-elle la protection contre le XSS ?",
+    choices: ["Elle n'affaiblit rien du tout", "Elle autorise l'exécution de JavaScript écrit directement dans la page (balises script inline), exactement ce que CSP est censée bloquer", "Elle ralentit le chargement de la page", "Elle ne concerne que les feuilles de style CSS"],
+    correctIndex: 1,
+    explanation: "Une des protections principales de CSP est d'empêcher l'exécution de scripts inline injectés par un attaquant — `unsafe-inline` désactive précisément cette protection pour TOUT script inline, légitime ou non.",
+  },
+  {
+    key: "exif-metadata-privacy-risk",
+    category: "CYBERSECURITY",
+    prompt: "Pourquoi nettoyer les métadonnées EXIF d'une photo avant publication publique est-il recommandé ?",
+    choices: ["Ce n'est jamais nécessaire", "Les métadonnées EXIF peuvent révéler des informations sensibles (localisation GPS, appareil utilisé, nom d'utilisateur système) sans que l'utilisateur en ait conscience", "Ça rend la photo plus lourde", "Ça empêche l'affichage de la photo"],
+    correctIndex: 1,
+    explanation: "Une photo publiée peut involontairement exposer sa géolocalisation précise ou d'autres informations techniques/personnelles cachées dans ses métadonnées — un risque pour la vie privée souvent ignoré.",
+  },
+  {
+    key: "linux-writable-cron-script-risk",
+    category: "CYBERSECURITY",
+    prompt: "Pourquoi un script lancé par une tâche cron root, mais accessible en écriture par tous les utilisateurs, est-il un vrai risque de sécurité ?",
+    choices: ["Ce n'est pas un risque réel", "N'importe quel utilisateur peut modifier le script, qui s'exécutera ensuite avec les privilèges root à la prochaine exécution planifiée", "Ça ralentit uniquement l'exécution du script", "Cron ne peut pas exécuter de scripts modifiés"],
+    correctIndex: 1,
+    explanation: "Le principe du moindre privilège est violé ici : un fichier exécuté avec des privilèges élevés (root) ne devrait jamais être modifiable par des utilisateurs à privilèges plus faibles — une élévation de privilèges triviale sinon.",
+  },
+  {
+    key: "dns-spoofing-vs-arp-spoofing",
+    category: "NETWORKING",
+    prompt: "En quoi le DNS spoofing (ou cache poisoning) est-il conceptuellement similaire à l'ARP spoofing ?",
+    choices: ["Aucun rapport entre les deux", "Les deux consistent à injecter de fausses associations (IP-MAC pour ARP, domaine-IP pour DNS) pour rediriger le trafic vers un attaquant", "Le DNS spoofing ne fonctionne que sur les réseaux locaux", "L'ARP spoofing chiffre le trafic"],
+    correctIndex: 1,
+    explanation: "Les deux attaques exploitent l'absence d'authentification native d'un protocole (ARP au niveau local, DNS au niveau résolution de nom) pour faire croire à une fausse association et détourner le trafic.",
+  },
+  {
+    key: "reverse-single-byte-xor",
+    category: "CYBERSECURITY",
+    prompt: "Pour retrouver une clé XOR d'un seul octet à partir d'un texte en clair connu et de son texte chiffré, quelle opération effectue-t-on ?",
+    choices: ["Addition du texte clair et du texte chiffré", "XOR entre le texte clair et le texte chiffré correspondant", "Division du texte chiffré par le texte clair", "Aucune opération ne permet de retrouver la clé"],
+    correctIndex: 1,
+    explanation: "Puisque chiffré = clair XOR clé, alors clé = clair XOR chiffré (propriété du XOR : appliqué deux fois avec la même valeur, il annule l'opération) — retrouver la clé est trivial dès qu'on connaît un fragment de texte en clair.",
+  },
 ];
 
 /**
@@ -7420,6 +8534,92 @@ const CTF_CHALLENGES: CtfChallengeSeed[] = [
     points: 100,
     acceptedAnswers: ["command injection", "plaintext password", "hardcoded credentials", "exposed credentials"],
   },
+  {
+    key: "crypto-vigenere-basics",
+    category: "CRYPTO",
+    difficulty: 3,
+    title: "Le chiffre de Vigenère",
+    description:
+      "Un message a été chiffré avec le chiffre de Vigenère (chaque lettre décalée selon la lettre correspondante d'une clé répétée), en utilisant la clé `KEY` :\n\n" +
+      "`YBDYVB`\n\n" +
+      "Déchiffre ce message (un seul mot, en minuscules).",
+    hint: "Pour chaque lettre, soustrais la position de la lettre correspondante de la clé (K=10, E=4, Y=24, répétées) dans l'alphabet — comme un César dont le décalage change à chaque lettre.",
+    points: 125,
+    acceptedAnswers: ["oxford"],
+  },
+  {
+    key: "web-security-headers-csp",
+    category: "WEB",
+    difficulty: 2,
+    title: "Politique de sécurité incomplète",
+    description:
+      "Un site définit cet en-tête de sécurité :\n\n" +
+      "`Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'`\n\n" +
+      "Une directive de cette politique affaiblit fortement la protection contre le XSS que CSP est censée apporter. Quelle est cette valeur problématique (un mot, avec le tiret, en anglais) ?",
+    hint: "Cette valeur autorise l'exécution de JavaScript directement écrit dans la page (balises `<script>` inline) — exactement ce que CSP est censé bloquer pour se protéger du XSS.",
+    points: 100,
+    acceptedAnswers: ["unsafe-inline", "unsafeinline"],
+  },
+  {
+    key: "osint-exif-camera-data",
+    category: "OSINT",
+    difficulty: 2,
+    title: "Métadonnées de l'appareil photo",
+    description:
+      "Une photo publiée par une entreprise sur son site « à propos » contient encore ses métadonnées EXIF complètes, incluant le modèle exact de l'appareil photo et le nom du logiciel de retouche utilisé, ainsi qu'un nom d'utilisateur système dans le champ « Auteur ».\n\n" +
+      "Quel principe de sécurité de base cette entreprise n'a-t-elle pas appliqué avant de publier cette image (2 mots en français, l'inverse de « ajouter des informations ») ?",
+    hint: "L'action recommandée avant publication est l'inverse de ce qui a été fait ici — pense au verbe qui décrit le retrait d'informations superflues d'un fichier.",
+    points: 75,
+    acceptedAnswers: ["nettoyage des metadonnees", "suppression des metadonnees", "nettoyage metadonnees"],
+  },
+  {
+    key: "forensics-process-parent-anomaly",
+    category: "FORENSICS",
+    difficulty: 3,
+    title: "Un parent qui ne devrait pas exister",
+    description:
+      "L'arborescence des processus d'une machine Windows compromise montre `winword.exe` (Microsoft Word) comme processus PARENT de `powershell.exe`, qui a ensuite lancé une connexion réseau sortante inhabituelle.\n\n" +
+      "Pourquoi cette relation parent-enfant est-elle un signal d'alerte fort, sachant que Word ne lance normalement jamais PowerShell (2 mots en anglais, technique déjà vue dans le cours Malware) ?",
+    hint: "C'est le nom de la technique consistant à détourner un outil système légitime (ici PowerShell) plutôt que d'installer un malware séparément détectable — vue dans le cours 'Malware et réponse à incident'.",
+    points: 125,
+    acceptedAnswers: ["living off the land", "loltl"],
+  },
+  {
+    key: "linux-cron-privilege-escalation",
+    category: "LINUX",
+    difficulty: 3,
+    title: "Script cron accessible en écriture",
+    description:
+      "Sur un serveur, une crontab root exécute `* * * * * /opt/scripts/cleanup.sh`. La sortie de `ls -l /opt/scripts/cleanup.sh` montre : `-rwxrwxrwx 1 root root 512 cleanup.sh`.\n\n" +
+      "Quel est le problème de sécurité exact ici (2 mots en français) — sachant que N'IMPORTE QUEL utilisateur du système peut modifier ce fichier, qui s'exécute ensuite avec les privilèges root ?",
+    hint: "Le fichier est en écriture pour TOUT LE MONDE (`rwxrwxrwx`) mais s'exécute avec les droits root via cron — n'importe qui peut y insérrer son propre code qui s'exécutera en tant que root à la prochaine minute.",
+    points: 125,
+    acceptedAnswers: ["elevation de privileges", "escalade de privileges", "privilege escalation"],
+  },
+  {
+    key: "network-dns-cache-poisoning",
+    category: "NETWORK",
+    difficulty: 3,
+    title: "Réponse DNS suspecte",
+    description:
+      "Un utilisateur tape `banque-officielle.com` dans son navigateur, mais son ordinateur le redirige vers une IP appartenant à un attaquant, à cause d'une entrée falsifiée injectée dans le cache d'un résolveur DNS intermédiaire.\n\n" +
+      "Comment s'appelle cette technique d'attaque (2 mots en anglais) ?",
+    hint: "Le nom combine le protocole ciblé (DNS) et l'action de corrompre un cache avec de fausses données — même famille conceptuelle qu'ARP spoofing, mais sur un service différent.",
+    points: 100,
+    acceptedAnswers: ["dns spoofing", "dns cache poisoning", "cache poisoning"],
+  },
+  {
+    key: "reverse-xor-key-recovery",
+    category: "REVERSE",
+    difficulty: 4,
+    title: "Retrouver la clé XOR",
+    description:
+      "Un texte en clair connu (`NODIFY`) a été chiffré en XOR avec une clé d'un seul octet répétée, donnant en hexadécimal : `05 04 0f 02 0d 12`.\n\n" +
+      "Le premier caractère du texte en clair est 'N' (0x4E). Calcule la clé utilisée (un seul caractère, en majuscule) sachant que XOR appliqué deux fois avec la même clé retrouve la valeur d'origine.",
+    hint: "clé = texte_clair XOR texte_chiffré. Pour le premier caractère : 0x4E XOR 0x05 = la clé, à convertir en caractère ASCII.",
+    points: 150,
+    acceptedAnswers: ["k"],
+  },
 ];
 
 /**
@@ -7705,6 +8905,135 @@ const EXERCISES: ExerciseSeed[] = [
       "Un prompt vague laisse le modèle deviner le format/niveau/longueur attendus — préciser ces éléments explicitement réduit fortement les réponses hors sujet ou mal calibrées, sans changer de modèle.",
     xpReward: 5,
     skillKey: "prompt-engineering",
+  },
+  {
+    key: "debug-js-closure-loop",
+    type: "MCQ",
+    category: "DEVELOPMENT",
+    difficulty: 3,
+    title: "Trouve le bug : closure dans une boucle",
+    prompt:
+      "Ce code affiche `3, 3, 3` au lieu de `0, 1, 2` attendu :\n\n```js\nfor (var i = 0; i < 3; i++) {\n  setTimeout(() => console.log(i), 0);\n}\n```\n\nQuelle correction minimale règle le bug ?",
+    choices: ["Remplacer `var` par `let`", "Remplacer `setTimeout` par `setInterval`", "Ajouter `async` avant la fonction fléchée", "Remplacer `console.log` par `console.error`"],
+    correctIndex: 0,
+    explanation: "`var` crée une seule variable partagée par toute la boucle ; `let` crée une nouvelle liaison à chaque itération (scope de bloc), donc chaque callback capture bien sa propre valeur d'i.",
+    xpReward: 15,
+    skillKey: "javascript",
+  },
+  {
+    key: "complete-ts-generic-function",
+    type: "TEXT",
+    category: "DEVELOPMENT",
+    difficulty: 3,
+    title: "Complète le code : fonction générique",
+    prompt:
+      "Complète cette signature de fonction générique pour qu'elle accepte un tableau de n'importe quel type et retourne son premier élément, en gardant le bon type de retour :\n\n```ts\nfunction premier_____(arr: T[]): T {\n  return arr[0];\n}\n```\n\nRéponds juste par ce qui complète le `_____` (ex: `<X>`).",
+    acceptedAnswers: ["<t>"],
+    explanation: "`<T>` déclare un paramètre de type générique — TypeScript infère automatiquement `T` à partir du tableau passé en argument, gardant la relation exacte entre le type d'entrée et de sortie.",
+    xpReward: 15,
+    skillKey: "typescript",
+  },
+  {
+    key: "debug-security-jwt-none-alg",
+    type: "MCQ",
+    category: "CYBERSECURITY",
+    difficulty: 4,
+    title: "Analyse sécurité : JWT vulnérable",
+    prompt:
+      "Un serveur accepte un JWT dont l'en-tête décodé est `{\"alg\": \"none\", \"typ\": \"JWT\"}`, sans jamais vérifier de signature dans ce cas. Quel est le risque ?",
+    choices: [
+      "Aucun risque, `none` est juste une valeur par défaut sans danger",
+      "N'importe qui peut forger un token arbitraire (ex: se faire passer pour un admin) puisqu'aucune signature n'est vérifiée",
+      "Le token devient illisible",
+      "Le serveur refuse toujours ce type de token automatiquement",
+    ],
+    correctIndex: 1,
+    explanation: "Un serveur mal implémenté qui accepte `alg: none` sans vérification laisse quiconque forger un JWT avec n'importe quel contenu (ex: `role: admin`) — une des failles JWT historiques les plus critiques.",
+    xpReward: 20,
+    skillKey: "secure-coding",
+  },
+  {
+    key: "debug-python-async-blocking",
+    type: "MCQ",
+    category: "DEVELOPMENT",
+    difficulty: 3,
+    title: "Trouve le bug : appel bloquant dans une coroutine",
+    prompt:
+      "Cette fonction async bloque toute la boucle d'événements pendant 2 secondes, empêchant les autres coroutines de s'exécuter :\n\n```python\nasync def attendre():\n    time.sleep(2)\n    return 'fini'\n```\n\nQuelle correction règle le problème ?",
+    choices: [
+      "Remplacer `time.sleep(2)` par `await asyncio.sleep(2)`",
+      "Supprimer le mot-clé `async`",
+      "Ajouter `await` devant `time.sleep(2)` sans rien changer d'autre",
+      "Remplacer `return` par `yield`",
+    ],
+    correctIndex: 0,
+    explanation: "`time.sleep()` est une fonction bloquante classique qui gèle tout le thread, y compris la boucle asyncio — `asyncio.sleep()` est la version non-bloquante conçue pour coexister avec d'autres coroutines pendant l'attente.",
+    xpReward: 15,
+    skillKey: "python",
+  },
+  {
+    key: "complete-sql-index-creation",
+    type: "TEXT",
+    category: "DEVELOPMENT",
+    difficulty: 2,
+    title: "Complète le code : créer un index",
+    prompt:
+      "Complète cette requête pour créer un index sur la colonne `email` de la table `users` :\n\n```sql\n_____ INDEX idx_users_email ON users(email);\n```\n\nQuel mot-clé complète le `_____` (un seul mot) ?",
+    acceptedAnswers: ["create"],
+    explanation: "`CREATE INDEX nom ON table(colonne)` crée un index — accélère les requêtes filtrant/joignant sur cette colonne, au prix d'un léger coût sur les écritures.",
+    xpReward: 10,
+    skillKey: "sql",
+  },
+  {
+    key: "debug-docker-layer-caching",
+    type: "MCQ",
+    category: "CLOUD",
+    difficulty: 3,
+    title: "Trouve le bug : build Docker trop lent",
+    prompt:
+      "Ce Dockerfile réinstalle toutes les dépendances npm à chaque changement du code source, rendant chaque build très lent :\n\n```dockerfile\nFROM node:20\nWORKDIR /app\nCOPY . .\nRUN npm install\nCMD [\"node\", \"index.js\"]\n```\n\nQuel réordonnancement corrige le problème en exploitant le cache de layers Docker ?",
+    choices: [
+      "Copier d'abord `package.json` seul, lancer `npm install`, PUIS copier le reste du code source",
+      "Supprimer `WORKDIR`",
+      "Remplacer `COPY` par `ADD`",
+      "Ajouter `--no-cache` à `npm install`",
+    ],
+    correctIndex: 0,
+    explanation: "Docker met en cache chaque layer et ne réexécute que ceux dont l'entrée a changé — copier `package.json` avant le code source permet à `npm install` de rester en cache tant que les dépendances ne changent pas, même si le code source change souvent.",
+    xpReward: 15,
+    skillKey: "docker",
+  },
+  {
+    key: "debug-git-force-push-danger",
+    type: "MCQ",
+    category: "DEVELOPMENT",
+    difficulty: 2,
+    title: "Analyse : danger d'un force push",
+    prompt:
+      "Un développeur fait `git push --force` sur la branche `main` partagée par toute l'équipe, après avoir localement rebasé et réécrit l'historique. Quel est le risque principal pour les autres membres de l'équipe ?",
+    choices: [
+      "Aucun risque, force push est toujours sûr",
+      "Les commits des autres membres, basés sur l'ancien historique, peuvent être perdus/écrasés côté distant, et leurs copies locales deviennent incompatibles",
+      "Le dépôt distant est automatiquement supprimé",
+      "Ça ralentit uniquement le prochain clone",
+    ],
+    correctIndex: 1,
+    explanation: "`--force` remplace l'historique distant sans vérifier s'il a divergé — tout travail poussé par d'autres entre-temps peut être écrasé, et leurs copies locales se retrouvent avec un historique incompatible avec le nouveau `main`.",
+    xpReward: 15,
+    skillKey: "git",
+  },
+  {
+    key: "complete-python-fstring",
+    type: "TEXT",
+    category: "DEVELOPMENT",
+    difficulty: 1,
+    title: "Complète le code : f-string",
+    prompt:
+      "Complète cette ligne pour afficher \"Bonjour Alice, tu as 25 ans\" en utilisant une f-string :\n\n```python\nnom = \"Alice\"\nage = 25\nprint(_____)\n```\n\nRéponds par l'expression complète (ex: `f\"...\"`), sans le `print(`.",
+    acceptedAnswers: ["f\"bonjour {nom}, tu as {age} ans\"", "f'bonjour {nom}, tu as {age} ans'"],
+    explanation: "Une f-string (`f\"...\"`) permet d'interpoler directement des variables entre accolades dans une chaîne — plus lisible que la concaténation manuelle avec `+`.",
+    xpReward: 5,
+    skillKey: "python",
   },
 ];
 
